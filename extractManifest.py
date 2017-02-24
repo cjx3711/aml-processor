@@ -1,7 +1,11 @@
+"""
+Algorithms to extract selected data from manifest, and process them into useable forms.
+"""
+
 from csv import *
 from itertools import *
 
-def IDsAndAlleles(inDir, outDir):
+def genTiledReads(inDir, outDir):
     """
     Combines overlapping amplicon tiles in the manifest into the contiguous sequenced region.
     Writes to 'IDs and Combined Alleles.csv
@@ -23,3 +27,6 @@ def IDsAndAlleles(inDir, outDir):
             alleleList.append(tempAllele)
         outputList = list(zip([x[0] for x in tileCounter], alleleList))
         writeToCSV("IDs and Combined Alleles", outDir, outputList)
+
+def genSignedReads(inDir, outDir):
+    pass
