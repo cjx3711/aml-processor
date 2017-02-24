@@ -1,3 +1,9 @@
+# AML Processor
+Some project for some prof because something. Please rename me.
+
+
+Your old psuedo algo thing is here
+```
 pairReads(leftFastQ, rightFastQ){
 	/*
 	3 possibilities:
@@ -32,4 +38,4 @@ pairReads(leftFastQ, rightFastQ){
 	reformatReads(leftSeq, rightSeq)
 
 	createArchetype(Reads)
-}
+}```
