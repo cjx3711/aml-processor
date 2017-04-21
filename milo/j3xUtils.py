@@ -5,6 +5,7 @@ All routines of the j3x file format.
 from genomicsUtils import *
 
 qualityDict = getPhredQualityDict();
+errorDict = getPhredErrorDict();
 
 def simplifyQuality(p):
     """

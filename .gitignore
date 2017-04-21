@@ -5,3 +5,4 @@ __pycache__
 *.pyc
 
 milo/data
+milo/__pycache__
