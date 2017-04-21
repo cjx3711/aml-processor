@@ -11,6 +11,11 @@ rangeEnd = readLength - scoreThreshold
 rangeStart = -rangeEnd
 
 def mergeUnpaired(left, right, lQuality, rQuality):
+    """
+    Merges two unpaired reads
+    Quality is not taken into consideration for tha calculations, it's only used as a return.
+    Returns mergedSequence, qualityScores, numberOfCollisions
+    """
     #Align unpaired reads
     for x in range(rangeStart, rangeEnd):
         # x is the relative position of the left read to the right, as it slides rightward
@@ -36,6 +41,10 @@ def mergeUnpaired(left, right, lQuality, rQuality):
     return " ".join((left, right)), " ".join((lQuality, rQuality)), "N/A"
 
 def calcScore(left, right, overlapPairs, overlapLength):
+    """
+    Checks if the overlap is legit.
+    Returns a nice score for the overlap
+    """
     score, count = 0, 0
     for x, y in overlapPairs:
         # Rewards exact matches, heavily penalizes differences, ignores when quality is too low
