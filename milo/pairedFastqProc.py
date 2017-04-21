@@ -1,5 +1,6 @@
 from Bio.pairwise2 import *
 from j3xUtils import *
+from manifestExtraction import *
 from concurrent.futures import *
 from itertools import *
 
@@ -9,6 +10,7 @@ readLength = 151
 scoreThreshold = 10
 rangeEnd = readLength - scoreThreshold
 rangeStart = -rangeEnd
+ampDict1, ampDict2 = genAmpliconDict("references/")
 
 def mergeUnpaired(left, right, lQuality, rQuality):
     """
@@ -39,7 +41,7 @@ def mergeUnpaired(left, right, lQuality, rQuality):
             j3xQuality = "".join(simplifyQuality(qualityDict[x]) for x in allQuality)
             return j3xBases, j3xQuality, str(mergedSeq[1])
     # If alignment fails, return both reads separated with a space
-    return " ".join((left, right)), " ".join((lQuality, rQuality)), "N/A"
+    return " ".join((left, right)), " ".join((lQuality, rQuality)), "?"
 
 def calcScore(overlapPairs, overlapLength):
     """
@@ -84,14 +86,23 @@ def mergeOverlap(overlapPairs, overlapQuality):
         return bases[0], quality[0]
     return tuple("".join(y) for y in zip(*(pickBetter(*x) for x in zip(overlapPairs, overlapQuality)))), collisions[0]
 
+def findAmplicon(read):
+    ampID = str(ampDict1.get(read[:17], "000"))
+    if ampID == "000":
+        return str(ampDict2.get(read[7:24], "000"))
+    else:
+        return ampID
+
 def alignAndMerge(left, right):
     # Merges (left sequence, reverseComplement(right sequence), left quality, reversed(right quality))
     basesQualityCollisions = mergeUnpaired(left[1][:-1], reverseComplement(right[1][:-1]), left[3][:-1], right[3][:-1][::-1])
-    # Creates new ID sequence by retrieving only the coordinates from the existing FASTQ read ID, and then appending the number of collisions
+    # Retrieves the coordinates from the existing FASTQ read ID
     coordIndices = nthAndKthLetter(left[0], ":", 5, 7)
     sequenceID = left[0][coordIndices[0]: coordIndices[1] - 2]
-    newID = ["".join(("C:", basesQualityCollisions[2], ", ", sequenceID))]
-
+    # Checks which amplicon a read belongs to
+    ampID = findAmplicon(basesQualityCollisions[0])
+    # Joins amplicon number, collision number, and coordinate as new ID
+    newID = ["".join(("ID:", ampID, ", C:", basesQualityCollisions[2], ", ", sequenceID))]
     # Adds the sequence and quality, and returns
     newID.extend(basesQualityCollisions[:2])
     return "\n".join(newID)

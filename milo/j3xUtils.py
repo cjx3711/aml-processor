@@ -18,7 +18,7 @@ def simplifyQuality(p):
     elif p >= 0.9:
         return "?"
     else:
-        return "×"
+        return "x"
 
 def fastqToJ3X(sequenceData):
     """

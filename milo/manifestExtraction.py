@@ -3,6 +3,8 @@ Algorithms to extract selected data from manifest, and process them into useable
 """
 from itertools import *
 from genomicsUtils import *
+from collections import Counter
+from Levenshtein import distance
 
 def genTiledReads(inDir, outDir):
     """
@@ -60,4 +62,31 @@ def genAmpliconDict(inDir):
     CAUTION
     Generates a dictionary of amplicon hashes. For testing purposes only.
     """
+    closeList = []
     with open(inDir + "Manifest.csv") as csvFile:
+        # Puts column labels in headerList and rest of CSV file in csvList
+        headerList = next(csvFile)
+        csvList = list(reader(csvFile))
+
+        #Divides them into hashes of 15 and see if there are overlaps
+        ampList = [(x[2][:17], x[2][7:24], x[2][6:23], x[2][8:25]) for x in csvList]
+        ampList1 = [x[0] for x in ampList]
+        """
+        for i in range(len(ampList1)):
+            for j in range(i + 1, len(ampList1)):
+                if distance(ampList1[i], ampList1[j]) < 3:
+                    closeList.append((min(str(i + 1), str(j + 1)), max(str(i + 1), str(j + 1))))
+        """
+        ampList2 = [x[1] for x in ampList]
+        ampList2.extend([x[2] for x in ampList])
+        ampList2.extend([x[3] for x in ampList])
+        """
+        for i in range(len(ampList2)):
+            for j in range(i + 1, len(ampList2)):
+                if distance(ampList2[i], ampList2[j]) < 3 and i%571 != j%571:
+                    closeList.append((min(str(i%571 + 1), str(j%571 + 1)), max(str(i%571 + 1), str(j%571 + 1))))
+
+        closeList.sort()
+        """
+        return {seq:str(ind + 1).rjust(3, "0") for ind, seq in enumerate(ampList1)}, {seq:str((ind + 1) % 571).rjust(3, "0") for ind, seq in enumerate(ampList2)}
+
