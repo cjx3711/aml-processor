@@ -2,14 +2,15 @@
 genomicsUtils | Methods for common routines in genome analysis
 """
 from math import pow
+from csv import *
 
 complement = {"A" : "T", "C" : "G", "G" : "C", "T" : "A"}
 phredList = [
-                "K", "J", "I", "H", "G", "F", "E",
-                "D", "C", "B", "A", "@", "?", ">",
-                "=", "<", ";", ":", "9", "8", "7",
-                "6", "5","4", "3", "2", "1", "0",
-                "/", ".", "-", ",", "+", "*", "(",
+                "K", "J", "I", "H", "G", "F", "E", 
+                "D", "C", "B", "A", "@", "?", ">", 
+                "=", "<", ";", ":", "9", "8", "7", 
+                "6", "5","4", "3", "2", "1", "0", 
+                "/", ".", "-", ",", "+", "*", "(", 
                 ")", "\'", "&", "%", "$", "#", "\"", "!"
                 ]
 
@@ -50,5 +51,13 @@ def nthAndKthLetter(targetString, targetLetter, n, k):
 def getPhredQualityDict():
     """
     Computes nucleotide sequencing accuracy of phred scores.
+    0 to 1
     """
     return {x : 1 - pow(10, -y/10) for x, y in zip(phredList, range(42, -1, -1))}
+
+def getPhredErrorDict():
+    """
+    Computes nucleotide sequencing accuracy of phred scores.
+    0 to 1
+    """
+    return {x : pow(10, -y/10) for x, y in zip(phredList, range(42, -1, -1))}
