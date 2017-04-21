@@ -87,11 +87,46 @@ def mergeOverlap(overlapPairs, overlapQuality):
     return tuple("".join(y) for y in zip(*(pickBetter(*x) for x in zip(overlapPairs, overlapQuality)))), collisions[0]
 
 def findAmplicon(read):
+    """
+    Accepts a read of bases and returns the ID number of the amplicon associated with the read
+    """
     ampID = str(ampDict1.get(read[:17], "000"))
     if ampID == "000":
         return str(ampDict2.get(read[7:24], "000"))
     else:
         return ampID
+
+with open("references/Manifest.csv") as csvFile:
+        next(csvFile)
+        refSeqs = [x[2] for x in list(reader(csvFile))]
+
+def findAmpliconLevenshtein(read):
+    """
+    Accepts a read of bases and returns the ID number of the amplicon associated with the read
+    """
+    ampID = str(ampDict1.get(read[:17], "000"))
+    if ampID == "000":
+        ampID = str(ampDict2.get(read[7:24], "000"))
+
+    # If the amplicon chosen are those which are easily mistaken, used Levenshtein to determine correct amplicon
+    # CAUTION: Vulnerable to large insertions
+    if ampID == "041" or ampID == "570":
+        return findCorrect(read, refSeqs, 41, 570)
+    elif ampID == "539" or ampID == "569":
+        return findCorrect(read, refSeqs, 539, 569)
+    elif ampID == "368" or ampID == "571":
+        return findCorrect(read, refSeqs, 368, 571)
+    elif ampID == "188" or ampID == "197":
+        return findCorrect(read, refSeqs, 188, 197)
+    elif ampID == "137" or ampID == "453":
+        return findCorrect(read, refSeqs, 137, 453)
+    else:
+        return ampID
+
+def findCorrect(read, refSeqs, i, j):
+    i -= 1
+    j -= 1
+    return str(min((distance(read, refSeqs[i]), i),(distance(read, refSeqs[j]), j))[1]).rjust(3, "0")
 
 def alignAndMerge(left, right):
     # Merges (left sequence, reverseComplement(right sequence), left quality, reversed(right quality))
@@ -100,7 +135,7 @@ def alignAndMerge(left, right):
     coordIndices = nthAndKthLetter(left[0], ":", 5, 7)
     sequenceID = left[0][coordIndices[0]: coordIndices[1] - 2]
     # Checks which amplicon a read belongs to
-    ampID = findAmplicon(basesQualityCollisions[0])
+    ampID = findAmpliconLevenshtein(basesQualityCollisions[0])
     # Joins amplicon number, collision number, and coordinate as new ID
     newID = ["".join(("ID:", ampID, ", C:", basesQualityCollisions[2], ", ", sequenceID))]
     # Adds the sequence and quality, and returns
