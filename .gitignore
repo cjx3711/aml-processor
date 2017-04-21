@@ -1,5 +1,7 @@
 Reference Data
-
+.DS_Store
 How to git.txt
 __pycache__
 *.pyc
+
+milo/data
