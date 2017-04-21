@@ -12,6 +12,7 @@ rangeStart = -rangeEnd
 
 def mergeUnpaired(left, right, lQuality, rQuality):
     """
+    Note: ulnernable to early terminaton upon encountering random repeats or homopolymer sequences
     Merges two unpaired reads
     Quality is not taken into consideration for tha calculations, it's only used as a return.
     Returns mergedSequence, qualityScores, numberOfCollisions
