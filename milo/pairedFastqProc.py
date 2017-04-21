@@ -54,31 +54,45 @@ def calcScore(left, right, overlapPairs, overlapLength):
     return score
 
 def mergeOverlap(overlapPairs, overlapQuality):
+    # Collisions are the number of contradictions during a merge, defined as bases whose quality scores do not diverge significantly
     collisions = [0]
     def pickBetter(bases, quality):
+        """
+        Helper function to pick the base with better quality
+        """
         if bases[0] != bases[1]:
+            # If the bases are different
             if errorDict[quality[0]] > errorDict[quality[1]] * 5:
+                # If the right read is at least five times less likely to have an error, return it and its quality
                 return bases[1], quality[1]
             elif errorDict[quality[1]] > errorDict[quality[0]] * 5:
+                # Otherwise, just return the other read
                 pass
             else:
+                # If one is not a significantly better choice than the other, increment collision counter.
                 collisions[0] += 1
         return bases[0], quality[0]
     return tuple("".join(y) for y in zip(*(pickBetter(*x) for x in zip(overlapPairs, overlapQuality)))), collisions[0]
 
 def alignAndMerge(left, right):
+    # Merges (left sequence, reverseComplement(right sequence), left quality, reversed(right quality))
     basesQualityCollisions = mergeUnpaired(left[1][:-1], reverseComplement(right[1][:-1]), left[3][:-1], right[3][:-1][::-1])
+    # Creates new ID sequence by retrieving only the coordinates from the existing FASTQ read ID, and then appending the number of collisions
     coordIndices = nthAndKthLetter(left[0], ":", 5, 7)
     sequenceID = left[0][coordIndices[0]: coordIndices[1] - 2]
     newID = ["".join(("C:", basesQualityCollisions[2], ", ", sequenceID))]
+
+    # Adds the sequence and quality, and returns
     newID.extend(basesQualityCollisions[:2])
     return "\n".join(newID)
 
 def pairToJ3X(fq1, fq2, inDir, outDir):
         with open(inDir + fq1) as fq1File, open(inDir + fq2) as fq2File:
             with open(outDir + fq1[:(fq1.find("_R1_"))] + "PAIRED.j3x", "w+", newline = "") as outFile:
+                # Creates iterators which deliver the 4 lines of each FASTQ read as a zip (ID, Sequence, Blank, Quality)
                 fq1Iter, fq2Iter = grouper(fq1File, 4), grouper(fq2File, 4)
                 with ProcessPoolExecutor(numThreads) as processManager:
+                    # Calls alignAndMerge(FASTQ1's (ID, Sequence, Blank, Quality), FASTQ2's (ID, Sequence, Blank, Quality))
                     for x in processManager.map(alignAndMerge, fq1Iter, fq2Iter, chunksize = 250):
                         outFile.write(x)
                         outFile.write("\n\n")
