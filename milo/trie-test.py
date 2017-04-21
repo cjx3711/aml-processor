@@ -1,102 +1,96 @@
 import pygtrie
 import time
 
-kgramLength = 15
-spacing = 15
+class AmpliconMatcherKgram:
 
-# indelTree = pygtrie.CharTrie()
-indelHash = {}
+    def __init__(self, kgramLength = 15, spacing = 15):
+        self.kgramLength = kgramLength
+        self.spacing = spacing
+        self.indelHash = {}
+        self.referenceCount = 0;
+
+        self.noCount = 0
+        self.badCount = 0
+        self.ummCount = 0
+        self.total = 0
+
+
+    def generateManifest(self, filename):
+        with open(filename, "r", newline = "") as references:
+
+            # Read through each line of the reference file and create the kgrams
+            lineno = -1
+            for line in references:
+                if lineno >= 0:
+                    self.referenceCount += 1
+                    sequence = line.split(',')[2]
+                    for i in range(0,len(sequence) - self.kgramLength, self.spacing):
+                        kgram = sequence[i:i+self.kgramLength]
+                        # Add each of the kgrams to the hash
+                        if (kgram in self.indelHash) == False:
+                            self.indelHash[kgram] = []
+                        self.indelHash[kgram].append((lineno,i))
+                lineno += 1
+        self.matchCounts = [[0,x] for x in range(self.referenceCount)]
+
+    def resetMatchCounts(self):
+        i = 0
+        for mc in self.matchCounts:
+            mc[0] = 0
+            mc[1] = i
+            i += 1
+
+    def findAmpliconKgram(self, read):
+        self.total += 1
+        matches = []
+        self.resetMatchCounts()
+        i = 0
+        while i < len(read) - self.kgramLength + 1:
+            kgram = read[i:i+self.kgramLength]
+            if kgram in self.indelHash:
+                currentMatches = self.indelHash[kgram]
+                i += self.spacing - 1
+                for match in currentMatches:
+                    self.matchCounts[match[0]][0] += 1
+                matches.extend(currentMatches)
+            i += 1
+        self.matchCounts.sort(reverse = True)
+        # largest1, largest2 = getLargestTwo(matchCounts)
+        secondPercent = 0 # Percentage of the second largest
+        if ( self.matchCounts[0][0] == 0 and self.matchCounts[1][0] == 0):
+            self.noCount += 1
+            return '000'
+
+        if ( self.matchCounts[0][0] != 0 ):
+            secondPercent = self.matchCounts[1][0] / self.matchCounts[0][0]
+        if ( secondPercent > 0.6 ):
+            self.badCount += 1
+        elif ( secondPercent > 0.3 ):
+            self.ummCount += 1
+
+        return self.matchCounts[0][1]
+
+
 
 start_time = time.time()
 
+ampliconMatcher = AmpliconMatcherKgram()
+ampliconMatcher.generateManifest("references/Manifest.csv")
 
-referenceCount = 0;
-with open("references/Manifest.csv", "r", newline = "") as references:
-
-    # Read through each line of the reference file and create the kgrams
-    lineno = -1
-    for line in references:
-        if lineno >= 0:
-            referenceCount += 1
-            sequence = line.split(',')[2]
-            for i in range(0,len(sequence) - kgramLength, spacing):
-                kgram = sequence[i:i+kgramLength]
-                # # Trie
-                # if indelTree.has_key(kgram) == False:
-                #     indelTree[kgram] = []
-                # indelTree[kgram].append((lineno,i))
-                if (kgram in indelHash) == False:
-                    indelHash[kgram] = []
-                indelHash[kgram].append((lineno,i))
-        lineno += 1
-
-    # Add each of the kgrams to the trie
-
-noCount = 0
-badCount = 0
-ummCount = 0
-total = 0
-
-# matchCounts = [0] * referenceCount
-matchCounts = [[0,x] for x in range(referenceCount)]
-
-def findAmpliconKgram(read):
-    global noCount
-    global badCount
-    global ummCount
-    matches = []
-    resetMatchCounts(matchCounts)
-    i = 0
-    while i < len(line) - kgramLength + 1:
-        kgram = line[i:i+kgramLength]
-        if kgram in indelHash:
-            currentMatches = indelHash[kgram]
-            i += spacing - 1
-            for match in currentMatches:
-                matchCounts[match[0]][0] += 1
-            matches.extend(currentMatches)
-        i += 1
-    matchCounts.sort(reverse = True)
-    # largest1, largest2 = getLargestTwo(matchCounts)
-    secondPercent = 0 # Percentage of the second largest
-    if ( matchCounts[0][0] == 0 and matchCounts[1][0] == 0):
-        noCount += 1
-        return '000'
-
-    if ( matchCounts[0][0] != 0 ):
-        secondPercent = matchCounts[1][0] / matchCounts[0][0]
-    if ( secondPercent > 0.6 ):
-        badCount += 1
-    elif ( secondPercent > 0.3 ):
-        ummCount += 1
-
-    return matchCounts[0][1]
-
-
-def resetMatchCounts(matchCounts):
-    for mc in matchCounts:
-        mc[0] = 0
-        mc[1] = i
-
-with open("data/AD01_S1_L001PAIRED.j3x") as test:
-# with open("data/MINITEST_AD01_S1_L001PAIRED.j3x") as test:
+# with open("data/AD01_S1_L001PAIRED.j3x") as test:
+with open("data/MINITEST_AD01_S1_L001PAIRED.j3x") as test:
     linecounter = -1
     for line in test:
         linecounter += 1
         if linecounter % 4 != 1:
             continue
-        total += 1
 
-        findAmpliconKgram(line)
-            # print(str(matchCounts[0]) + str(matchCounts[1]))
+        ampliconMatcher.findAmpliconKgram(line)
 
-
-        # print(matchCounts)
-        # print(matches)
-print(noCount)
-print(ummCount)
-print(badCount)
-print(total)
+print(ampliconMatcher.noCount)
+print(ampliconMatcher.ummCount)
+print(ampliconMatcher.badCount)
+print(ampliconMatcher.total)
 
 
 
