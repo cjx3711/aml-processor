@@ -5,11 +5,11 @@ from math import pow
 
 complement = {"A" : "T", "C" : "G", "G" : "C", "T" : "A"}
 phredList = [
-                "K", "J", "I", "H", "G", "F", "E", 
-                "D", "C", "B", "A", "@", "?", ">", 
-                "=", "<", ";", ":", "9", "8", "7", 
-                "6", "5","4", "3", "2", "1", "0", 
-                "/", ".", "-", ",", "+", "*", "(", 
+                "K", "J", "I", "H", "G", "F", "E",
+                "D", "C", "B", "A", "@", "?", ">",
+                "=", "<", ";", ":", "9", "8", "7",
+                "6", "5","4", "3", "2", "1", "0",
+                "/", ".", "-", ",", "+", "*", "(",
                 ")", "\'", "&", "%", "$", "#", "\"", "!"
                 ]
 
@@ -52,3 +52,7 @@ def getPhredQualityDict():
     Computes nucleotide sequencing accuracy of phred scores.
     """
     return {x : 1 - pow(10, -y/10) for x, y in zip(phredList, range(42, -1, -1))}
+
+# Temp unit for testing the testing framework
+def IsOdd(n):
+    return n % 2 == 1

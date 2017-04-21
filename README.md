@@ -1,6 +1,11 @@
 # MILo: Mutant Indel Locator
 
-MILo is a FastQ Aligner and Variant Caller algorithm for the AML Panel
+[![Build Status](https://travis-ci.org/j3x1/aml-processor.svg?branch=master)](https://travis-ci.org/j3x1/aml-processor)
+
+MILo is a FastQ Aligner and Variant Caller algorithm for the AML Panel.
+
+**Stack**
+- Python 3.6
 
 [Algo documentation](https://docs.google.com/document/d/1_uWV8ExxDhpnAHwQIGdE2CcQR7scXawhVlBf9aegF8Q/edit?usp=sharing).
 
