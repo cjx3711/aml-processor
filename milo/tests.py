@@ -23,6 +23,26 @@ class GenomicsUtils(unittest.TestCase):
 
 class PairedFASTQAligher(unittest.TestCase):
 
+    def test_scoring(self):
+        left = "AAAAAAAAAAAAA"
+        right = "AAAAAAAAAAAAA"
+        overlapPairs = tuple(zip(left, right))
+        score = calcScore(overlapPairs, len(left))
+        self.assertEqual(score, 13)
+
+    def test_score_ignore(self):
+        left = "AAAAAAAAAAAAA"
+        right = "CCCCCCCCCCCCC"
+        overlapPairs = tuple(zip(left, right))
+        score = calcScore(overlapPairs, len(left))
+        self.assertEqual(score, -5)
+
+    def test_score_mismatch(self):
+        left = "AAAAAAAAAAAAA"
+        right = "AAAAAAAAAAAAC"
+        overlapPairs = tuple(zip(left, right))
+        score = calcScore(overlapPairs, len(left))
+        self.assertEqual(score, 7)
 
     def test_no_overlap(self):
         left = "A" * 151
@@ -114,7 +134,6 @@ class PairedFASTQAligher(unittest.TestCase):
     def test_actual_sequence_delete(self):
         left = "TGCAGTCCCAGCCCACAGCCCCCCTCCTCCCTCAGACTCAGGAGTCCATAGCGAATTTCGACGATCGTTGCATTAACTCGCGAACAAACGGATCTCGTATGCCGTCTTCTGCTTGAAAACAAAAACAATTTCAATACGTCTGAAAATGTTA"
         right = reverseComplement("TATGGACTCCTGAGTCTGAGGGAGGAGGGGGGCTGTGGGCTGGGACTGCAAGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAAGGTTCAGTGTAGATCTCGGTGGGCGCCGGATCATTAATAAAAAAAAAACAGAAATTCACGGTGAGC")
-        print(right)
         lQuality = "CCCCCGEEFGGGGGGGGEGCCEFGCEGGFCFGGGGDG@EFGFGGGAFGGGEGGGGCDEEGFGGEEEFEG@CFEDEEGCFGCEFE@FEGFGG=4+,EFF7D=FGG=CEFB??,CFGFGG<,?,,4B+:,,,8<5,,C,B:,,+5,:,:,@B,"
         rQuality = "CCCCCFGGGGGGFGGFGFFGGGGGG;CEDEGGGGGGFGGGGGDG<AEFG?EBFFGGG:@CEGCF>FECFFFGGE<BFF,BCE,EABFB:>>FDFF9FF,=3@F<>:C*3<*5<****8,<;<,@,8;:=E*1*1*++2,27,,,***4*2+"[::-1]
 
