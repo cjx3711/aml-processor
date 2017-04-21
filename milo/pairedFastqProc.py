@@ -11,6 +11,12 @@ rangeEnd = readLength - scoreThreshold
 rangeStart = -rangeEnd
 
 def mergeUnpaired(left, right, lQuality, rQuality):
+    """
+    Note: ulnernable to early terminaton upon encountering random repeats or homopolymer sequences
+    Merges two unpaired reads
+    Quality is not taken into consideration for tha calculations, it's only used as a return.
+    Returns mergedSequence, qualityScores, numberOfCollisions
+    """
     #Align unpaired reads
     for x in range(rangeStart, rangeEnd):
         # x is the relative position of the left read to the right, as it slides rightward
@@ -22,7 +28,7 @@ def mergeUnpaired(left, right, lQuality, rQuality):
         overlapQuality = tuple(zip(lQuality[lRange[0]:lRange[1]], rQuality[rRange[0]:rRange[1]]))
         overlapLength = lRange[1] - lRange[0]
         # If score in overlapping region is high, combine left and right reads
-        if calcScore(left, right, overlapPairs, overlapLength) > scoreThreshold:
+        if calcScore(overlapPairs, overlapLength) > scoreThreshold:
             # mergedSeq = ((bases, quality), collisions)
             mergedSeq = mergeOverlap(overlapPairs, overlapQuality)
             # Append the non-overlapping bases to the left and right of the merged sequence
@@ -35,7 +41,11 @@ def mergeUnpaired(left, right, lQuality, rQuality):
     # If alignment fails, return both reads separated with a space
     return " ".join((left, right)), " ".join((lQuality, rQuality)), "N/A"
 
-def calcScore(left, right, overlapPairs, overlapLength):
+def calcScore(overlapPairs, overlapLength):
+    """
+    Checks if the overlap is legit.
+    Returns a nice score for the overlap
+    """
     score, count = 0, 0
     for x, y in overlapPairs:
         # Rewards exact matches, heavily penalizes differences, ignores when quality is too low

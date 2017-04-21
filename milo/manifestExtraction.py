@@ -54,3 +54,10 @@ def genSignedReads(inDir, outDir):
         # Writes [leftRead, rightRead, mergedAmplicon] to CSV
         outputList = list(zip(diffStrands, combinedList))
         writeToCSV("Paired Signed Reads", outDir, outputList)
+
+def genAmpliconDict(inDir):
+    """
+    CAUTION
+    Generates a dictionary of amplicon hashes. For testing purposes only.
+    """
+    with open(inDir + "Manifest.csv") as csvFile:
