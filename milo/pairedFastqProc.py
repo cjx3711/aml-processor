@@ -1,8 +1,8 @@
-from Bio.pairwise2 import *
 from j3xUtils import *
 from manifestExtraction import *
 from concurrent.futures import *
 from itertools import *
+from difflib import *
 
 numThreads = 12
 baseScore = {"A": 1, "T": 1, "C": 1, "G": 1, "N": 0}
@@ -126,7 +126,10 @@ def findAmpliconLevenshtein(read):
 def findCorrect(read, refSeqs, i, j):
     i -= 1
     j -= 1
-    return str(min((distance(read, refSeqs[i]), i),(distance(read, refSeqs[j]), j))[1]).rjust(3, "0")
+    return str(min((distance(read, refSeqs[i]), i),(distance(read, refSeqs[j]), j))[1] + 1).rjust(3, "0")
+
+def probDist(read1, read2):
+    return sum([1.5 ** x[2] for x in SequenceMatcher(None, read1, read2, autojunk = False).get_matching_blocks()])
 
 def alignAndMerge(left, right):
     # Merges (left sequence, reverseComplement(right sequence), left quality, reversed(right quality))
