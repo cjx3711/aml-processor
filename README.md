@@ -1,5 +1,7 @@
 # MILo: Mutant Indel Locator
 
+[![Build Status](https://travis-ci.org/j3x1/aml-processor.svg?branch=master)](https://travis-ci.org/j3x1/aml-processor)
+
 MILo is a FastQ Aligner and Variant Caller algorithm for the AML Panel.
 
 **Stack**
