@@ -32,77 +32,73 @@ with open("references/Manifest.csv", "r", newline = "") as references:
 
     # Add each of the kgrams to the trie
 
-
-# start_time = time.time()
-
-# with open("data/MINITEST_AD01_S1_L001PAIRED.j3x") as test:
-#     linecounter = -1
-#     for line in test:
-#         linecounter += 1
-#         if linecounter % 4 != 2:
-#             pass
-#
-#         matches = []
-#         for i in range(0,len(line) - kgramLength + 1):
-#             kgram = line[i:i+kgramLength]
-#             if indelTree.has_key(kgram):
-#                 matches.append(indelTree[kgram])
-
-
-# print("--- %s seconds ---" % (time.time() - start_time))
-
-
+noCount = 0
 badCount = 0
 ummCount = 0
-
 total = 0
+
 # matchCounts = [0] * referenceCount
 matchCounts = [[0,x] for x in range(referenceCount)]
+
+def findAmpliconKgram(read):
+    global noCount
+    global badCount
+    global ummCount
+    matches = []
+    resetMatchCounts(matchCounts)
+    i = 0
+    while i < len(line) - kgramLength + 1:
+        kgram = line[i:i+kgramLength]
+        if kgram in indelHash:
+            currentMatches = indelHash[kgram]
+            i += spacing - 1
+            for match in currentMatches:
+                matchCounts[match[0]][0] += 1
+            matches.extend(currentMatches)
+        i += 1
+    matchCounts.sort(reverse = True)
+    # largest1, largest2 = getLargestTwo(matchCounts)
+    secondPercent = 0 # Percentage of the second largest
+    if ( matchCounts[0][0] == 0 and matchCounts[1][0] == 0):
+        noCount += 1
+        return '000'
+
+    if ( matchCounts[0][0] != 0 ):
+        secondPercent = matchCounts[1][0] / matchCounts[0][0]
+    if ( secondPercent > 0.6 ):
+        badCount += 1
+    elif ( secondPercent > 0.3 ):
+        ummCount += 1
+
+    return matchCounts[0][1]
+
 
 def resetMatchCounts(matchCounts):
     for mc in matchCounts:
         mc[0] = 0
         mc[1] = i
 
-# with open("data/AD01_S1_L001PAIRED.j3x") as test:
-with open("data/MINITEST_AD01_S1_L001PAIRED.j3x") as test:
+with open("data/AD01_S1_L001PAIRED.j3x") as test:
+# with open("data/MINITEST_AD01_S1_L001PAIRED.j3x") as test:
     linecounter = -1
     for line in test:
         linecounter += 1
         if linecounter % 4 != 1:
             continue
-
         total += 1
 
-        matches = []
-        resetMatchCounts(matchCounts)
-        i = 0
-        while i < len(line) - kgramLength + 1:
-            kgram = line[i:i+kgramLength]
-            if kgram in indelHash:
-                currentMatches = indelHash[kgram]
-                i += spacing - 1
-                for match in currentMatches:
-                    matchCounts[match[0]][0] += 1
-                matches.extend(currentMatches)
-            i += 1
-        matchCounts.sort(reverse = True)
-        # largest1, largest2 = getLargestTwo(matchCounts)
-        secondPercent = 0 # Percentage of the second largest
-        if ( matchCounts[0][0] != 0 ):
-            secondPercent = matchCounts[1][0] / matchCounts[0][0]
-
-        if (secondPercent > 0.6 ):
-            badCount += 1
-        elif (secondPercent > 0.3 ):
-            ummCount += 1
+        findAmpliconKgram(line)
             # print(str(matchCounts[0]) + str(matchCounts[1]))
 
 
         # print(matchCounts)
         # print(matches)
+print(noCount)
 print(ummCount)
 print(badCount)
 print(total)
+
+
+
 
 print("--- %s seconds ---" % (time.time() - start_time))
