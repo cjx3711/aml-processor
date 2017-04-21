@@ -52,7 +52,3 @@ def getPhredQualityDict():
     Computes nucleotide sequencing accuracy of phred scores.
     """
     return {x : 1 - pow(10, -y/10) for x, y in zip(phredList, range(42, -1, -1))}
-
-# Temp unit for testing the testing framework
-def IsOdd(n):
-    return n % 2 == 1

@@ -4,13 +4,20 @@ from genomicsUtils import *
 
 
 # Here's our "unit tests".
-class IsOddTests(unittest.TestCase):
+class GenomicsUtils(unittest.TestCase):
+    # Tests must start with 'test'
+    def test_standard_reverse_compliment(self):
+        self.assertEqual(reverseComplement("ATCG"), "CGAT")
 
-    def testOne(self):
-        self.assertTrue(IsOdd(1))
+    def test_wrong_character_reverse_compliment(self):
+        self.assertEqual(reverseComplement("ATCG0s"), "NNCGAT")
 
-    def testTwo(self):
-        self.assertFalse(IsOdd(2))
+    def test_empty_reverse_compliment(self):
+        self.assertEqual(reverseComplement(""), "")
+
+    def test_longer_reverse_compliment(self):
+        self.assertEqual(reverseComplement("AAAAAAAACCCCCCCCTTTTTTTTGGGGGGGG"), "CCCCCCCCAAAAAAAAGGGGGGGGTTTTTTTT")
+
 
 def main():
     unittest.main()
