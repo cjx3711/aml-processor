@@ -57,13 +57,13 @@ def genSignedReads(inDir, outDir):
         outputList = list(zip(diffStrands, combinedList))
         writeToCSV("Paired Signed Reads", outDir, outputList)
 
-def genAmpliconDict(inDir):
+def genAmpliconDict(inFile):
     """
     CAUTION
     Generates a dictionary of amplicon hashes. For testing purposes only.
     """
     closeList = []
-    with open(inDir + "Manifest.csv") as csvFile:
+    with open(inFile) as csvFile:
         # Puts column labels in headerList and rest of CSV file in csvList
         headerList = next(csvFile)
         csvList = list(reader(csvFile))
@@ -89,4 +89,3 @@ def genAmpliconDict(inDir):
         closeList.sort()
         """
         return {seq:str(ind + 1).rjust(3, "0") for ind, seq in enumerate(ampList1)}, {seq:str((ind + 1) % 571).rjust(3, "0") for ind, seq in enumerate(ampList2)}
-

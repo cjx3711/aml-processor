@@ -2,8 +2,8 @@ from j3xUtils import *
 from manifestExtraction import *
 from concurrent.futures import *
 from itertools import *
-from difflib import *
 #from AmpliconMatcherHashSweep import *
+from AmpliconMatcherProbabilistic import *
 
 numThreads = 12
 baseScore = {"A": 1, "T": 1, "C": 1, "G": 1, "N": 0}
@@ -11,8 +11,8 @@ readLength = 151
 scoreThreshold = 10
 rangeEnd = readLength - scoreThreshold
 rangeStart = -rangeEnd
-ampDict1, ampDict2 = genAmpliconDict("references/")
 #ampliconMatcher = AmpliconMatcherHashSweep("references/Manifest.csv")
+ampliconMatcher = AmpliconMatcherProbabilistic("references/Manifest.csv")
 
 def mergeUnpaired(left, right, lQuality, rQuality):
     """
@@ -88,55 +88,6 @@ def mergeOverlap(overlapPairs, overlapQuality):
         return bases[0], quality[0]
     return tuple("".join(y) for y in zip(*(pickBetter(*x) for x in zip(overlapPairs, overlapQuality)))), collisions[0]
 
-def findAmplicon(read):
-    """
-    Accepts a read of bases and returns the ID number of the amplicon associated with the read
-    """
-    ampID = str(ampDict1.get(read[:17], "000"))
-    if ampID == "000":
-        return str(ampDict2.get(read[7:24], "000"))
-    else:
-        return ampID
-
-with open("references/Manifest.csv") as csvFile:
-        next(csvFile)
-        refSeqs = [x[2] for x in list(reader(csvFile))]
-        refSeqsTrunc = [x[:30] for x in refSeqs]
-
-def findCorrect(read, refSeqs, refsToCompare):
-    return str(max([(probDist(read, refSeqs[x]), x) for x in refsToCompare])[1] + 1).rjust(3, "0")
-
-def probDist(read1, read2):
-    return sum([1.2 ** x[2] for x in SequenceMatcher(None, read1, read2, autojunk = False).get_matching_blocks()])
-
-def findAmpliconProbabilistic(read):
-    """
-    Accepts a read of bases and returns the ID number of the amplicon associated with the read
-    """
-    ampID = str(ampDict1.get(read[:17], "000"))
-    if ampID == "000":
-        ampID = str(ampDict2.get(read[7:24], "000"))
-
-    # If the amplicon chosen are those which are easily mistaken, used cheem method to determine correct amplicon
-    if ampID == "041" or ampID == "570":
-        return findCorrect(read, refSeqs, [40, 569])
-    elif ampID == "539" or ampID == "569":
-        return findCorrect(read, refSeqs, [538, 568])
-    elif ampID == "368" or ampID == "571":
-        return findCorrect(read, refSeqs, [367, 570])
-    elif ampID == "188" or ampID == "197":
-        return findCorrect(read, refSeqs, [187, 196])
-    elif ampID == "137" or ampID == "453":
-        return findCorrect(read, refSeqs, [136, 452])
-    elif ampID == "000":
-        possiblyCorrect = findCorrect(read[:30], refSeqsTrunc, range(571))
-        if probDist(read, refSeqs[int(possiblyCorrect) - 1]) > 10000:
-            return possiblyCorrect
-        else:
-            return "000"
-    else:
-        return ampID
-
 def alignAndMerge(left, right):
     # Merges (left sequence, reverseComplement(right sequence), left quality, reversed(right quality))
     basesQualityCollisions = mergeUnpaired(left[1][:-1], reverseComplement(right[1][:-1]), left[3][:-1], right[3][:-1][::-1])
@@ -144,7 +95,7 @@ def alignAndMerge(left, right):
     coordIndices = nthAndKthLetter(left[0], ":", 5, 7)
     sequenceID = left[0][coordIndices[0]: coordIndices[1] - 2]
     # Checks which amplicon a read belongs to
-    ampID = findAmpliconProbabilistic(basesQualityCollisions[0])
+    ampID = ampliconMatcher.findAmplicon(basesQualityCollisions[0])
     # Joins amplicon number, collision number, and coordinate as new ID
     newID = ["".join(("ID:", ampID, ", C:", basesQualityCollisions[2], ", ", sequenceID))]
     # Adds the sequence and quality, and returns
