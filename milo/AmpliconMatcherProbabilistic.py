@@ -9,12 +9,15 @@ class AmpliconMatcherProbabilistic:
         self.refSeqs = []
         self.refSeqsTrunc = []
         self.ampDict1, self.ampDict2 = genAmpliconDict(reference)
+        self.refSeqs, self.refSeqsTrunc = self.genTruncatedAmplicons(reference)
 
+    def genTruncatedAmplicons(self, reference):
         with open(reference) as csvFile:
             next(csvFile)
-            self.refSeqs = [x[2] for x in list(reader(csvFile))]
-            self.refSeqsTrunc = [x[:30] for x in self.refSeqs]
-        print ("Done with init")
+            refSeqs = [x[2] for x in list(reader(csvFile))]
+            refSeqsTrunc = [x[:30] for x in self.refSeqs]
+
+            return refSeqs, refSeqsTrunc
 
     def findAmpliconOld(self, read):
         """
