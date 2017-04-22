@@ -1,33 +1,32 @@
 from genomicsUtils import *
-from Levenshtein import distance
+from collections import Counter
 
-def checkPercentWrong(j3xDir, manifestDir, j3x):
-    failedIDCount = 0
-    mismatch = 0
-    numLines = 0
-    with open(j3xDir + j3x) as j3xFile, open(manifestDir + "Manifest.csv") as csvFile:
-        headerList = next(csvFile)
-        refSeqs = [x[2] for x in list(reader(csvFile))]
+def checkPercentWrong(j3xDir, manifestDir, j3x, j3xRef):
+    unknownCount = 0
+    collidedReads = 0
+    numReads = 0
+    errorList = []
+    with open(j3xDir + j3x) as j3xFile, open(j3xDir + j3xRef) as j3xRefFile:
+        refIter = grouper(j3xRefFile, 4)
         for read in grouper(j3xFile, 4):
-            ampID = int(read[0][3:6])
-            if ampID == 0:
-                failedIDCount += 1
-            elif ampID == 41 or ampID == 570:
-                if findCorrect(read, refSeqs, 41, 570) != ampID: mismatch += 1
-            elif ampID == 539 or ampID == 569:
-                if findCorrect(read, refSeqs, 539, 569) != ampID: mismatch += 1
-            elif ampID == 368 or ampID == 571:
-                if findCorrect(read, refSeqs, 368, 571) != ampID: mismatch += 1
-            elif ampID == 188 or ampID == 197:
-                if findCorrect(read, refSeqs, 188, 197) != ampID: mismatch += 1
-            elif ampID == 137 or ampID == 453:
-                if findCorrect(read, refSeqs, 137, 453) != ampID: mismatch += 1
-            numLines += 1
-    return mismatch/numLines, failedIDCount/numLines
+            # Obtain collision and unknown match statistics
+            idSeq, baseSeq, qualitySeq, blank = read
+            ampID = idSeq[3:6]
+            collisions = idSeq[10:11]
+            if ampID == "000":
+                unknownCount += 1
+            if collisions != "0":
+                collidedReads += 1
+            numReads += 1
 
-def findCorrect(read, refSeqs, i, j):
-    i -= 1
-    j -= 1
-    return min((distance(read[1], refSeqs[i]), i),(distance(read[1], refSeqs[j]), j))[1]
+            # Compare against "correct" file to determine if false positives follow any distribution.
+            refRead = next(refIter)
+            refAmpID = refRead[0][3:6]
+            if ampID != refAmpID:
+                errorList.append(ampID)
+    errorCounter = Counter(errorList)
+    print(len(errorList))
+    print(errorCounter)
+    print("Unknowns: " + str(unknownCount/numReads) + ", Reads with collisions: " + str(collidedReads/numReads))
 
-print(checkPercentWrong("data/Processed/", "references/", "AD01_S1_L001PAIRED.j3x"))
+checkPercentWrong("data/Processed/", "references/", "MINITEST_AD01_S1_L001PAIRED_JX.j3x", "MINITEST_AD01_S1_L001PAIRED_MatchedUnknown.j3x")

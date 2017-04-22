@@ -1,0 +1,15 @@
+Reads with collisions during pairing 4.77%
+Nonsense rate: 100/25000 = 0.4%
+
+HashSweep: Unknowns 0.12%, Errors: 408, False +ve 485:165x, 296:51x, 319:36x, rest <10x
+(Dubious) Probabilistic: Unknowns 4.40%, Errors 995, All unknowns
+(Unknowns, Dubious) Probabilistic: 0.42%
+
+MINITEST FastQ Pairing Only 4s
+MINITEST (Unknowns, Dubious) Probabilistic 30s
+MINITEST (Dubious) Probabilistic 6s
+MINITEST (All) HashSweep 5s
+
+FULLTEST FastQ Pairing Only 410s
+FULLTEST (Dubious) Probabilistic 560s
+FULLTEST (All) HashSweep 480s
