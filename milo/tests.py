@@ -23,7 +23,7 @@ class GenomicsUtils(unittest.TestCase):
 class AmpliconMatcherKgramTests(unittest.TestCase):
     def test_file_read(self):
         ampMat = AmpliconMatcherKgram("references/Manifest.csv")
-        self.assertEqual(ampMat.referenceCount, 573)
+        self.assertEqual(ampMat.referenceCount, 571)
 
     def test_simple_data(self):
         sample_data = [
@@ -31,7 +31,6 @@ class AmpliconMatcherKgramTests(unittest.TestCase):
             'CCCCGGGG'
         ]
         ampMat = AmpliconMatcherKgram(sample_data, 4, 4)
-        print(ampMat.ampliconRefs)
         self.assertEqual(ampMat.referenceCount, 2)
 
         self.assertTrue('AAAA' in ampMat.ampliconRefs)
@@ -66,7 +65,6 @@ class AmpliconMatcherKgramTests(unittest.TestCase):
             'AAAATTTTCCCCGGGG'
         ]
         ampMat = AmpliconMatcherKgram(sample_data, 4, 5)
-        print(ampMat.ampliconRefs)
         self.assertEqual(ampMat.referenceCount, 1)
         self.assertTrue('AAAA' in ampMat.ampliconRefs)
         self.assertFalse('TTTT' in ampMat.ampliconRefs)
