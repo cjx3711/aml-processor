@@ -55,7 +55,7 @@ class PairedFASTQAligher(unittest.TestCase):
 
         # No overlap because too small
         self.assertEqual(mergedSequence, expected)
-        self.assertEqual(noOfCol, "N/A")
+        self.assertEqual(noOfCol, "?")
 
     def test_small_overlap(self):
         overlap = 5
@@ -71,7 +71,7 @@ class PairedFASTQAligher(unittest.TestCase):
 
         # No overlap because too small
         self.assertEqual(mergedSequence, expected)
-        self.assertEqual(noOfCol, "N/A")
+        self.assertEqual(noOfCol, "?")
 
     def test_normal_overlap(self):
         overlap = 11
