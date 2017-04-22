@@ -1,9 +1,9 @@
 import unittest
 
 from genomicsUtils import *
-from pairedFastqProc import *
-from AmpliconMatcherKgram import *
-
+from AmpliconMatcherProbabilistic import *
+from AmpliconMatcherHashSweep import *
+from ReadPairer import *
 
 # Here's our "unit tests".
 class GenomicsUtils(unittest.TestCase):
@@ -20,9 +20,10 @@ class GenomicsUtils(unittest.TestCase):
     def test_longer_reverse_compliment(self):
         self.assertEqual(reverseComplement("AAAAAAAACCCCCCCCTTTTTTTTGGGGGGGG"), "CCCCCCCCAAAAAAAAGGGGGGGGTTTTTTTT")
 
-class AmpliconMatcherKgramTests(unittest.TestCase):
+class AmpliconMatcherHashSweepTests(unittest.TestCase):
     def test_file_read(self):
-        ampMat = AmpliconMatcherKgram("references/Manifest.csv")
+        # Count the amplicons that were read
+        ampMat = AmpliconMatcherHashSweep("references/Manifest.csv")
         self.assertEqual(ampMat.referenceCount, 571)
 
     def test_simple_data(self):
@@ -30,9 +31,10 @@ class AmpliconMatcherKgramTests(unittest.TestCase):
             'AAAATTTT',
             'CCCCGGGG'
         ]
-        ampMat = AmpliconMatcherKgram(sample_data, 4, 4)
+        ampMat = AmpliconMatcherHashSweep(sample_data, 4, 4)
         self.assertEqual(ampMat.referenceCount, 2)
 
+        # Check if the hash structure is correct
         self.assertTrue('AAAA' in ampMat.ampliconRefs)
         self.assertTrue('TTTT' in ampMat.ampliconRefs)
         self.assertTrue('CCCC' in ampMat.ampliconRefs)
@@ -47,9 +49,10 @@ class AmpliconMatcherKgramTests(unittest.TestCase):
             'AAAATTTT',
             'TTTTGGGG'
         ]
-        ampMat = AmpliconMatcherKgram(sample_data, 4, 4)
+        ampMat = AmpliconMatcherHashSweep(sample_data, 4, 4)
         self.assertEqual(ampMat.referenceCount, 2)
 
+        # Check if the hash structure is correct
         self.assertTrue('AAAA' in ampMat.ampliconRefs)
         self.assertTrue('TTTT' in ampMat.ampliconRefs)
         self.assertFalse('CCCC' in ampMat.ampliconRefs)
@@ -64,42 +67,46 @@ class AmpliconMatcherKgramTests(unittest.TestCase):
         sample_data = [
             'AAAATTTTCCCCGGGG'
         ]
-        ampMat = AmpliconMatcherKgram(sample_data, 4, 5)
+        ampMat = AmpliconMatcherHashSweep(sample_data, 4, 5)
         self.assertEqual(ampMat.referenceCount, 1)
+
+        # Check if the hash structure is correct
         self.assertTrue('AAAA' in ampMat.ampliconRefs)
         self.assertFalse('TTTT' in ampMat.ampliconRefs)
         self.assertFalse('CCCC' in ampMat.ampliconRefs)
         self.assertFalse('GGGG' in ampMat.ampliconRefs)
         self.assertTrue('TTTC' in ampMat.ampliconRefs)
         self.assertTrue('CCGG' in ampMat.ampliconRefs)
-
         self.assertTrue((0, 0) in ampMat.ampliconRefs['AAAA'])
         self.assertTrue((0, 5) in ampMat.ampliconRefs['TTTC'])
         self.assertTrue((0, 10) in ampMat.ampliconRefs['CCGG'])
 
 
 
-class PairedFASTQAligher(unittest.TestCase):
+class PairedFASTQAligner(unittest.TestCase):
+
+    def setUp(self):
+        self.readPairer = ReadPairer()
 
     def test_scoring(self):
         left = "AAAAAAAAAAAAA"
         right = "AAAAAAAAAAAAA"
         overlapPairs = tuple(zip(left, right))
-        score = calcScore(overlapPairs, len(left))
+        score = self.readPairer.calcScore(overlapPairs, len(left))
         self.assertEqual(score, 13)
 
     def test_score_ignore(self):
         left = "AAAAAAAAAAAAA"
         right = "CCCCCCCCCCCCC"
         overlapPairs = tuple(zip(left, right))
-        score = calcScore(overlapPairs, len(left))
+        score = self.readPairer.calcScore(overlapPairs, len(left))
         self.assertEqual(score, -5)
 
     def test_score_mismatch(self):
         left = "AAAAAAAAAAAAA"
         right = "AAAAAAAAAAAAC"
         overlapPairs = tuple(zip(left, right))
-        score = calcScore(overlapPairs, len(left))
+        score = self.readPairer.calcScore(overlapPairs, len(left))
         self.assertEqual(score, 7)
 
     def test_no_overlap(self):
@@ -108,7 +115,7 @@ class PairedFASTQAligher(unittest.TestCase):
         leftQuality = "K" * len(left)
         rightQuality = "K" * len(right)
 
-        mergedSequence, qualityScores, noOfCol = mergeUnpaired(left, right, leftQuality, rightQuality)
+        mergedSequence, qualityScores, noOfCol = self.readPairer.mergeUnpaired(left, right, leftQuality, rightQuality)
         expected = left + " " + right
 
         # No overlap because too small
@@ -123,7 +130,7 @@ class PairedFASTQAligher(unittest.TestCase):
         leftQuality = "K" * len(left)
         rightQuality = "K" * len(right)
 
-        mergedSequence, qualityScores, noOfCol = mergeUnpaired(left, right, leftQuality, rightQuality)
+        mergedSequence, qualityScores, noOfCol = self.readPairer.mergeUnpaired(left, right, leftQuality, rightQuality)
 
         expected = left + " " + right
 
@@ -139,7 +146,7 @@ class PairedFASTQAligher(unittest.TestCase):
         leftQuality = "K" * len(left)
         rightQuality = "K" * len(right)
 
-        mergedSequence, qualityScores, noOfCol = mergeUnpaired(left, right, leftQuality, rightQuality)
+        mergedSequence, qualityScores, noOfCol = self.readPairer.mergeUnpaired(left, right, leftQuality, rightQuality)
 
         expected = "A" * sides + "C" * overlap + "G" * sides
 
@@ -153,7 +160,7 @@ class PairedFASTQAligher(unittest.TestCase):
         leftQuality = "K" * len(left)
         rightQuality = "K" * len(right)
 
-        mergedSequence, qualityScores, noOfCol = mergeUnpaired(left, right, leftQuality, rightQuality)
+        mergedSequence, qualityScores, noOfCol = self.readPairer.mergeUnpaired(left, right, leftQuality, rightQuality)
 
         expected = "A" * sides + "C" * overlap + "G" * sides
 
@@ -165,7 +172,7 @@ class PairedFASTQAligher(unittest.TestCase):
         right = reverseComplement("AGTCAGGATGTTAGCAGAGCCAGTCAAGACTTGCCGACAAAGGAAACTAGAAGCCAAGAAAGCTGCAGCTGAAAAGCTTTCCTCCCTGGAGAACAGCTCAAATAAAAATGAAAAGGAAAAGTCAGCCCCATCACGTACAAAACAAACTGAA")
         lQuality = "CCCCCGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGFGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG"
         rQuality = "CCCCCGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGFGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGDGGGGGGGGGGGGGGGGGGGGFGGGGGGGGGGGDFG"[::-1]
-        mergedSequence, qualityScores, noOfCol = mergeUnpaired(left, right, lQuality, rQuality)
+        mergedSequence, qualityScores, noOfCol = self.readPairer.mergeUnpaired(left, right, lQuality, rQuality)
 
         expectedMerged = "CAAGTTGATGGGGGCAAAACCAAAATAATTTTCATTTTTAATATACCACACAACACATCTATCTACAAATGCTTTACATTAAATTTACCTGCCAACTGTTTAGCCTGGCTTGCGTTTTCAGTTTGTTTTGTACGTGATGGGGCTGACTTTTCCTTTTCATTTTTATTTGAGCTGTTCTCCAGGGAGGAAAGCTTTTCAGCTGCAGCTTTCTTGGCTTCTAGTTTCCTTTGTCGGCAAGTCTTGACTGGCTCTGCTAACATCCTGACT"
         expecedQuality = "." * len(expectedMerged)
@@ -180,7 +187,7 @@ class PairedFASTQAligher(unittest.TestCase):
         lQuality = "CCCCCGGGFCCEF;F9AGFGFDEGGGGGDFAAEFF<FG<CFFFFGFEG8F@C@C7<C:FC7FD8<FDCAC<FEGGC,CFGACFFGGG<F6C<C9<6C@@FF@CCFFGEGGGGGGGGFG8=?4EEFFFCCCFGGFFF<EGGGGCF8?==BC@"
         rQuality = "-8BC8B@FC<9E--6FFECEFGGG8CCFCGGG,CFFF,,,;EFFCCC,CFF6CFCA8,CC,C96C@EF9,C,,66,<,E<,@FB8DGGEFE@<@C@:>?,9,<?FFGCGGG?,<<E<,9F:<?@<AEG9A?CEF,AFGECF,@EEFEDF,A"[::-1]
 
-        mergedSequence, qualityScores, noOfCol = mergeUnpaired(left, right, lQuality, rQuality)
+        mergedSequence, qualityScores, noOfCol = self.readPairer.mergeUnpaired(left, right, lQuality, rQuality)
 
         expectedMerged = "TCTTTCTGCCTCATGCTCTCTCCAACAGGCTTGCAGCCAATTTACTGGAGCAGGGATGACGTAGCCCAGTGGCTCATGTGGGCTGAAAATGAGTTTTCTTTAAGGCCAATTGACAGCAACACATTTGAAATGAATGGCAAAGCTCTCCTGCTGCTGACCAAAGAGGACTTTCGCTATCGATCTCCTCATTCAGGTGAGAGTCTGGACTCTTGGCATATGCCCAACTTGGAAAATCTCTTAGTTAGTGGTTGGTCTTTAACACCCC"
         expecedQuality = ".............,.,...................,..,.........,.....,,.,..,..,,.....,.....?..........,.,.,.,,,......................,,.?..............,.......,.,,...,?.........,?,?.,,...,.......,...?,.?,?,,??.?,....,,.?..?,....,...?......,???....?.......,.........,??.,,....,..,?"
@@ -195,7 +202,7 @@ class PairedFASTQAligher(unittest.TestCase):
         lQuality = "CCCCCGEEFGGGGGGGGEGCCEFGCEGGFCFGGGGDG@EFGFGGGAFGGGEGGGGCDEEGFGGEEEFEG@CFEDEEGCFGCEFE@FEGFGG=4+,EFF7D=FGG=CEFB??,CFGFGG<,?,,4B+:,,,8<5,,C,B:,,+5,:,:,@B,"
         rQuality = "CCCCCFGGGGGGFGGFGFFGGGGGG;CEDEGGGGGGFGGGGGDG<AEFG?EBFFGGG:@CEGCF>FECFFFGGE<BFF,BCE,EABFB:>>FDFF9FF,=3@F<>:C*3<*5<****8,<;<,@,8;:=E*1*1*++2,27,,,***4*2+"[::-1]
 
-        mergedSequence, qualityScores, noOfCol = mergeUnpaired(left, right, lQuality, rQuality)
+        mergedSequence, qualityScores, noOfCol = self.readPairer.mergeUnpaired(left, right, lQuality, rQuality)
 
         expectedMerged = "TGCAGTCCCAGCCCACAGCCCCCCTCCTCCCTCAGACTCAGGAGTCCATA"
         expecedQuality = ".................................................."
