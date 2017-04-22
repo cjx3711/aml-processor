@@ -14,6 +14,7 @@ class AmpliconMatcherProbabilistic:
             next(csvFile)
             self.refSeqs = [x[2] for x in list(reader(csvFile))]
             self.refSeqsTrunc = [x[:30] for x in self.refSeqs]
+        print ("Done with init")
 
     def findAmpliconOld(self, read):
         """
@@ -45,12 +46,15 @@ class AmpliconMatcherProbabilistic:
             return self.findCorrect(read, self.refSeqs, [187, 196])
         elif ampID == "137" or ampID == "453":
             return self.findCorrect(read, self.refSeqs, [136, 452])
-        elif ampID == "000":
-            possiblyCorrect = self.findCorrect(read[:30], self.refSeqsTrunc, range(571))
-            if self.probDist(read, self.refSeqs[int(possiblyCorrect) - 1]) > 10000:
-                return possiblyCorrect
-            else:
-                return "000"
+            """
+            elif ampID == "000":
+
+                possiblyCorrect = self.findCorrect(read[:30], self.refSeqsTrunc, range(571))
+                if self.probDist(read, self.refSeqs[int(possiblyCorrect) - 1]) > 10000:
+                    return possiblyCorrect
+                else:
+                    return "000"
+            """
         else:
             return ampID
 
