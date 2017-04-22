@@ -3,7 +3,7 @@ from manifestExtraction import *
 from concurrent.futures import *
 from itertools import *
 from difflib import *
-#from AmpliconMatcherKgram import *
+#from AmpliconMatcherHashSweep import *
 
 numThreads = 12
 baseScore = {"A": 1, "T": 1, "C": 1, "G": 1, "N": 0}
@@ -12,7 +12,7 @@ scoreThreshold = 10
 rangeEnd = readLength - scoreThreshold
 rangeStart = -rangeEnd
 ampDict1, ampDict2 = genAmpliconDict("references/")
-#ampliconMatcher = AmpliconMatcherKgram("references/Manifest.csv")
+#ampliconMatcher = AmpliconMatcherHashSweep("references/Manifest.csv")
 
 def mergeUnpaired(left, right, lQuality, rQuality):
     """

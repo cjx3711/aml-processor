@@ -2,7 +2,7 @@ import unittest
 
 from genomicsUtils import *
 from pairedFastqProc import *
-from AmpliconMatcherKgram import *
+from AmpliconMatcherHashSweep import *
 
 
 # Here's our "unit tests".
@@ -20,9 +20,10 @@ class GenomicsUtils(unittest.TestCase):
     def test_longer_reverse_compliment(self):
         self.assertEqual(reverseComplement("AAAAAAAACCCCCCCCTTTTTTTTGGGGGGGG"), "CCCCCCCCAAAAAAAAGGGGGGGGTTTTTTTT")
 
-class AmpliconMatcherKgramTests(unittest.TestCase):
+class AmpliconMatcherHashSweepTests(unittest.TestCase):
     def test_file_read(self):
-        ampMat = AmpliconMatcherKgram("references/Manifest.csv")
+        # Count the amplicons that were read
+        ampMat = AmpliconMatcherHashSweep("references/Manifest.csv")
         self.assertEqual(ampMat.referenceCount, 571)
 
     def test_simple_data(self):
@@ -30,9 +31,10 @@ class AmpliconMatcherKgramTests(unittest.TestCase):
             'AAAATTTT',
             'CCCCGGGG'
         ]
-        ampMat = AmpliconMatcherKgram(sample_data, 4, 4)
+        ampMat = AmpliconMatcherHashSweep(sample_data, 4, 4)
         self.assertEqual(ampMat.referenceCount, 2)
 
+        # Check if the hash structure is correct
         self.assertTrue('AAAA' in ampMat.ampliconRefs)
         self.assertTrue('TTTT' in ampMat.ampliconRefs)
         self.assertTrue('CCCC' in ampMat.ampliconRefs)
@@ -47,9 +49,10 @@ class AmpliconMatcherKgramTests(unittest.TestCase):
             'AAAATTTT',
             'TTTTGGGG'
         ]
-        ampMat = AmpliconMatcherKgram(sample_data, 4, 4)
+        ampMat = AmpliconMatcherHashSweep(sample_data, 4, 4)
         self.assertEqual(ampMat.referenceCount, 2)
 
+        # Check if the hash structure is correct
         self.assertTrue('AAAA' in ampMat.ampliconRefs)
         self.assertTrue('TTTT' in ampMat.ampliconRefs)
         self.assertFalse('CCCC' in ampMat.ampliconRefs)
@@ -64,15 +67,16 @@ class AmpliconMatcherKgramTests(unittest.TestCase):
         sample_data = [
             'AAAATTTTCCCCGGGG'
         ]
-        ampMat = AmpliconMatcherKgram(sample_data, 4, 5)
+        ampMat = AmpliconMatcherHashSweep(sample_data, 4, 5)
         self.assertEqual(ampMat.referenceCount, 1)
+
+        # Check if the hash structure is correct
         self.assertTrue('AAAA' in ampMat.ampliconRefs)
         self.assertFalse('TTTT' in ampMat.ampliconRefs)
         self.assertFalse('CCCC' in ampMat.ampliconRefs)
         self.assertFalse('GGGG' in ampMat.ampliconRefs)
         self.assertTrue('TTTC' in ampMat.ampliconRefs)
         self.assertTrue('CCGG' in ampMat.ampliconRefs)
-
         self.assertTrue((0, 0) in ampMat.ampliconRefs['AAAA'])
         self.assertTrue((0, 5) in ampMat.ampliconRefs['TTTC'])
         self.assertTrue((0, 10) in ampMat.ampliconRefs['CCGG'])

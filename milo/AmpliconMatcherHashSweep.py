@@ -1,4 +1,4 @@
-class AmpliconMatcherKgram:
+class AmpliconMatcherHashSweep:
 
     def __init__(self, reference, kgramLength = 15, spacing = 15):
         """
@@ -22,6 +22,35 @@ class AmpliconMatcherKgram:
 
         self.matchCounts = [[0,x] for x in range(self.referenceCount)]
 
+    def findAmplicon(self, read):
+        self.total += 1
+        matches = []
+        self.resetMatchCounts()
+        i = 0
+        while i < len(read) - self.kgramLength + 1:
+            kgram = read[i:i+self.kgramLength]
+            if kgram in self.ampliconRefs:
+                currentMatches = self.ampliconRefs[kgram]
+                i += self.spacing - 1
+                for match in currentMatches:
+                    self.matchCounts[match[0]][0] += 1
+                matches.extend(currentMatches)
+            i += 1
+        self.matchCounts.sort(reverse = True)
+        # largest1, largest2 = getLargestTwo(matchCounts)
+        secondPercent = 0 # Percentage of the second largest
+        if ( self.matchCounts[0][0] == 0 and self.matchCounts[1][0] == 0):
+            self.noCount += 1
+            return '000'
+
+        if ( self.matchCounts[0][0] != 0 ):
+            secondPercent = self.matchCounts[1][0] / self.matchCounts[0][0]
+        if ( secondPercent > 0.6 ):
+            self.badCount += 1
+        elif ( secondPercent > 0.3 ):
+            self.ummCount += 1
+
+        return str(self.matchCounts[0][1] + 1).rjust(3,'0')
 
     def generateReferenceFromFile(self, filename):
         with open(filename, "r", newline = "") as references:
@@ -55,33 +84,3 @@ class AmpliconMatcherKgram:
             mc[0] = 0
             mc[1] = i
             i += 1
-
-    def findAmpliconKgram(self, read):
-        self.total += 1
-        matches = []
-        self.resetMatchCounts()
-        i = 0
-        while i < len(read) - self.kgramLength + 1:
-            kgram = read[i:i+self.kgramLength]
-            if kgram in self.ampliconRefs:
-                currentMatches = self.ampliconRefs[kgram]
-                i += self.spacing - 1
-                for match in currentMatches:
-                    self.matchCounts[match[0]][0] += 1
-                matches.extend(currentMatches)
-            i += 1
-        self.matchCounts.sort(reverse = True)
-        # largest1, largest2 = getLargestTwo(matchCounts)
-        secondPercent = 0 # Percentage of the second largest
-        if ( self.matchCounts[0][0] == 0 and self.matchCounts[1][0] == 0):
-            self.noCount += 1
-            return '000'
-
-        if ( self.matchCounts[0][0] != 0 ):
-            secondPercent = self.matchCounts[1][0] / self.matchCounts[0][0]
-        if ( secondPercent > 0.6 ):
-            self.badCount += 1
-        elif ( secondPercent > 0.3 ):
-            self.ummCount += 1
-
-        return str(self.matchCounts[0][1] + 1).rjust(3,'0')
