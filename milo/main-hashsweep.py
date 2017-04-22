@@ -1,11 +1,11 @@
 import time
 
-from AmpliconMatcherKgram import *
+from AmpliconMatcherHashSweep import *
 
 
 start_time = time.time()
 
-ampliconMatcher = AmpliconMatcherKgram("references/Manifest.csv")
+ampliconMatcher = AmpliconMatcherHashSweep("references/Manifest.csv")
 
 # with open("data/AD01_S1_L001PAIRED.j3x") as test:
 with open("data/MINITEST_AD01_S1_L001PAIRED.j3x") as test:
@@ -15,7 +15,7 @@ with open("data/MINITEST_AD01_S1_L001PAIRED.j3x") as test:
         if linecounter % 4 != 1:
             continue
 
-        amplicon = ampliconMatcher.findAmpliconKgram(line)
+        amplicon = ampliconMatcher.findAmplicon(line)
 
 print(ampliconMatcher.noCount)
 print(ampliconMatcher.ummCount)
