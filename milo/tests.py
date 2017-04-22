@@ -2,7 +2,7 @@ import unittest
 
 from genomicsUtils import *
 from pairedFastqProc import *
-
+from AmpliconMatcherKgram import *
 
 
 # Here's our "unit tests".
@@ -19,6 +19,66 @@ class GenomicsUtils(unittest.TestCase):
 
     def test_longer_reverse_compliment(self):
         self.assertEqual(reverseComplement("AAAAAAAACCCCCCCCTTTTTTTTGGGGGGGG"), "CCCCCCCCAAAAAAAAGGGGGGGGTTTTTTTT")
+
+class AmpliconMatcherKgramTests(unittest.TestCase):
+    def test_file_read(self):
+        ampMat = AmpliconMatcherKgram("references/Manifest.csv")
+        self.assertEqual(ampMat.referenceCount, 573)
+
+    def test_simple_data(self):
+        sample_data = [
+            'AAAATTTT',
+            'CCCCGGGG'
+        ]
+        ampMat = AmpliconMatcherKgram(sample_data, 4, 4)
+        print(ampMat.ampliconRefs)
+        self.assertEqual(ampMat.referenceCount, 2)
+
+        self.assertTrue('AAAA' in ampMat.ampliconRefs)
+        self.assertTrue('TTTT' in ampMat.ampliconRefs)
+        self.assertTrue('CCCC' in ampMat.ampliconRefs)
+        self.assertTrue('GGGG' in ampMat.ampliconRefs)
+        self.assertTrue((0, 0) in ampMat.ampliconRefs['AAAA'])
+        self.assertTrue((0, 4) in ampMat.ampliconRefs['TTTT'])
+        self.assertTrue((1, 0) in ampMat.ampliconRefs['CCCC'])
+        self.assertTrue((1, 4) in ampMat.ampliconRefs['GGGG'])
+
+    def test_overlapping_data(self):
+        sample_data = [
+            'AAAATTTT',
+            'TTTTGGGG'
+        ]
+        ampMat = AmpliconMatcherKgram(sample_data, 4, 4)
+        self.assertEqual(ampMat.referenceCount, 2)
+
+        self.assertTrue('AAAA' in ampMat.ampliconRefs)
+        self.assertTrue('TTTT' in ampMat.ampliconRefs)
+        self.assertFalse('CCCC' in ampMat.ampliconRefs)
+        self.assertTrue('GGGG' in ampMat.ampliconRefs)
+        self.assertEqual(len(ampMat.ampliconRefs['TTTT']), 2)
+        self.assertTrue((0, 0) in ampMat.ampliconRefs['AAAA'])
+        self.assertTrue((0, 4) in ampMat.ampliconRefs['TTTT'])
+        self.assertTrue((1, 0) in ampMat.ampliconRefs['TTTT'])
+        self.assertTrue((1, 4) in ampMat.ampliconRefs['GGGG'])
+
+    def test_skip_data(self):
+        sample_data = [
+            'AAAATTTTCCCCGGGG'
+        ]
+        ampMat = AmpliconMatcherKgram(sample_data, 4, 5)
+        print(ampMat.ampliconRefs)
+        self.assertEqual(ampMat.referenceCount, 1)
+        self.assertTrue('AAAA' in ampMat.ampliconRefs)
+        self.assertFalse('TTTT' in ampMat.ampliconRefs)
+        self.assertFalse('CCCC' in ampMat.ampliconRefs)
+        self.assertFalse('GGGG' in ampMat.ampliconRefs)
+        self.assertTrue('TTTC' in ampMat.ampliconRefs)
+        self.assertTrue('CCGG' in ampMat.ampliconRefs)
+
+        self.assertTrue((0, 0) in ampMat.ampliconRefs['AAAA'])
+        self.assertTrue((0, 5) in ampMat.ampliconRefs['TTTC'])
+        self.assertTrue((0, 10) in ampMat.ampliconRefs['CCGG'])
+
 
 
 class PairedFASTQAligher(unittest.TestCase):

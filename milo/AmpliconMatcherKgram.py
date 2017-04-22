@@ -1,35 +1,53 @@
 class AmpliconMatcherKgram:
 
-    def __init__(self, manifest, kgramLength = 15, spacing = 15):
+    def __init__(self, reference, kgramLength = 15, spacing = 15):
+        """
+        reference can be of two types, list or str.
+        If list, it will use it directly, if str it will read the reference file
+        """
         self.kgramLength = kgramLength
         self.spacing = spacing
-        self.indelHash = {}
+        self.ampliconRefs = {}
         self.referenceCount = 0;
 
         self.noCount = 0
         self.badCount = 0
         self.ummCount = 0
         self.total = 0
-        self.generateManifest(manifest)
+
+        if type(reference) is list:
+            self.generateReferenceFromList(reference)
+        elif type(reference) is str:
+            self.generateReferenceFromFile(reference)
+
+        self.matchCounts = [[0,x] for x in range(self.referenceCount)]
 
 
-    def generateManifest(self, filename):
+    def generateReferenceFromFile(self, filename):
         with open(filename, "r", newline = "") as references:
-
             # Read through each line of the reference file and create the kgrams
             lineno = -1
             for line in references:
                 if lineno >= 0:
                     self.referenceCount += 1
                     sequence = line.split(',')[2]
-                    for i in range(0,len(sequence) - self.kgramLength, self.spacing):
-                        kgram = sequence[i:i+self.kgramLength]
-                        # Add each of the kgrams to the hash
-                        if (kgram in self.indelHash) == False:
-                            self.indelHash[kgram] = []
-                        self.indelHash[kgram].append((lineno,i))
+                    self.processSingleReferenceLine(sequence, lineno)
                 lineno += 1
-        self.matchCounts = [[0,x] for x in range(self.referenceCount)]
+
+    def generateReferenceFromList(self, references):
+        self.referenceCount = len(references)
+        lineno = 0
+        for sequence in references:
+            self.processSingleReferenceLine(sequence, lineno)
+            lineno += 1
+
+    def processSingleReferenceLine(self, sequence, lineno):
+        for i in range(0,len(sequence) - self.kgramLength + 1, self.spacing):
+            kgram = sequence[i:i+self.kgramLength]
+            # Add each of the kgrams to the hash
+            if (kgram in self.ampliconRefs) == False:
+                self.ampliconRefs[kgram] = []
+            self.ampliconRefs[kgram].append((lineno,i))
 
     def resetMatchCounts(self):
         i = 0
@@ -45,8 +63,8 @@ class AmpliconMatcherKgram:
         i = 0
         while i < len(read) - self.kgramLength + 1:
             kgram = read[i:i+self.kgramLength]
-            if kgram in self.indelHash:
-                currentMatches = self.indelHash[kgram]
+            if kgram in self.ampliconRefs:
+                currentMatches = self.ampliconRefs[kgram]
                 i += self.spacing - 1
                 for match in currentMatches:
                     self.matchCounts[match[0]][0] += 1
