@@ -15,7 +15,7 @@ class AmpliconMatcherProbabilistic:
         with open(reference) as csvFile:
             next(csvFile)
             refSeqs = [x[2] for x in list(reader(csvFile))]
-            refSeqsTrunc = [x[:30] for x in self.refSeqs]
+            refSeqsTrunc = [x[:30] for x in refSeqs]
 
             return refSeqs, refSeqsTrunc
 

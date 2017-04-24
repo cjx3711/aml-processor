@@ -45,12 +45,17 @@ class AmpliconMatcherHashSweep:
                 for match in currentMatches:
                     if (match in matches) == False:
                         self.matchCounts[match[0]][0] += self.getWeight(readCursor)
-                        matches.extend(match)
+                        matches.append(match)
+                # matches.extend(currentMatches)
+
             readCursor += 1
 
         self.matchCounts.sort(reverse = True)
         # largest1, largest2 = getLargestTwo(matchCounts)
         secondPercent = 0 # Percentage of the second largest
+
+        ampID = str(self.matchCounts[0][1] + 1).rjust(3,'0')
+
         if ( self.matchCounts[0][0] <= 1 and self.matchCounts[1][0] <= 0):
             self.noCount += 1
             return '000'
@@ -62,7 +67,14 @@ class AmpliconMatcherHashSweep:
         elif ( secondPercent > 0.3 ):
             self.ummCount += 1
 
-        return str(self.matchCounts[0][1] + 1).rjust(3,'0')
+
+        # if ampID == '296':
+        #     print(str(self.matchCounts[0]) + " " + str(self.matchCounts[1]))
+        #     print(matches)
+        #     print(read)
+
+
+        return ampID
 
     def generateReferenceFromFile(self, filename):
         with open(filename) as references:
