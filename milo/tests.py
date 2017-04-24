@@ -20,6 +20,15 @@ class GenomicsUtils(unittest.TestCase):
     def test_longer_reverse_compliment(self):
         self.assertEqual(reverseComplement("AAAAAAAACCCCCCCCTTTTTTTTGGGGGGGG"), "CCCCCCCCAAAAAAAAGGGGGGGGTTTTTTTT")
 
+class AmpliconMatcherProbabilisticTests(unittest.TestCase):
+    def test_file_read(self):
+        # Count the amplicons that were read
+        ampMat = AmpliconMatcherProbabilistic("references/Manifest.csv")
+        self.assertEqual(len(ampMat.refSeqs), 571)
+        self.assertEqual(len(ampMat.ampDict1), 571)
+        self.assertEqual(len(ampMat.ampDict2), 1713)
+        self.assertEqual(len(ampMat.refSeqsTrunc), 571)
+
 class AmpliconMatcherHashSweepTests(unittest.TestCase):
     def test_file_read(self):
         # Count the amplicons that were read

@@ -22,24 +22,41 @@ class AmpliconMatcherHashSweep:
 
         self.matchCounts = [[0,x] for x in range(self.referenceCount)]
 
+    def getWeight(self, cursorPos):
+        """
+        We want to weight the beginning of the sequence higher
+        This is because the probe sequence is likely to be correct
+        """
+        if cursorPos > 30:
+            return 1
+        else:
+            return 2
+
     def findAmplicon(self, read):
         self.total += 1
         matches = []
         self.resetMatchCounts()
-        i = 0
-        while i < len(read) - self.kgramLength + 1:
-            kgram = read[i:i+self.kgramLength]
+        readCursor = 0
+        while readCursor < len(read) - self.kgramLength + 1:
+            kgram = read[readCursor:readCursor + self.kgramLength]
             if kgram in self.ampliconRefs:
                 currentMatches = self.ampliconRefs[kgram]
-                i += self.spacing - 1
+                # readCursor += self.spacing - 2
                 for match in currentMatches:
-                    self.matchCounts[match[0]][0] += 1
-                matches.extend(currentMatches)
-            i += 1
+                    if (match in matches) == False:
+                        self.matchCounts[match[0]][0] += self.getWeight(readCursor)
+                        matches.append(match)
+                # matches.extend(currentMatches)
+
+            readCursor += 1
+
         self.matchCounts.sort(reverse = True)
         # largest1, largest2 = getLargestTwo(matchCounts)
         secondPercent = 0 # Percentage of the second largest
-        if ( self.matchCounts[0][0] == 0 and self.matchCounts[1][0] == 0):
+
+        ampID = str(self.matchCounts[0][1] + 1).rjust(3,'0')
+
+        if ( self.matchCounts[0][0] <= 1 and self.matchCounts[1][0] <= 0):
             self.noCount += 1
             return '000'
 
@@ -50,10 +67,17 @@ class AmpliconMatcherHashSweep:
         elif ( secondPercent > 0.3 ):
             self.ummCount += 1
 
-        return str(self.matchCounts[0][1] + 1).rjust(3,'0')
+
+        # if ampID == '296':
+        #     print(str(self.matchCounts[0]) + " " + str(self.matchCounts[1]))
+        #     print(matches)
+        #     print(read)
+
+
+        return ampID
 
     def generateReferenceFromFile(self, filename):
-        with open(filename, "r", newline = "") as references:
+        with open(filename) as references:
             # Read through each line of the reference file and create the kgrams
             lineno = -1
             for line in references:
