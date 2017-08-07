@@ -1,5 +1,7 @@
 import time
 
+# Test file. Doesn't seem to do anything
+
 from AmpliconMatcherHashSweep import *
 
 
