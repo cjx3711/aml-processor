@@ -248,31 +248,31 @@ class MutationExtraction(unittest.TestCase):
         base = "AAATTTCCCGGG"
         compare = "TAAATTTCCCTTGGG"
         mutationHash = mutationArrayToHash(mutationID(base,compare))
-        self.assertEqual(mutationHash, 'I:0:-T I:10:-TT')
+        self.assertEqual(mutationHash, 'I:0:-T I:9:-TT')
         
     def test_5(self):
         base = "AAATTTCCCGGG"
         compare = "TAAATTTCCCTTGGGTTT"
         mutationHash = mutationArrayToHash(mutationID(base,compare))
-        self.assertEqual(mutationHash, 'I:0:-T I:10:-TT I:15:-TTT')
+        self.assertEqual(mutationHash, 'I:0:-T I:9:-TT I:12:-TTT')
         
     def test_6(self):
         base = "AAATTTCCCGGG"
         compare = "TAAATTTCCCTTGG"
         mutationHash = mutationArrayToHash(mutationID(base,compare))
-        self.assertEqual(mutationHash, 'I:0:-T I:10:-TT D:14:G-')
+        self.assertEqual(mutationHash, 'I:0:-T I:9:-TT D:11:G-')
         
     def test_7(self):
         base = "AAATTTCCCGGG"
         compare = "TAAACCCTTGGG"
         mutationHash = mutationArrayToHash(mutationID(base,compare))
-        self.assertEqual(mutationHash, 'I:0:-T D:4:TTT- I:7:-TT')
+        self.assertEqual(mutationHash, 'I:0:-T D:3:TTT- I:9:-TT')
         
     def test_8(self):
         base = "AAATTTCCCGGG"
         compare = "TAAACCG"
         mutationHash = mutationArrayToHash(mutationID(base,compare))
-        self.assertEqual(mutationHash, 'I:0:-T D:4:TTTC- D:7:GG-')
+        self.assertEqual(mutationHash, 'I:0:-T D:3:TTTC- D:10:GG-')
         
     # Test expectation tracking when mutant in front
     # Front mutant is Sub
@@ -286,56 +286,56 @@ class MutationExtraction(unittest.TestCase):
         base = "AAATTTCCCGGG"
         compare = "TAATTTCCCTTGGGTTT"
         mutationHash = mutationArrayToHash(mutationID(base,compare))
-        self.assertEqual(mutationHash, 'S:0:A-T I:9:-TT I:14:-TTT')
+        self.assertEqual(mutationHash, 'S:0:A-T I:9:-TT I:12:-TTT')
         
     def test_11(self):
         base = "AAATTTCCCGGG"
         compare = "TAATTTCCCTTGG"
         mutationHash = mutationArrayToHash(mutationID(base,compare))
-        self.assertEqual(mutationHash, 'S:0:A-T I:9:-TT D:13:G-')
+        self.assertEqual(mutationHash, 'S:0:A-T I:9:-TT D:11:G-')
         
     def test_12(self):
         base = "AAATTTCCCGGG"
         compare = "TAACCCTTGGG"
         mutationHash = mutationArrayToHash(mutationID(base,compare))
-        self.assertEqual(mutationHash, 'I:0:-T D:3:ATTT- I:6:-TT')
+        self.assertEqual(mutationHash, 'I:0:-T D:2:ATTT- I:9:-TT')
         
     def test_13(self):
         base = "AAATTTCCCGGG"
         compare = "TAACCG"
         mutationHash = mutationArrayToHash(mutationID(base,compare))
-        self.assertEqual(mutationHash, 'I:0:-T D:3:ATTTC- D:6:GG-')
+        self.assertEqual(mutationHash, 'I:0:-T D:2:ATTTC- D:10:GG-')
 
     # Front mutant is Del
     def test_14(self):
         base = "AAATTTCCCGGG"
         compare = "AATTTCCCTTGGG"
         mutationHash = mutationArrayToHash(mutationID(base,compare))
-        self.assertEqual(mutationHash, 'D:0:A- I:8:-TT')
+        self.assertEqual(mutationHash, 'D:0:A- I:9:-TT')
         
     def test_15(self):
         base = "AAATTTCCCGGG"
         compare = "AATTTCCCTTGGGTTT"
         mutationHash = mutationArrayToHash(mutationID(base,compare))
-        self.assertEqual(mutationHash, 'D:0:A- I:8:-TT I:13:-TTT')
+        self.assertEqual(mutationHash, 'D:0:A- I:9:-TT I:12:-TTT')
         
     def test_16(self):
         base = "AAATTTCCCGGG"
         compare = "AATTTCCCTTGG"
         mutationHash = mutationArrayToHash(mutationID(base,compare))
-        self.assertEqual(mutationHash, 'D:0:A- I:8:-TT D:12:G-')
+        self.assertEqual(mutationHash, 'D:0:A- I:9:-TT D:11:G-')
         
     def test_17(self):
         base = "AAATTTCCCGGG"
         compare = "AACCCTTGGG"
         mutationHash = mutationArrayToHash(mutationID(base,compare))
-        self.assertEqual(mutationHash, 'D:2:ATTT- I:5:-TT')
+        self.assertEqual(mutationHash, 'D:2:ATTT- I:9:-TT')
         
     def test_18(self):
         base = "AAATTTCCCGGG"
         compare = "AACCG"
         mutationHash = mutationArrayToHash(mutationID(base,compare))
-        self.assertEqual(mutationHash, 'D:2:ATTTC- D:5:GG-')
+        self.assertEqual(mutationHash, 'D:2:ATTTC- D:10:GG-')
         
     # Test when front mutant is same base as next base
     def test_19(self):
@@ -353,19 +353,19 @@ class MutationExtraction(unittest.TestCase):
         base = "AAATTTCCCGGG"
         compare = "AAAAAATTTCCCTTGGG"
         mutationHash = mutationArrayToHash(mutationID(base,compare))
-        self.assertEqual(mutationHash, 'I:0:-AAA I:12:-TT')
+        self.assertEqual(mutationHash, 'I:0:-AAA I:9:-TT')
         
     def test_22(self):
         base = "AAATTTCCCGGG"
         compare = "AAAAAATTTCCCTTGGGTTT"
         mutationHash = mutationArrayToHash(mutationID(base,compare))
-        self.assertEqual(mutationHash, 'I:0:-AAA I:12:-TT I:17:-TTT')
+        self.assertEqual(mutationHash, 'I:0:-AAA I:9:-TT I:12:-TTT')
         
     def test_23(self):
         base = "AAATTTCCCGGG"
         compare = "AAAAAATTTCCCTTGG"
         mutationHash = mutationArrayToHash(mutationID(base,compare))
-        self.assertEqual(mutationHash, 'I:0:-AAA I:12:-TT D:16:G-')
+        self.assertEqual(mutationHash, 'I:0:-AAA I:9:-TT D:11:G-')
         
     def test_24(self):
         base = "AAATTTCCCGGG"
@@ -377,7 +377,7 @@ class MutationExtraction(unittest.TestCase):
         base = "AAATTTCCCGGG"
         compare = "AAAAAACCG"
         mutationHash = mutationArrayToHash(mutationID(base,compare))
-        self.assertEqual(mutationHash, 'S:3:TTTC-AAA D:9:GG-')
+        self.assertEqual(mutationHash, 'S:3:TTTC-AAA D:10:GG-')
         
     # Test when mutant not in front
     def test_26(self):
@@ -402,7 +402,7 @@ class MutationExtraction(unittest.TestCase):
         base = "AAATTTCCCGGG"
         compare = "AAATTTAACCCAAAGGG"
         mutationHash = mutationArrayToHash(mutationID(base,compare))
-        self.assertEqual(mutationHash, 'I:6:-AA I:11:-AAA')
+        self.assertEqual(mutationHash, 'I:6:-AA I:9:-AAA')
         
     def test_30(self):
         base = "AAATTTCCCGGG"
@@ -443,13 +443,13 @@ class MutationExtraction(unittest.TestCase):
         base = "AAATTTCCCGGG"
         compare = "AAATTCCGG"
         mutationHash = mutationArrayToHash(mutationID(base,compare))
-        self.assertEqual(mutationHash, 'D:5:TC- D:9:G-')
+        self.assertEqual(mutationHash, 'D:5:TC- D:11:G-')
         
     def test_37(self):
         base = "AAATTTCCCGGG"
         compare = "AAACCGG"
         mutationHash = mutationArrayToHash(mutationID(base,compare))
-        self.assertEqual(mutationHash, 'D:3:TTTC- D:7:G-')
+        self.assertEqual(mutationHash, 'D:3:TTTC- D:11:G-')
         
 
     # Test tracking
@@ -457,13 +457,13 @@ class MutationExtraction(unittest.TestCase):
         base = "AAATTTCCCGGG"
         compare = "AAATAAATTCGGTG"
         mutationHash = mutationArrayToHash(mutationID(base,compare))
-        self.assertEqual(mutationHash, 'I:0:-AAAT D:9:TCC- I:12:-T')
+        self.assertEqual(mutationHash, 'I:0:-AAAT D:5:TCC- I:11:-T')
         
     def test_39(self):
         base = "AAATTTCCCGGG"
         compare = "AAATAAATTCCTG"
         mutationHash = mutationArrayToHash(mutationID(base,compare))
-        self.assertEqual(mutationHash, 'I:0:-AAAT D:9:T- S:11:C-T D:13:GG-')    
+        self.assertEqual(mutationHash, 'I:0:-AAAT D:5:T- S:8:C-T D:10:GG-')    
         # A better answer
         # self.assertEqual(mutationHash, 'I:4:-AAA S:11:C-T D:12:GG-')    
     
