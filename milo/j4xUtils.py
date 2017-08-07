@@ -19,30 +19,30 @@ def mutationID(base, compare):
             pass
         elif ( deltaA == deltaB ):
             # Substitution
-            # print('Substitution at {0} from {1} to {2}'.format(posB-deltaB, base[posA-deltaA:posA], compare[posB-deltaB:posB]))
-            mutations.append({ 'type': 'S', 'pos': posB-deltaB, 'from': base[posA-deltaA:posA], 'to': compare[posB-deltaB:posB]})
+            # print('Substitution at {0} from {1} to {2}'.format(posA-deltaA, base[posA-deltaA:posA], compare[posB-deltaB:posB]))
+            mutations.append({ 'type': 'S', 'pos': posA-deltaA, 'from': base[posA-deltaA:posA], 'to': compare[posB-deltaB:posB]})
         elif ( deltaA > deltaB ):
             if ( deltaB == 0 ):
                 # Simple deletion
-                # print('Deletion at {0} of {1}'.format(posB-deltaB, base[posA-deltaA:posA]))
-                mutations.append({ 'type': 'D', 'pos': posB-deltaB, 'from': base[posA-deltaA:posA], 'to': ''})
+                # print('Deletion at {0} of {1}'.format(posA-deltaA, base[posA-deltaA:posA]))
+                mutations.append({ 'type': 'D', 'pos': posA-deltaA, 'from': base[posA-deltaA:posA], 'to': ''})
                 
             else:
                 # Deletion and insertion
-                # print('DelAdd at {0} del {1} add {2}'.format(posB-deltaB, base[posA-deltaA:posA], compare[posB-deltaB:posB]))
-                mutations.append({ 'type': 'S', 'pos': posB-deltaB, 'from': base[posA-deltaA:posA], 'to': compare[posB-deltaB:posB]})
+                # print('DelAdd at {0} del {1} add {2}'.format(posA-deltaA, base[posA-deltaA:posA], compare[posB-deltaB:posB]))
+                mutations.append({ 'type': 'S', 'pos': posA-deltaA, 'from': base[posA-deltaA:posA], 'to': compare[posB-deltaB:posB]})
                 
         elif ( deltaA < deltaB ):
             # Addition
             if ( deltaA == 0 ):
                 # Simple Addition
-                # print('Addition at {0} of {1}'.format(posB-deltaB, compare[posB-deltaB:posB])) 
-                mutations.append({ 'type': 'I', 'pos': posB-deltaB, 'from': '', 'to': compare[posB-deltaB:posB]})
+                # print('Addition at {0} of {1}'.format(posA-deltaA, compare[posB-deltaB:posB])) 
+                mutations.append({ 'type': 'I', 'pos': posA-deltaA, 'from': '', 'to': compare[posB-deltaB:posB]})
                 
             else:
                 # Insertion and Deletion
-                # print('AddDel at {0} add {1} del {2}'.format(posB-deltaB, compare[posB-deltaB:posB], base[posA-deltaA:posA]))
-                mutations.append({ 'type': 'S', 'pos': posB-deltaB, 'from': base[posA-deltaA:posA], 'to': compare[posB-deltaB:posB]})
+                # print('AddDel at {0} add {1} del {2}'.format(posA-deltaA, compare[posB-deltaB:posB], base[posA-deltaA:posA]))
+                mutations.append({ 'type': 'S', 'pos': posA-deltaA, 'from': base[posA-deltaA:posA], 'to': compare[posB-deltaB:posB]})
                 
                 
         
