@@ -29,9 +29,10 @@ class MutationFinder:
         self.ampliconMutationMaps[key] += 1
     
     def identifyMutations(self, data):
-        ampliconID = int(data[0][3:data[0].index(',')]) - 1
+        ampliconID = int(data[0][3:data[0].index(',')])
+        
         sequenceData = data[1][:-1]
-        referenceSequence = self.ampliconRefs[ampliconID]
+        referenceSequence = self.ampliconRefs[ampliconID-1]
         mutationHash = mutationIDAsHash(referenceSequence, sequenceData)
         
         # print(mutationHash)
