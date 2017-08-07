@@ -2,14 +2,13 @@ from manifestExtraction import *
 from unpairedFastqProc import *
 from ReadPairer import *
 
-fileName = "AD01_S1_L001_R1_001.fastq"
-fq1 = "MINITEST_AD01_S1_L001_R1_001.fastq"
-fq2 = "MINITEST_AD01_S1_L001_R2_001.fastq"
+fq1 = "MICROTEST_AD01_S1_L001_R1_001.fastq"
+fq2 = "MICROTEST_AD01_S1_L001_R2_001.fastq"
 inDir = "data/Raw/"
 outDir = "data/Processed/"
 
 numThreads = 12
-readPairer = ReadPairer(probabilistic = false)
+readPairer = ReadPairer(probabilistic = False)
 
 
 def pairToJ3X(fq1, fq2, inDir, outDir):
@@ -26,4 +25,3 @@ def pairToJ3X(fq1, fq2, inDir, outDir):
 
 
 if __name__ ==  "__main__": pairToJ3X(fq1, fq2, inDir, outDir)
-#if __name__ ==  "__main__": fastqToAny(fileName, inDir, outDir, "j3x")
