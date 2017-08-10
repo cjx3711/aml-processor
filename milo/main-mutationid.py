@@ -1,16 +1,19 @@
-from manifestExtraction import *
-from concurrent.futures import *
+from manifestExtraction import grouper
 from MutationFinder import *
 import json
 from pprint import pprint
 import time
+import os
+from multiprocessing import Pool, cpu_count
+from tqdm import tqdm
 
 inDir = "data/2-paired/"
 outDir = "data/3-mutations/"
 
-numThreads = 12
+numThreads = cpu_count()
 chunksize = 250
 mutationFinder = MutationFinder()
+bytesPerRead = 500 # Estimated
 
 def run():
     minMutationCount = 2
@@ -24,11 +27,11 @@ def run():
     print("Milo Mutation Identifier")
     print("Minimum Mutation Count: {0}".format(minMutationCount))
     print("Chunksize (Process Pool): {0}".format(chunksize))
-    print()    
+    print()
     
     with open('files.json') as file_list_file:    
         filenameArray = json.load(file_list_file)
-
+        
         for filenames in filenameArray:
             pairedFile, mutationFile = readFilenames(filenames)
             
@@ -52,29 +55,39 @@ def readFilenames(filenames):
     
 def mutationID(pairedFile, mutationFile, inDir, outDir, minMutationCount):
     with open(inDir + pairedFile) as inFile:
+        filesize = os.path.getsize(inDir + pairedFile)
+        estimatedReads = int(filesize / bytesPerRead)
         with open(outDir + mutationFile, "w+", newline = "") as outFile:
             print("{0} Crunching {1}".format(time.strftime('%X %d %b %Y') ,pairedFile))
             start = time.time()
             mutationFinder.reinit()
             # Creates iterators which deliver the 4 lines of each FASTQ read as a zip (ID, Sequence, Blank, Quality)
             inFileIter = grouper(inFile, 4)
-            with ProcessPoolExecutor(numThreads) as processManager:
-                # Calls alignAndMerge(FASTQ1's (ID, Sequence, Blank, Quality), FASTQ2's (ID, Sequence, Blank, Quality))
-                for ampliconID, mutationHash in processManager.map(mutationFinder.identifyMutations, inFileIter, chunksize = chunksize):
+            pool = Pool(numThreads)
+            with tqdm(total=estimatedReads) as pbar:
+                result = pool.imap_unordered(mutationFinder.identifyMutations, inFileIter, chunksize = chunksize)
+                for i, data in tqdm(enumerate(result)):
+                    ampliconID = data[0]
+                    mutationHash = data[1]
                     mutationFinder.putMutationMap(ampliconID, mutationHash)
-                
-                print("{0} Dumping {1}".format(time.strftime('%X %d %b %Y'), mutationFile))
-                mutationList = mutationFinder.extractHighestOccuringMutations(minMutationCount)
+                    pbar.update()
+
+            pbar.close()
+            pool.close()
+            pool.join()
             
-                for mutationOccurence in mutationList:    
-                    outFile.write(str(mutationOccurence[1]))
-                    outFile.write(', ')
-                    outFile.write(mutationOccurence[0])
-                    outFile.write('\n')
-                
-                outFile.close()
-                print("{0} Dumped {1}".format(time.strftime('%X %d %b %Y'), mutationFile))
-                print("Took {0}s".format(time.time() - start))
+            print("{0} Dumping {1}".format(time.strftime('%X %d %b %Y'), mutationFile))
+            mutationList = mutationFinder.extractHighestOccuringMutations(minMutationCount)
+        
+            for mutationOccurence in mutationList:    
+                outFile.write(str(mutationOccurence[1]))
+                outFile.write(', ')
+                outFile.write(mutationOccurence[0])
+                outFile.write('\n')
+            
+            outFile.close()
+            print("{0} Dumped {1}".format(time.strftime('%X %d %b %Y'), mutationFile))
+            print("Took {0}s".format(time.time() - start))
                 
                 
 run()

@@ -43,6 +43,4 @@ class MutationFinder:
         referenceSequence = self.ampliconRefs[ampliconID-1]
         mutationHash = mutationIDAsHash(referenceSequence, sequenceData)
         
-        # print(mutationHash)
-        
         return ampliconID, mutationHash
