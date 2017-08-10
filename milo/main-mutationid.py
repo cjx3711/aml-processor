@@ -30,12 +30,10 @@ def run():
         
         for filenames in filenameArray:
             pairedFile, mutationFile = readFilenames(filenames)
-            start = time.time()
+            
             # Don't understand the __name__ thing, but it's required according to SO
             if __name__ ==  "__main__": mutationID(pairedFile, mutationFile, inDir, outDir, minMutationCount)
-            end = time.time()
-            print("Took {0}s".format(end - start))
-
+            
 def readFilenames(filenames):
     pairedFile = mutationFile = ''
     if ( 'paired' in filenames ):
@@ -47,7 +45,8 @@ def readFilenames(filenames):
 def mutationID(pairedFile, mutationFile, inDir, outDir, minMutationCount):
     with open(inDir + pairedFile) as inFile:
         with open(outDir + mutationFile, "w+", newline = "") as outFile:
-            print("Crunching {0}".format(pairedFile))
+            print("{0} Crunching {1}".format(time.strftime('%X %d %b %Y') ,pairedFile))
+            start = time.time()
             mutationFinder.reinit()
             # Creates iterators which deliver the 4 lines of each FASTQ read as a zip (ID, Sequence, Blank, Quality)
             inFileIter = grouper(inFile, 4)
@@ -56,7 +55,7 @@ def mutationID(pairedFile, mutationFile, inDir, outDir, minMutationCount):
                 for ampliconID, mutationHash in processManager.map(mutationFinder.identifyMutations, inFileIter, chunksize = 250):
                     mutationFinder.putMutationMap(ampliconID, mutationHash)
                 
-                print("Dumping {0}".format(mutationFile))
+                print("{0} Dumping {1}".format(time.strftime('%X %d %b %Y'), mutationFile))
                 mutationList = mutationFinder.extractHighestOccuringMutations(minMutationCount)
             
                 for mutationOccurence in mutationList:    
@@ -66,6 +65,8 @@ def mutationID(pairedFile, mutationFile, inDir, outDir, minMutationCount):
                     outFile.write('\n')
                 
                 outFile.close()
-                print("Dumped {0}".format(mutationFile))
+                print("{0} Dumped {1}".format(time.strftime('%X %d %b %Y'), mutationFile))
+                print("Took {0}s".format(time.time() - start))
+                
                 
 run()
