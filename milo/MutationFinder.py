@@ -13,7 +13,7 @@ class MutationFinder:
             for line in references:
                 if lineno >= 0:
                     self.referenceCount += 1
-                    sequence = line.split(',')[2]
+                    sequence = line.split(',')[3]
                     
                     self.ampliconRefs.append(sequence);
                 lineno += 1
