@@ -3,6 +3,7 @@ from concurrent.futures import *
 from MutationFinder import *
 import json
 from pprint import pprint
+import time
 
 inDir = "data/Processed/"
 outDir = "data/Processed/"
@@ -29,9 +30,11 @@ def run():
         
         for filenames in filenameArray:
             pairedFile, mutationFile = readFilenames(filenames)
-
+            start = time.time()
             # Don't understand the __name__ thing, but it's required according to SO
             if __name__ ==  "__main__": mutationID(pairedFile, mutationFile, inDir, outDir, minMutationCount)
+            end = time.time()
+            print("Took {0}s".format(end - start))
 
 def readFilenames(filenames):
     pairedFile = mutationFile = ''
