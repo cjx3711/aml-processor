@@ -9,6 +9,7 @@ inDir = "data/2-paired/"
 outDir = "data/3-mutations/"
 
 numThreads = 12
+chunksize = 250
 mutationFinder = MutationFinder()
 
 def run():
@@ -17,7 +18,14 @@ def run():
         config_data = json.load(config_file)
         if ( 'minMutationCount' in config_data ):
             minMutationCount = config_data['minMutationCount']
-            
+        if ( 'chunksize' in config_data ):
+            chunksize = config_data['chunksize']
+    
+    print("Milo Mutation Identifier")
+    print("Minimum Mutation Count: {0}".format(minMutationCount))
+    print("Chunksize (Process Pool): {0}".format(chunksize))
+    print()    
+    
     with open('files.json') as file_list_file:    
         filenameArray = json.load(file_list_file)
 
@@ -52,7 +60,7 @@ def mutationID(pairedFile, mutationFile, inDir, outDir, minMutationCount):
             inFileIter = grouper(inFile, 4)
             with ProcessPoolExecutor(numThreads) as processManager:
                 # Calls alignAndMerge(FASTQ1's (ID, Sequence, Blank, Quality), FASTQ2's (ID, Sequence, Blank, Quality))
-                for ampliconID, mutationHash in processManager.map(mutationFinder.identifyMutations, inFileIter, chunksize = 250):
+                for ampliconID, mutationHash in processManager.map(mutationFinder.identifyMutations, inFileIter, chunksize = chunksize):
                     mutationFinder.putMutationMap(ampliconID, mutationHash)
                 
                 print("{0} Dumping {1}".format(time.strftime('%X %d %b %Y'), mutationFile))
