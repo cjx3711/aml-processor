@@ -3,9 +3,8 @@ from j4xUtils import *
 class MutationFinder:
         
     def __init__(self):
-        self.referenceCount = 0;
+        self.referenceCount = 0
         self.ampliconRefs = []
-        self.ampliconMutationMaps = {}
         with open('references/Manifest.csv') as references:
             lineno = -1
             
@@ -16,6 +15,9 @@ class MutationFinder:
                     
                     self.ampliconRefs.append(sequence);
                 lineno += 1
+        
+    def reinit(self):
+        self.ampliconMutationMaps = {}
         
     def getMutationMap(self):
         return self.ampliconMutationMaps

@@ -48,7 +48,7 @@ def mutationID(pairedFile, mutationFile, inDir, outDir, minMutationCount):
     with open(inDir + pairedFile) as inFile:
         with open(outDir + mutationFile, "w+", newline = "") as outFile:
             print("Crunching {0}".format(pairedFile))
-            
+            mutationFinder.reinit()
             # Creates iterators which deliver the 4 lines of each FASTQ read as a zip (ID, Sequence, Blank, Quality)
             inFileIter = grouper(inFile, 4)
             with ProcessPoolExecutor(numThreads) as processManager:
