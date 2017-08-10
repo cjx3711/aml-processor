@@ -2,8 +2,7 @@ from j4xUtils import *
 
 class MutationFinder:
         
-    def __init__(self, groupsOf):
-        self.groupsOf = groupsOf
+    def __init__(self):
         self.referenceCount = 0;
         self.ampliconRefs = []
         self.ampliconMutationMaps = {}
@@ -36,13 +35,12 @@ class MutationFinder:
         return filteredTupleList
         
     def identifyMutations(self, data):
-        for i in range(self.groupsOf):
-            ampliconID = int(data[4*i+0][3:data[4*i+0].index(',')])
-            
-            sequenceData = data[4*i+1][:-1]
-            referenceSequence = self.ampliconRefs[ampliconID-1]
-            mutationHash = mutationIDAsHash(referenceSequence, sequenceData)
-            
-            self.putMutationMap(ampliconID, mutationHash)
+        ampliconID = int(data[0][3:data[0].index(',')])
         
-        return 0
+        sequenceData = data[1][:-1]
+        referenceSequence = self.ampliconRefs[ampliconID-1]
+        mutationHash = mutationIDAsHash(referenceSequence, sequenceData)
+        
+        # print(mutationHash)
+        
+        return ampliconID, mutationHash
