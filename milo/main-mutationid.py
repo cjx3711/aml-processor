@@ -24,7 +24,7 @@ def run():
         if ( 'chunksize' in config_data ):
             chunksize = config_data['chunksize']
     
-    print("Milo Mutation Identifier")
+    print("MILo Mutation Identifier")
     print("Minimum Mutation Count: {0}".format(minMutationCount))
     print("Chunksize (Process Pool): {0}".format(chunksize))
     print()
@@ -96,10 +96,22 @@ def mutationID(pairedFile, mutationFile, inDir, outDir, minMutationCount):
                 outFile.write(convertHashPositionsToCoordinates(mutationHash, mutationCoordinates))
 
                 outFile.write('\n')
+                
+            outFile.write('Reference Amplicon Stats\n')
+            referenceAmplicons = mutationFinder.getReferenceAmpliconArray()
+            outFile.write('Count: ' + str(mutationFinder.referenceCount) + '\n')
+            total = 0
+            for i, refAmp in enumerate(referenceAmplicons):
+                total += refAmp[2]
+                outFile.write(str(i+1) + ', ')
+                outFile.write(str(refAmp[2]) + ', ')
+                outFile.write(refAmp[0] + '\n')
+            outFile.write('Total: ' + str(total))
+            
             
             outFile.close()
             print("{0} Dumped {1}".format(time.strftime('%X %d %b %Y'), mutationFile))
-            print("Took {0}s".format(time.time() - start))
+            print("Took {0}s\n\n".format(time.time() - start))
                 
                 
 run()

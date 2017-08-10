@@ -33,6 +33,9 @@ class MutationFinder:
                     self.ampliconRefs.append([sequence, coordinates, 0]);
                 lineno += 1
     
+    def getReferenceAmpliconArray(self):
+        return self.ampliconRefs
+        
     def getReferenceAmplicon(self, ampliconID):
         return self.ampliconRefs[ampliconID-1]
         

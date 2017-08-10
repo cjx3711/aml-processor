@@ -34,6 +34,9 @@ def run():
             # Don't understand the __name__ thing, but it's required according to SO
             if __name__ ==  "__main__": pairToJ3X(fq1, fq2, paired, inDir, outDir) 
     
+        print("MILo Amplicon Pairer")
+        print("Chunksize (Process Pool): {0}".format(chunksize))
+        print()
     
 def readFilenames(filenames):
     fq1 = fq2 = paired = ''
@@ -72,6 +75,6 @@ def pairToJ3X(fq1, fq2, paired, inDir, outDir):
             pbar.close()
 
             print("{0} Dumped {1}".format(time.strftime('%X %d %b %Y'), paired))
-            print("Took {0}s".format(time.time() - start))
+            print("Took {0}s\n\n".format(time.time() - start))
 
 run()
