@@ -69,7 +69,8 @@ def mutationID(pairedFile, mutationFile, inDir, outDir, minMutationCount):
                 for i, data in tqdm(enumerate(result)):
                     ampliconID = data[0]
                     mutationHash = data[1]
-                    mutationFinder.putMutationMap(ampliconID, mutationHash)
+                    referenceCoordinate = data[2]
+                    mutationFinder.putMutationHash(ampliconID, mutationHash, referenceCoordinate)
                     pbar.update()
 
             pbar.close()
@@ -79,10 +80,21 @@ def mutationID(pairedFile, mutationFile, inDir, outDir, minMutationCount):
             print("{0} Dumping {1}".format(time.strftime('%X %d %b %Y'), mutationFile))
             mutationList = mutationFinder.extractHighestOccuringMutations(minMutationCount)
         
-            for mutationOccurence in mutationList:    
-                outFile.write(str(mutationOccurence[1]))
+            for mutationOccurence in mutationList:
+                mutationCount = mutationOccurence[1]
+                mutationHash = mutationOccurence[0]
+                ampliconID = int(mutationHash[:mutationHash.find(' ')])
+                referenceAmplicon = mutationFinder.getReferenceAmplicon(ampliconID)
+                mutationCoordinates = referenceAmplicon[1]
+                appearanceCount = referenceAmplicon[2]
+                outFile.write(str(mutationCount))
+                outFile.write(' / ')
+                outFile.write(str(appearanceCount))
+                outFile.write('\t, ')
+                outFile.write(mutationHash)
                 outFile.write(', ')
-                outFile.write(mutationOccurence[0])
+                outFile.write(convertHashPositionsToCoordinates(mutationHash, mutationCoordinates))
+
                 outFile.write('\n')
             
             outFile.close()

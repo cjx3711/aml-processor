@@ -90,6 +90,18 @@ def hashToMutation(mutationHash):
         'from': mutationFrom,
         'to': mutationTo
     }
+
+def convertHashPositionsToCoordinates(mutationHash, startCoordinate):
+    positionArray = extractPositionsFromHash(mutationHash)
+    coordinateArray = [ str(x + startCoordinate) for x in positionArray ]
+    return ' '.join(coordinateArray)
+    
+def extractPositionsFromHash(mutationHash):
+    mutationArray = hashToMutationArray(mutationHash)
+    positionArray = []
+    for mutation in mutationArray:
+        positionArray.append(mutation['pos'])
+    return positionArray
     
 def mutateSequenceByHash(base, mutationHash):
     mutationArray = hashToMutationArray(mutationHash)

@@ -92,7 +92,15 @@ class AmpliconMatcherHashSweepTests(unittest.TestCase):
         self.assertTrue((0, 10) in ampMat.ampliconRefs['CCGG'])
 
 
-
+class miscj4xUtils(unittest.TestCase):
+    def weirdly_specific_function_1(self):
+        coords = convertHashPositionsToCoordinates('291 S:29:T-A S:102:T-G', 0)
+        self.assertEqual(coords, '29 102')
+        
+    def weirdly_specific_function_2(self):
+        coords = convertHashPositionsToCoordinates('291 S:29:T-A S:102:T-G', 100)
+        self.assertEqual(coords, '129 202')
+        
 class PairedFASTQAligner(unittest.TestCase):
 
     def setUp(self):
