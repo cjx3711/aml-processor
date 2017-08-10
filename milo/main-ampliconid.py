@@ -18,6 +18,10 @@ readPairer = ReadPairer(probabilistic = False)
 bytesPerRead = 350 # Estimated
 
 def run():
+    print("MILo Amplicon Pairer")
+    print("Chunksize (Process Pool): {0}".format(chunksize))
+    print()
+    
     with open('files.json') as file_list_file:    
         filenameArray = json.load(file_list_file)
     
@@ -33,11 +37,7 @@ def run():
     
             # Don't understand the __name__ thing, but it's required according to SO
             if __name__ ==  "__main__": pairToJ3X(fq1, fq2, paired, inDir, outDir) 
-    
-        print("MILo Amplicon Pairer")
-        print("Chunksize (Process Pool): {0}".format(chunksize))
-        print()
-    
+
 def readFilenames(filenames):
     fq1 = fq2 = paired = ''
     

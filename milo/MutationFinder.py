@@ -37,6 +37,8 @@ class MutationFinder:
         return self.ampliconRefs
         
     def getReferenceAmplicon(self, ampliconID):
+        if ( ampliconID == 0 ):
+            return None
         return self.ampliconRefs[ampliconID-1]
         
     def getMutationHashDict(self):
@@ -44,6 +46,8 @@ class MutationFinder:
     
     # Puts the identified mutation into the hash
     def putMutationHash(self, ampliconID, mutationHash, referenceCoordinate):
+        if ( ampliconID == 0 ):
+            return
         key = "{0} {1}".format(ampliconID, mutationHash)
         referenceAmplicon = self.getReferenceAmplicon(ampliconID)
         referenceAmplicon[2] += 1 # Increment the count
@@ -62,7 +66,9 @@ class MutationFinder:
         
     def identifyMutations(self, data):
         ampliconID = int(data[0][3:data[0].index(',')])
-        
+        if ( ampliconID == 0 ):
+            return None, None, None
+            
         sequenceData = data[1][:-1]
         referenceAmplicon = self.getReferenceAmplicon(ampliconID)
         
