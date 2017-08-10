@@ -7,3 +7,5 @@ __pycache__
 
 milo/data
 milo/__pycache__
+milo/config.json
+milo/files.json

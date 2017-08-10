@@ -2,7 +2,8 @@ from j4xUtils import *
 
 class MutationFinder:
         
-    def __init__(self):
+    def __init__(self, groupsOf):
+        self.groupsOf = groupsOf
         self.referenceCount = 0;
         self.ampliconRefs = []
         self.ampliconMutationMaps = {}
@@ -28,12 +29,20 @@ class MutationFinder:
             self.ampliconMutationMaps[key] = 0
         self.ampliconMutationMaps[key] += 1
     
+    def extractHighestOccuringMutations(self, minOccurences):
+        mutationTupleList = list(self.getMutationMap().items())
+        filteredTupleList = [x for x in mutationTupleList if x[1] >= minOccurences]
+        filteredTupleList.sort(key=lambda tup: -tup[1])
+        return filteredTupleList
+        
     def identifyMutations(self, data):
-        ampliconID = int(data[0][3:data[0].index(',')]) - 1
-        sequenceData = data[1][:-1]
-        referenceSequence = self.ampliconRefs[ampliconID]
-        mutationHash = mutationIDAsHash(referenceSequence, sequenceData)
+        for i in range(self.groupsOf):
+            ampliconID = int(data[4*i+0][3:data[4*i+0].index(',')])
+            
+            sequenceData = data[4*i+1][:-1]
+            referenceSequence = self.ampliconRefs[ampliconID-1]
+            mutationHash = mutationIDAsHash(referenceSequence, sequenceData)
+            
+            self.putMutationMap(ampliconID, mutationHash)
         
-        # print(mutationHash)
-        
-        return ampliconID, mutationHash
+        return 0

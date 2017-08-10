@@ -67,3 +67,54 @@ def mutationIDAsHash(base, compare):
     
 def mutationToString(mutation):
     return mutation['type'] + ':' + str(mutation['pos']) + ':' + str(mutation['from']) + '-' + str(mutation['to'])
+    
+def hashToMutationArray(mutationHash):
+    mutations = mutationHash.split(' ')
+    mutationArray = []
+    for mutation in mutations:
+        if (mutation.startswith(('S', 'I', 'D'))):
+            mutationArray.append(hashToMutation(mutation))
+    
+    return mutationArray
+    
+def hashToMutation(mutationHash):
+    hashParts = mutationHash.split(':')
+    mutationType = hashParts[0]
+    mutationPosition = int(hashParts[1])
+    changeParts = hashParts[2].split('-')
+    mutationFrom = changeParts[0]
+    mutationTo = changeParts[1]
+    return {
+        'type': mutationType,
+        'pos': mutationPosition,
+        'from': mutationFrom,
+        'to': mutationTo
+    }
+    
+def mutateSequenceByHash(base, mutationHash):
+    mutationArray = hashToMutationArray(mutationHash)
+    return mutateSequence(base, mutationArray)
+    
+def mutateSequence(base, mutationArray):
+    cursor = 0
+    mutated = ''
+    for mutation in mutationArray:
+        mutated += base[cursor:mutation['pos']]
+        cursor = mutation['pos']
+        if ( mutation['type'] == 'I' ):
+            mutated += mutation['to']
+        elif ( mutation['type'] == 'D' ):
+            actual = base[cursor:cursor+len(mutation['from'])]
+            if ( actual != mutation['from'] ):
+                return 'Invalid mutation'
+            cursor += len(mutation['from'])
+            
+        elif ( mutation['type'] == 'S' ):
+            actual = base[cursor:cursor+len(mutation['from'])]
+            if ( actual != mutation['from'] ):
+                return 'Invalid mutation'
+            cursor += len(mutation['from'])
+            mutated += mutation['to']
+            
+    mutated += base[cursor:]
+    return mutated
