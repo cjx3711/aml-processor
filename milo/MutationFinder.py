@@ -28,6 +28,12 @@ class MutationFinder:
             self.ampliconMutationMaps[key] = 0
         self.ampliconMutationMaps[key] += 1
     
+    def extractHighestOccuringMutations(self, minOccurences):
+        mutationTupleList = list(self.getMutationMap().items())
+        filteredTupleList = [x for x in mutationTupleList if x[1] >= minOccurences]
+        filteredTupleList.sort(key=lambda tup: -tup[1])
+        return filteredTupleList
+        
     def identifyMutations(self, data):
         ampliconID = int(data[0][3:data[0].index(',')])
         
