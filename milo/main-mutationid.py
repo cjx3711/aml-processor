@@ -5,8 +5,8 @@ import json
 from pprint import pprint
 import time
 
-inDir = "data/Processed/"
-outDir = "data/Processed/"
+inDir = "data/2-paired/"
+outDir = "data/3-mutations/"
 
 numThreads = 12
 mutationFinder = MutationFinder()

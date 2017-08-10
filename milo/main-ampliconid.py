@@ -3,8 +3,8 @@ from unpairedFastqProc import *
 from ReadPairer import *
 import json
 
-inDir = "data/Raw/"
-outDir = "data/Processed/"
+inDir = "data/1-raw/"
+outDir = "data/2-paired/"
 
 numThreads = 12
 readPairer = ReadPairer(probabilistic = False)
