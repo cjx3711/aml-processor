@@ -1,6 +1,7 @@
 import unittest
 
 from genomicsUtils import *
+from j4xUtils import *
 from AmpliconMatcherProbabilistic import *
 from AmpliconMatcherHashSweep import *
 from ReadPairer import *
@@ -220,7 +221,543 @@ class PairedFASTQAligner(unittest.TestCase):
         self.assertEqual(qualityScores, expecedQuality)
         self.assertEqual(noOfCol, expectedCol)
 
+class MutationApplication(unittest.TestCase):
+    # Test when mutant in front
+    def test_1(self):
+        base = "AAATTTCCCGGG"
+        mutation = "I:0:-T"
+        mutated = mutateSequenceByHash(base,mutation)
+        self.assertEqual(mutated, 'TAAATTTCCCGGG')
+        
+    def test_2(self):
+        base = "AAATTTCCCGGG"
+        mutation = "S:0:A-T"
+        mutated = mutateSequenceByHash(base, mutation)
+        self.assertEqual(mutated, 'TAATTTCCCGGG')
+        
+    def test_3(self):
+        base = "AAATTTCCCGGG"
+        mutation = "D:0:A-"
+        mutated = mutateSequenceByHash(base, mutation)
+        self.assertEqual(mutated, 'AATTTCCCGGG')
 
+    # Test expectation tracking when mutant in front
+    # Front mutant is Ins
+    def test_4(self):
+        base = "AAATTTCCCGGG"
+        mutation = "I:0:-T I:9:-TT"
+        mutated = mutateSequenceByHash(base, mutation)
+        self.assertEqual(mutated, 'TAAATTTCCCTTGGG')
+        
+    def test_5(self):
+        base = "AAATTTCCCGGG"
+        mutation = "I:0:-T I:9:-TT I:12:-TTT"
+        mutated = mutateSequenceByHash(base, mutation)
+        self.assertEqual(mutated, 'TAAATTTCCCTTGGGTTT')
+        
+    def test_6(self):
+        base = "AAATTTCCCGGG"
+        mutation = "I:0:-T I:9:-TT D:11:G-"
+        mutated = mutateSequenceByHash(base, mutation)
+        self.assertEqual(mutated, 'TAAATTTCCCTTGG')
+        
+    def test_7(self):
+        base = "AAATTTCCCGGG"
+        mutation = "I:0:-T D:3:TTT- I:9:-TT"
+        mutated = mutateSequenceByHash(base, mutation)
+        self.assertEqual(mutated, 'TAAACCCTTGGG')
+        
+    def test_8(self):
+        base = "AAATTTCCCGGG"
+        mutation = "I:0:-T D:3:TTTC- D:10:GG-"
+        mutated = mutateSequenceByHash(base, mutation)
+        self.assertEqual(mutated, 'TAAACCG')
+        
+    # Test expectation tracking when mutant in front
+    # Front mutant is Sub
+    def test_9(self):
+        base = "AAATTTCCCGGG"
+        mutation = "S:0:A-T I:9:-TT"
+        mutated = mutateSequenceByHash(base, mutation)
+        self.assertEqual(mutated, 'TAATTTCCCTTGGG')
+        
+    def test_10(self):
+        base = "AAATTTCCCGGG"
+        mutation = "S:0:A-T I:9:-TT I:12:-TTT"
+        mutated = mutateSequenceByHash(base, mutation)
+        self.assertEqual(mutated, 'TAATTTCCCTTGGGTTT')
+        
+    def test_11(self):
+        base = "AAATTTCCCGGG"
+        mutation = "S:0:A-T I:9:-TT D:11:G-"
+        mutated = mutateSequenceByHash(base, mutation)
+        self.assertEqual(mutated, 'TAATTTCCCTTGG')
+        
+    def test_12(self):
+        base = "AAATTTCCCGGG"
+        mutation = "I:0:-T D:2:ATTT- I:9:-TT"
+        mutated = mutateSequenceByHash(base, mutation)
+        self.assertEqual(mutated, 'TAACCCTTGGG')
+        
+    def test_13(self):
+        base = "AAATTTCCCGGG"
+        mutation = "I:0:-T D:2:ATTTC- D:10:GG-"
+        mutated = mutateSequenceByHash(base, mutation)
+        self.assertEqual(mutated, 'TAACCG')
+
+    # Front mutant is Del
+    def test_14(self):
+        base = "AAATTTCCCGGG"
+        mutation = "D:0:A- I:9:-TT"
+        mutated = mutateSequenceByHash(base, mutation)
+        self.assertEqual(mutated, 'AATTTCCCTTGGG')
+        
+    def test_15(self):
+        base = "AAATTTCCCGGG"
+        mutation = "D:0:A- I:9:-TT I:12:-TTT"
+        mutated = mutateSequenceByHash(base, mutation)
+        self.assertEqual(mutated, 'AATTTCCCTTGGGTTT')
+        
+    def test_16(self):
+        base = "AAATTTCCCGGG"
+        mutation = "D:0:A- I:9:-TT D:11:G-"
+        mutated = mutateSequenceByHash(base, mutation)
+        self.assertEqual(mutated, 'AATTTCCCTTGG')
+        
+    def test_17(self):
+        base = "AAATTTCCCGGG"
+        mutation = "D:2:ATTT- I:9:-TT"
+        mutated = mutateSequenceByHash(base, mutation)
+        self.assertEqual(mutated, 'AACCCTTGGG')
+        
+    def test_18(self):
+        base = "AAATTTCCCGGG"
+        mutation = "D:2:ATTTC- D:10:GG-"
+        mutated = mutateSequenceByHash(base, mutation)
+        self.assertEqual(mutated, 'AACCG')
+        
+    # Test when front mutant is same base as next base
+    def test_19(self):
+        base = "AAATTTCCCGGG"
+        mutation = "I:0:-A"
+        mutated = mutateSequenceByHash(base, mutation)
+        self.assertEqual(mutated, 'AAAATTTCCCGGG')
+    def test_20(self):
+        base = "AAATTTCCCGGG"
+        mutation = "I:0:-AAA"
+        mutated = mutateSequenceByHash(base, mutation)
+        self.assertEqual(mutated, 'AAAAAATTTCCCGGG')
+        
+    def test_21(self):
+        base = "AAATTTCCCGGG"
+        mutation = "I:0:-AAA I:9:-TT"
+        mutated = mutateSequenceByHash(base, mutation)
+        self.assertEqual(mutated, 'AAAAAATTTCCCTTGGG')
+        
+    def test_22(self):
+        base = "AAATTTCCCGGG"
+        mutation = "I:0:-AAA I:9:-TT I:12:-TTT"
+        mutated = mutateSequenceByHash(base, mutation)
+        self.assertEqual(mutated, 'AAAAAATTTCCCTTGGGTTT')
+        
+    def test_23(self):
+        base = "AAATTTCCCGGG"
+        mutation = "I:0:-AAA I:9:-TT D:11:G-"
+        mutated = mutateSequenceByHash(base, mutation)
+        self.assertEqual(mutated, 'AAAAAATTTCCCTTGG')
+        
+    def test_24(self):
+        base = "AAATTTCCCGGG"
+        mutation = "S:3:TTT-AAA I:9:-TT"
+        mutated = mutateSequenceByHash(base, mutation)
+        self.assertEqual(mutated, 'AAAAAACCCTTGGG')
+        
+    def test_25(self):
+        base = "AAATTTCCCGGG"
+        mutation = "S:3:TTTC-AAA D:10:GG-"
+        mutated = mutateSequenceByHash(base, mutation)
+        self.assertEqual(mutated, 'AAAAAACCG')
+        
+    # Test when mutant not in front
+    def test_26(self):
+        base = "AAATTTCCCGGG"
+        mutation = "I:3:-T"
+        mutated = mutateSequenceByHash(base, mutation)
+        self.assertEqual(mutated, 'AAATTTTCCCGGG')
+        
+    def test_27(self):
+        base = "AAATTTCCCGGG"
+        mutation = "I:6:-TTCCC"
+        mutated = mutateSequenceByHash(base, mutation)
+        self.assertEqual(mutated, 'AAATTTTTCCCCCCGGG')
+        
+    def test_28(self):
+        base = "AAATTTCCCGGG"
+        mutation = "I:6:-A"
+        mutated = mutateSequenceByHash(base, mutation)
+        self.assertEqual(mutated, 'AAATTTACCCGGG')
+        
+    def test_29(self):
+        base = "AAATTTCCCGGG"
+        mutation = "I:6:-AA I:9:-AAA"
+        mutated = mutateSequenceByHash(base, mutation)
+        self.assertEqual(mutated, 'AAATTTAACCCAAAGGG')
+        
+    def test_30(self):
+        base = "AAATTTCCCGGG"
+        mutation = "S:3:T-A"
+        mutated = mutateSequenceByHash(base, mutation)
+        self.assertEqual(mutated, 'AAAATTCCCGGG')
+        
+    def test_31(self):
+        base = "AAATTTCCCGGG"
+        mutation = "S:3:TTT-AAA"
+        mutated = mutateSequenceByHash(base, mutation)
+        self.assertEqual(mutated, 'AAAAAACCCGGG')
+    def test_32(self):
+        base = "AAATTTCCCGGG"
+        mutation = "S:4:T-A"
+        mutated = mutateSequenceByHash(base, mutation)
+        self.assertEqual(mutated, 'AAATATCCCGGG')
+        
+    def test_33(self):
+        base = "AAATTTCCCGGG"
+        mutation = "S:6:CCC-AAA"
+        mutated = mutateSequenceByHash(base, mutation)
+        self.assertEqual(mutated, 'AAATTTAAAGGG')
+        
+    def test_34(self):
+        base = "AAATTTCCCGGG"
+        mutation = "D:3:T-"
+        mutated = mutateSequenceByHash(base, mutation)
+        self.assertEqual(mutated, 'AAATTCCCGGG')
+        
+    def test_35(self):
+        base = "AAATTTCCCGGG"
+        mutation = "D:3:TTT-"
+        mutated = mutateSequenceByHash(base, mutation)
+        self.assertEqual(mutated, 'AAACCCGGG')
+        
+    def test_36(self):
+        base = "AAATTTCCCGGG"
+        mutation = "D:5:TC- D:11:G-"
+        mutated = mutateSequenceByHash(base, mutation)
+        self.assertEqual(mutated, 'AAATTCCGG')
+        
+    def test_37(self):
+        base = "AAATTTCCCGGG"
+        mutation = "D:3:TTTC- D:11:G-"
+        mutated = mutateSequenceByHash(base, mutation)
+        self.assertEqual(mutated, 'AAACCGG')
+        
+
+    # Test tracking
+    def test_38(self):
+        base = "AAATTTCCCGGG"
+        mutation = "I:0:-AAAT D:5:TCC- I:11:-T"
+        mutated = mutateSequenceByHash(base, mutation)
+        self.assertEqual(mutated, 'AAATAAATTCGGTG')
+        
+    def test_39(self):
+        base = "AAATTTCCCGGG"
+        mutation = "I:0:-AAAT D:5:T- S:8:C-T D:10:GG-"
+        mutated = mutateSequenceByHash(base, mutation)
+        self.assertEqual(mutated, 'AAATAAATTCCTG')
+        
+    # Test when mutant behind
+    def test_40(self):
+        base = "AAATTTCCCGGG"
+        mutation = "I:12:-T"
+        mutated = mutateSequenceByHash(base, mutation)
+        self.assertEqual(mutated, 'AAATTTCCCGGGT')
+        
+    def test_41(self):
+        base = "AAATTTCCCGGG"
+        mutation = "I:12:-GG"
+        mutated = mutateSequenceByHash(base, mutation)
+        self.assertEqual(mutated, 'AAATTTCCCGGGGG')
+        
+    def test_42(self):
+        base = "AAATTTCCCGGG"
+        mutation = "S:11:G-T"
+        mutated = mutateSequenceByHash(base, mutation)
+        self.assertEqual(mutated, 'AAATTTCCCGGT')
+        
+    def test_43(self):
+        base = "AAATTTCCCGGG"
+        mutation = "D:10:GG-"
+        mutated = mutateSequenceByHash(base,mutation)
+        self.assertEqual(mutated, 'AAATTTCCCG')
+        
+class MutationExtraction(unittest.TestCase):
+    # Test when mutant in front
+    def test_1(self):
+        base = "AAATTTCCCGGG"
+        compare = "TAAATTTCCCGGG"
+        mutationHash = mutationArrayToHash(mutationID(base,compare))
+        self.assertEqual(mutationHash, 'I:0:-T')
+        
+    def test_2(self):
+        base = "AAATTTCCCGGG"
+        compare = "TAATTTCCCGGG"
+        mutationHash = mutationArrayToHash(mutationID(base,compare))
+        self.assertEqual(mutationHash, 'S:0:A-T')
+        
+    def test_3(self):
+        base = "AAATTTCCCGGG"
+        compare = "AATTTCCCGGG"
+        mutationHash = mutationArrayToHash(mutationID(base,compare))
+        self.assertEqual(mutationHash, 'D:0:A-')
+    
+    # Test expectation tracking when mutant in front
+    # Front mutant is Ins
+    def test_4(self):
+        base = "AAATTTCCCGGG"
+        compare = "TAAATTTCCCTTGGG"
+        mutationHash = mutationArrayToHash(mutationID(base,compare))
+        self.assertEqual(mutationHash, 'I:0:-T I:9:-TT')
+        
+    def test_5(self):
+        base = "AAATTTCCCGGG"
+        compare = "TAAATTTCCCTTGGGTTT"
+        mutationHash = mutationArrayToHash(mutationID(base,compare))
+        self.assertEqual(mutationHash, 'I:0:-T I:9:-TT I:12:-TTT')
+        
+    def test_6(self):
+        base = "AAATTTCCCGGG"
+        compare = "TAAATTTCCCTTGG"
+        mutationHash = mutationArrayToHash(mutationID(base,compare))
+        self.assertEqual(mutationHash, 'I:0:-T I:9:-TT D:11:G-')
+        
+    def test_7(self):
+        base = "AAATTTCCCGGG"
+        compare = "TAAACCCTTGGG"
+        mutationHash = mutationArrayToHash(mutationID(base,compare))
+        self.assertEqual(mutationHash, 'I:0:-T D:3:TTT- I:9:-TT')
+        
+    def test_8(self):
+        base = "AAATTTCCCGGG"
+        compare = "TAAACCG"
+        mutationHash = mutationArrayToHash(mutationID(base,compare))
+        self.assertEqual(mutationHash, 'I:0:-T D:3:TTTC- D:10:GG-')
+        
+    # Test expectation tracking when mutant in front
+    # Front mutant is Sub
+    def test_9(self):
+        base = "AAATTTCCCGGG"
+        compare = "TAATTTCCCTTGGG"
+        mutationHash = mutationArrayToHash(mutationID(base,compare))
+        self.assertEqual(mutationHash, 'S:0:A-T I:9:-TT')
+        
+    def test_10(self):
+        base = "AAATTTCCCGGG"
+        compare = "TAATTTCCCTTGGGTTT"
+        mutationHash = mutationArrayToHash(mutationID(base,compare))
+        self.assertEqual(mutationHash, 'S:0:A-T I:9:-TT I:12:-TTT')
+        
+    def test_11(self):
+        base = "AAATTTCCCGGG"
+        compare = "TAATTTCCCTTGG"
+        mutationHash = mutationArrayToHash(mutationID(base,compare))
+        self.assertEqual(mutationHash, 'S:0:A-T I:9:-TT D:11:G-')
+        
+    def test_12(self):
+        base = "AAATTTCCCGGG"
+        compare = "TAACCCTTGGG"
+        mutationHash = mutationArrayToHash(mutationID(base,compare))
+        self.assertEqual(mutationHash, 'I:0:-T D:2:ATTT- I:9:-TT')
+        
+    def test_13(self):
+        base = "AAATTTCCCGGG"
+        compare = "TAACCG"
+        mutationHash = mutationArrayToHash(mutationID(base,compare))
+        self.assertEqual(mutationHash, 'I:0:-T D:2:ATTTC- D:10:GG-')
+
+    # Front mutant is Del
+    def test_14(self):
+        base = "AAATTTCCCGGG"
+        compare = "AATTTCCCTTGGG"
+        mutationHash = mutationArrayToHash(mutationID(base,compare))
+        self.assertEqual(mutationHash, 'D:0:A- I:9:-TT')
+        
+    def test_15(self):
+        base = "AAATTTCCCGGG"
+        compare = "AATTTCCCTTGGGTTT"
+        mutationHash = mutationArrayToHash(mutationID(base,compare))
+        self.assertEqual(mutationHash, 'D:0:A- I:9:-TT I:12:-TTT')
+        
+    def test_16(self):
+        base = "AAATTTCCCGGG"
+        compare = "AATTTCCCTTGG"
+        mutationHash = mutationArrayToHash(mutationID(base,compare))
+        self.assertEqual(mutationHash, 'D:0:A- I:9:-TT D:11:G-')
+        
+    def test_17(self):
+        base = "AAATTTCCCGGG"
+        compare = "AACCCTTGGG"
+        mutationHash = mutationArrayToHash(mutationID(base,compare))
+        self.assertEqual(mutationHash, 'D:2:ATTT- I:9:-TT')
+        
+    def test_18(self):
+        base = "AAATTTCCCGGG"
+        compare = "AACCG"
+        mutationHash = mutationArrayToHash(mutationID(base,compare))
+        self.assertEqual(mutationHash, 'D:2:ATTTC- D:10:GG-')
+        
+    # Test when front mutant is same base as next base
+    def test_19(self):
+        base = "AAATTTCCCGGG"
+        compare = "AAAATTTCCCGGG"
+        mutationHash = mutationArrayToHash(mutationID(base,compare))
+        self.assertEqual(mutationHash, 'I:0:-A')
+    def test_20(self):
+        base = "AAATTTCCCGGG"
+        compare = "AAAAAATTTCCCGGG"
+        mutationHash = mutationArrayToHash(mutationID(base,compare))
+        self.assertEqual(mutationHash, 'I:0:-AAA')
+        
+    def test_21(self):
+        base = "AAATTTCCCGGG"
+        compare = "AAAAAATTTCCCTTGGG"
+        mutationHash = mutationArrayToHash(mutationID(base,compare))
+        self.assertEqual(mutationHash, 'I:0:-AAA I:9:-TT')
+        
+    def test_22(self):
+        base = "AAATTTCCCGGG"
+        compare = "AAAAAATTTCCCTTGGGTTT"
+        mutationHash = mutationArrayToHash(mutationID(base,compare))
+        self.assertEqual(mutationHash, 'I:0:-AAA I:9:-TT I:12:-TTT')
+        
+    def test_23(self):
+        base = "AAATTTCCCGGG"
+        compare = "AAAAAATTTCCCTTGG"
+        mutationHash = mutationArrayToHash(mutationID(base,compare))
+        self.assertEqual(mutationHash, 'I:0:-AAA I:9:-TT D:11:G-')
+        
+    def test_24(self):
+        base = "AAATTTCCCGGG"
+        compare = "AAAAAACCCTTGGG"
+        mutationHash = mutationArrayToHash(mutationID(base,compare))
+        self.assertEqual(mutationHash, 'S:3:TTT-AAA I:9:-TT')
+        
+    def test_25(self):
+        base = "AAATTTCCCGGG"
+        compare = "AAAAAACCG"
+        mutationHash = mutationArrayToHash(mutationID(base,compare))
+        self.assertEqual(mutationHash, 'S:3:TTTC-AAA D:10:GG-')
+        
+    # Test when mutant not in front
+    def test_26(self):
+        base = "AAATTTCCCGGG"
+        compare = "AAATTTTCCCGGG"
+        mutationHash = mutationArrayToHash(mutationID(base,compare))
+        self.assertEqual(mutationHash, 'I:3:-T')
+        
+    def test_27(self):
+        base = "AAATTTCCCGGG"
+        compare = "AAATTTTTCCCCCCGGG"
+        mutationHash = mutationArrayToHash(mutationID(base,compare))
+        self.assertEqual(mutationHash, 'I:6:-TTCCC')
+        
+    def test_28(self):
+        base = "AAATTTCCCGGG"
+        compare = "AAATTTACCCGGG"
+        mutationHash = mutationArrayToHash(mutationID(base,compare))
+        self.assertEqual(mutationHash, 'I:6:-A')
+        
+    def test_29(self):
+        base = "AAATTTCCCGGG"
+        compare = "AAATTTAACCCAAAGGG"
+        mutationHash = mutationArrayToHash(mutationID(base,compare))
+        self.assertEqual(mutationHash, 'I:6:-AA I:9:-AAA')
+        
+    def test_30(self):
+        base = "AAATTTCCCGGG"
+        compare = "AAAATTCCCGGG"
+        mutationHash = mutationArrayToHash(mutationID(base,compare))
+        self.assertEqual(mutationHash, 'S:3:T-A')
+        
+    def test_31(self):
+        base = "AAATTTCCCGGG"
+        compare = "AAAAAACCCGGG"
+        mutationHash = mutationArrayToHash(mutationID(base,compare))
+        self.assertEqual(mutationHash, 'S:3:TTT-AAA')
+    def test_32(self):
+        base = "AAATTTCCCGGG"
+        compare = "AAATATCCCGGG"
+        mutationHash = mutationArrayToHash(mutationID(base,compare))
+        self.assertEqual(mutationHash, 'S:4:T-A')
+        
+    def test_33(self):
+        base = "AAATTTCCCGGG"
+        compare = "AAATTTAAAGGG"
+        mutationHash = mutationArrayToHash(mutationID(base,compare))
+        self.assertEqual(mutationHash, 'S:6:CCC-AAA')
+        
+    def test_34(self):
+        base = "AAATTTCCCGGG"
+        compare = "AAATTCCCGGG"
+        mutationHash = mutationArrayToHash(mutationID(base,compare))
+        self.assertEqual(mutationHash, 'D:3:T-')
+        
+    def test_35(self):
+        base = "AAATTTCCCGGG"
+        compare = "AAACCCGGG"
+        mutationHash = mutationArrayToHash(mutationID(base,compare))
+        self.assertEqual(mutationHash, 'D:3:TTT-')
+        
+    def test_36(self):
+        base = "AAATTTCCCGGG"
+        compare = "AAATTCCGG"
+        mutationHash = mutationArrayToHash(mutationID(base,compare))
+        self.assertEqual(mutationHash, 'D:5:TC- D:11:G-')
+        
+    def test_37(self):
+        base = "AAATTTCCCGGG"
+        compare = "AAACCGG"
+        mutationHash = mutationArrayToHash(mutationID(base,compare))
+        self.assertEqual(mutationHash, 'D:3:TTTC- D:11:G-')
+        
+
+    # Test tracking
+    def test_38(self):
+        base = "AAATTTCCCGGG"
+        compare = "AAATAAATTCGGTG"
+        mutationHash = mutationArrayToHash(mutationID(base,compare))
+        self.assertEqual(mutationHash, 'I:0:-AAAT D:5:TCC- I:11:-T')
+        
+    def test_39(self):
+        base = "AAATTTCCCGGG"
+        compare = "AAATAAATTCCTG"
+        mutationHash = mutationArrayToHash(mutationID(base,compare))
+        self.assertEqual(mutationHash, 'I:0:-AAAT D:5:T- S:8:C-T D:10:GG-')    
+        # A better answer
+        # self.assertEqual(mutationHash, 'I:4:-AAA S:11:C-T D:12:GG-')    
+    
+    # Test when mutant behind
+    def test_40(self):
+        base = "AAATTTCCCGGG"
+        compare = "AAATTTCCCGGGT"
+        mutationHash = mutationArrayToHash(mutationID(base,compare))
+        self.assertEqual(mutationHash, 'I:12:-T')
+        
+    def test_41(self):
+        base = "AAATTTCCCGGG"
+        compare = "AAATTTCCCGGGGG"
+        mutationHash = mutationArrayToHash(mutationID(base,compare))
+        self.assertEqual(mutationHash, 'I:12:-GG')
+        
+    def test_42(self):
+        base = "AAATTTCCCGGG"
+        compare = "AAATTTCCCGGT"
+        mutationHash = mutationArrayToHash(mutationID(base,compare))
+        self.assertEqual(mutationHash, 'S:11:G-T')
+        
+    def test_43(self):
+        base = "AAATTTCCCGGG"
+        compare = "AAATTTCCCG"
+        mutationHash = mutationArrayToHash(mutationID(base,compare))
+        self.assertEqual(mutationHash, 'D:10:GG-')
 def main():
     unittest.main()
 

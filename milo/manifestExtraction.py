@@ -69,7 +69,7 @@ def genAmpliconDict(inFile):
         csvList = list(reader(csvFile))
 
         #Divides them into hashes of 15 and see if there are overlaps
-        ampList = [(x[2][:17], x[2][7:24], x[2][6:23], x[2][8:25]) for x in csvList]
+        ampList = [(x[3][:17], x[3][7:24], x[3][6:23], x[3][8:25]) for x in csvList]
         ampList1 = [x[0] for x in ampList]
         """
         for i in range(len(ampList1)):
