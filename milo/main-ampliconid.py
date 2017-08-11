@@ -26,20 +26,23 @@ def run():
         filenameArray = json.load(file_list_file)
     
         for filenames in filenameArray:
-            fq1, fq2, paired = readFilenames(filenames)
-            
+            fq1, fq2, paired, skip = readFilenames(filenames)
+            if skip:
+                continue
             if (fq1 == '' or fq2 == '' or paired == ''):
                 print('Please set the keys "fastq1", "fastq2" and "paired" in the config.json file')
                 return
         
         for filenames in filenameArray:
-            fq1, fq2, paired = readFilenames(filenames)
-    
+            fq1, fq2, paired, skip = readFilenames(filenames)
+            if skip:
+                continue
             # Don't understand the __name__ thing, but it's required according to SO
-            if __name__ ==  "__main__": pairToJ3X(fq1, fq2, paired, inDir, outDir) 
+            pairToJ3X(fq1, fq2, paired, inDir, outDir) 
 
 def readFilenames(filenames):
     fq1 = fq2 = paired = ''
+    skip = False
     
     if ( 'fastq1' in filenames ):
         fq1 = filenames['fastq1']
@@ -47,7 +50,10 @@ def readFilenames(filenames):
         fq2 = filenames['fastq2']
     if ( 'paired' in filenames ):
         paired = filenames['paired']
-    return fq1, fq2, paired
+    if ( 'skip' in filenames ):
+        skip = filenames['skip']
+        
+    return fq1, fq2, paired, skip
     
 def pairToJ3X(fq1, fq2, paired, inDir, outDir):
     with open(inDir + fq1) as fq1File, open(inDir + fq2) as fq2File:
@@ -77,4 +83,4 @@ def pairToJ3X(fq1, fq2, paired, inDir, outDir):
             print("{0} Dumped {1}".format(time.strftime('%X %d %b %Y'), paired))
             print("Took {0}s\n\n".format(time.time() - start))
 
-run()
+if __name__ ==  "__main__": run()
