@@ -22,7 +22,7 @@ def run():
     mutationTupleList = list(mutationHumanDictionary.items())
     filteredTupleList = [x for x in mutationTupleList if x[1]['fileOccurrences'] >= minOccurences]
     
-    filteredTupleList.sort(key=lambda tup: -tup[1]['totalOccurrences'])
+    filteredTupleList.sort(key=lambda tup: - tup[1]['fileOccurrences'])
     pprint(filteredTupleList)
     
         
