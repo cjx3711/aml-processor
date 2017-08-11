@@ -22,7 +22,7 @@ def run():
         if ( 'minMutationCount' in config_data ):
             minMutationCount = config_data['minMutationCount']
         if ( 'chunksize' in config_data ):
-            chunksize = config_data['chunksize']
+            chunksize = config_data['chunksize'] # TODO: Chunksize does not carry over
     
     print("MILo Mutation Identifier")
     print("Minimum Mutation Count: {0}".format(minMutationCount))
@@ -60,6 +60,8 @@ def readFilenames(filenames):
     return pairedFile, mutationFile, skip
     
 def mutationID(pairedFile, mutationFile, inDir, outDir, minMutationCount):
+    if not os.path.exists(outDir):
+        os.makedirs(outDir)
     with open(inDir + pairedFile) as inFile:
         filesize = os.path.getsize(inDir + pairedFile)
         estimatedReads = int(filesize / bytesPerRead)

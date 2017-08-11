@@ -1,8 +1,11 @@
 from manifestExtraction import grouper
 from unpairedFastqProc import *
 from ReadPairer import *
+from ReadCompressor import *
 from tqdm import tqdm
 from multiprocessing import cpu_count
+
+from pprint import pprint
 
 import os
 import json
@@ -56,12 +59,15 @@ def readFilenames(filenames):
     return fq1, fq2, paired, skip
     
 def pairToJ3X(fq1, fq2, paired, inDir, outDir):
+    readCompressor = ReadCompressor()
+    if not os.path.exists(outDir):
+        os.makedirs(outDir)
     with open(inDir + fq1) as fq1File, open(inDir + fq2) as fq2File:
         filesize1 = os.path.getsize(inDir + fq1)
         filesize2 = os.path.getsize(inDir + fq1)
         filesize = (filesize1 + filesize2) / 2
         estimatedReads = int(filesize / bytesPerRead)
-        
+
         outfile = outDir + paired
         with open(outfile, "w+", newline = "") as outFile:
             print("{0} Crunching {1} and {2}".format(time.strftime('%X %d %b %Y'), fq1, fq2))
@@ -74,12 +80,26 @@ def pairToJ3X(fq1, fq2, paired, inDir, outDir):
             with tqdm(total=estimatedReads) as pbar:
                 result = processManager.map(readPairer.alignAndMerge, fq1Iter, fq2Iter, chunksize = chunksize)
                 for i, data in tqdm(enumerate(result)):
-                    outFile.write(data)
-                    outFile.write("\n\n")
+                    readCompressor.putPairedRead(data)
+                    # outFile.write(data)
+                    # outFile.write("\n\n")
                     pbar.update()
-                outFile.close()
             pbar.close()
-
+            
+            sortedCompressedList = readCompressor.getDataList()
+            for read in sortedCompressedList:
+                sequence = read[0]
+                count = read[1][0]
+                iddata = read[1][1]
+                quality = read[1][2]
+                outFile.write("{0}, {1}".format(iddata, count))
+                outFile.write('\n')
+                outFile.write(sequence)
+                outFile.write('\n')
+                outFile.write(quality)
+                outFile.write("\n\n")
+            outFile.close()
+                
             print("{0} Dumped {1}".format(time.strftime('%X %d %b %Y'), paired))
             print("Took {0}s\n\n".format(time.time() - start))
 
