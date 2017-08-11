@@ -5,6 +5,7 @@ from pprint import pprint
 
 inDir = os.path.join("data", "3-mutations")
 outDir = os.path.join("data", "4-mutationstats")
+significanceThreshold = 0.2
 
 filenameEnd = "_MUTATIONS.j4x"
 mutationHumanDictionary = {}
@@ -22,8 +23,19 @@ def run():
     mutationTupleList = list(mutationHumanDictionary.items())
     filteredTupleList = [x for x in mutationTupleList if x[1]['fileOccurrences'] >= minOccurences]
     
-    filteredTupleList.sort(key=lambda tup: - tup[1]['fileOccurrences'])
-    pprint(filteredTupleList)
+    # Stably sort the list by file occurrences,
+    filteredTupleList.sort(key = lambda tup: tup[1]['fileOccurrences'], reverse = True)
+    # Average VAFrequency
+    filteredTupleList.sort(key = lambda tup: sum(tup[1]['VAFrequency']) / tup[1]['fileOccurrences'], reverse = True)
+    # 
+    filteredTupleList.sort(key = lambda tup: tup[0][:tup[0].find(" ")])
+    significantTupleList = [("",)]
+    for x in filteredTupleList:
+        if ( sum(x[1]['VAFrequency']) / x[1]['fileOccurrences'] > significanceThreshold ):
+            significantTupleList.append(x)
+        elif ( x[0][:x[0].find(" ")] == significantTupleList[-1][0][:significantTupleList[-1][0].find(" ")]):
+            significantTupleList.append(x)
+    pprint(significantTupleList)
     
         
 
