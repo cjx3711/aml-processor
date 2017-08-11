@@ -7,16 +7,16 @@ def mutationID(base, compare):
     global baseString
     if ( baseString != base ):
         baseString = base;
-        sequenceMatcher.set_seq2(baseString)
-    sequenceMatcher.set_seq1(compare)
+        sequenceMatcher.set_seq1(baseString)
+    sequenceMatcher.set_seq2(compare)
     matches = sequenceMatcher.get_matching_blocks();
     start = [0, 0]
     mutations = []
     
     for i in range(0, len(matches)):
         # Get the bits from the start to the current point
-        posA = matches[i].b
-        posB = matches[i].a
+        posA = matches[i].a
+        posB = matches[i].b
         deltaA = posA - start[0]
         deltaB = posB - start[1]
         
