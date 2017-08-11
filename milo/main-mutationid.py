@@ -78,8 +78,9 @@ def mutationID(pairedFile, mutationFile, inDir, outDir, minMutationCount):
                     ampliconID = data[0]
                     mutationHash = data[1]
                     referenceCoordinate = data[2]
-                    if ( ampliconID != None and mutationHash != None and referenceCoordinate != None ):
-                        mutationFinder.putMutationHash(ampliconID, mutationHash, referenceCoordinate)
+                    readCount = data[3]
+                    if ( ampliconID != None and mutationHash != None and referenceCoordinate != None and readCount != None ):
+                        mutationFinder.putMutationHash(ampliconID, mutationHash, referenceCoordinate, readCount)
                     pbar.update()
 
             pbar.close()

@@ -6,13 +6,13 @@ class MutationFinder:
         pass
         
     def reinit(self):
-        # Format of ampliconMutationHashDict
-        # {
-        #    'MUTATION_HASH': OCCURENCE_COUNT,
-        #    'MUTATION_HASH': OCCURENCE_COUNT,
+        # Format of ampliconMutationHashList
+        # [
+        #    ('MUTATION_HASH', OCCURENCE_COUNT),
+        #    ('MUTATION_HASH', OCCURENCE_COUNT),
         #    ...
-        # }
-        self.ampliconMutationHashDict = {}
+        # ]
+        self.ampliconMutationHashList = []
         
         self.referenceCount = 0
         self.ampliconRefs = []
@@ -41,34 +41,33 @@ class MutationFinder:
             return None
         return self.ampliconRefs[ampliconID-1]
         
-    def getMutationHashDict(self):
-        return self.ampliconMutationHashDict
     
     # Puts the identified mutation into the hash
-    def putMutationHash(self, ampliconID, mutationHash, referenceCoordinate):
+    def putMutationHash(self, ampliconID, mutationHash, referenceCoordinate, readCount):
         if ( ampliconID == 0 ):
             return
         key = "{0} {1}".format(ampliconID, mutationHash)
         referenceAmplicon = self.getReferenceAmplicon(ampliconID)
-        referenceAmplicon[2] += 1 # Increment the count
+        referenceAmplicon[2] += readCount # Increment the count
         
         if ( len(mutationHash) == 0 ):
             return
-        if ( key not in self.ampliconMutationHashDict ):
-            self.ampliconMutationHashDict[key] = 0
-        self.ampliconMutationHashDict[key] += 1
+        self.ampliconMutationHashList.append((key, readCount))
+        # if ( key not in self.ampliconMutationHashDict ):
+        #     self.ampliconMutationHashDict[key] = 0
+        # self.ampliconMutationHashDict[key] += 1
     
     def extractHighestOccuringMutations(self, minOccurences):
-        mutationTupleList = list(self.getMutationHashDict().items())
-        filteredTupleList = [x for x in mutationTupleList if x[1] >= minOccurences]
+        filteredTupleList = [x for x in self.ampliconMutationHashList if x[1] >= minOccurences]
         filteredTupleList.sort(key=lambda tup: -tup[1])
         return filteredTupleList
         
     def identifyMutations(self, data):
-        ampliconID = int(data[0][3:data[0].index(',')])
+        iddataParts = data[0].split(', ')
+        ampliconID = int(iddataParts[0][3:])
         if ( ampliconID == 0 ):
-            return None, None, None
-            
+            return None, None, None, None
+        readCount = int(iddataParts[3])
         sequenceData = data[1][:-1]
         referenceAmplicon = self.getReferenceAmplicon(ampliconID)
         
@@ -76,4 +75,4 @@ class MutationFinder:
         referenceCoordinate = referenceAmplicon[1]
         mutationHash = mutationIDAsHash(referenceSequence, sequenceData)
         
-        return ampliconID, mutationHash, referenceCoordinate
+        return ampliconID, mutationHash, referenceCoordinate, readCount
