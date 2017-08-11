@@ -1,16 +1,22 @@
 from difflib import SequenceMatcher
 
+sequenceMatcher = SequenceMatcher(None, '', '', autojunk = False)
+baseString = ''
+
 def mutationID(base, compare):
-    seqs = SequenceMatcher(None, base, compare, autojunk = False)
-    matches = seqs.get_matching_blocks();
+    global baseString
+    if ( baseString != base ):
+        baseString = base;
+        sequenceMatcher.set_seq2(baseString)
+    sequenceMatcher.set_seq1(compare)
+    matches = sequenceMatcher.get_matching_blocks();
     start = [0, 0]
     mutations = []
     
     for i in range(0, len(matches)):
-        
         # Get the bits from the start to the current point
-        posA = matches[i].a
-        posB = matches[i].b
+        posA = matches[i].b
+        posB = matches[i].a
         deltaA = posA - start[0]
         deltaB = posB - start[1]
         
