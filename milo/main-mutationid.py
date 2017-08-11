@@ -33,25 +33,31 @@ def run():
         filenameArray = json.load(file_list_file)
         
         for filenames in filenameArray:
-            pairedFile, mutationFile = readFilenames(filenames)
-            
+            pairedFile, mutationFile, skip = readFilenames(filenames)
+            if skip:
+                continue
             if (pairedFile == '' or mutationFile == ''):
                 print('Please set the keys "paired" and "mutation" in the config.json file')
                 return
         
         for filenames in filenameArray:
-            pairedFile, mutationFile = readFilenames(filenames)
-            
+            pairedFile, mutationFile, skip = readFilenames(filenames)
+            if skip:
+                continue
             # Don't understand the __name__ thing, but it's required according to SO
-            if __name__ ==  "__main__": mutationID(pairedFile, mutationFile, inDir, outDir, minMutationCount)
+            mutationID(pairedFile, mutationFile, inDir, outDir, minMutationCount)
             
 def readFilenames(filenames):
     pairedFile = mutationFile = ''
+    skip = False
+    
     if ( 'paired' in filenames ):
         pairedFile = filenames['paired']
     if ( 'mutation' in filenames ):
         mutationFile = filenames['mutation']
-    return pairedFile, mutationFile
+    if ( 'skip' in filenames ):
+        skip = filenames['skip']
+    return pairedFile, mutationFile, skip
     
 def mutationID(pairedFile, mutationFile, inDir, outDir, minMutationCount):
     with open(inDir + pairedFile) as inFile:
@@ -114,5 +120,4 @@ def mutationID(pairedFile, mutationFile, inDir, outDir, minMutationCount):
             print("{0} Dumped {1}".format(time.strftime('%X %d %b %Y'), mutationFile))
             print("Took {0}s\n\n".format(time.time() - start))
                 
-                
-run()
+if __name__ ==  "__main__": run()
