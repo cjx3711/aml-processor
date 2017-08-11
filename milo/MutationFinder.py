@@ -40,7 +40,6 @@ class MutationFinder:
         if ( ampliconID == 0 ):
             return None
         return self.ampliconRefs[ampliconID-1]
-        
     
     # Puts the identified mutation into the hash
     def putMutationHash(self, ampliconID, mutationHash, referenceCoordinate, readCount):

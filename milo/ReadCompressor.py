@@ -15,5 +15,5 @@ class ReadCompressor:
     
     def getDataList(self):
         readTupleList = list(self.ampliconCountDict.items())
-        readTupleList.sort(key=lambda tup: -tup[1][0])
+        readTupleList.sort(key=lambda tup: tup[1][1])
         return readTupleList
