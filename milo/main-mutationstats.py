@@ -3,21 +3,21 @@ import os
 from j4xUtils import *
 from pprint import pprint
 
-inDir = "data/3-mutations/"
-outDir = "data/4-mutationstats"
+inDir = os.path.join("data", "3-mutations")
+outDir = os.path.join("data", "4-mutationstats")
 
-filenaneEnd = "_MUTATIONS.j4x"
+filenameEnd = "_MUTATIONS.j4x"
 mutationHumanDictionary = {}
 
 def run():
-    minOccurences = 2
+    minOccurences = 1
     for filepath in glob.glob(os.path.join(inDir, '*.j4x')):
         # Read all files in input directory
-        filenameParts = filepath.split("/")
+        filenameParts = filepath.split(os.sep)
         filenameOnly = filenameParts[len(filenameParts)-1]
-        if (filenameOnly[-len(filenaneEnd):] == filenaneEnd):
-            personName = filenameOnly[:-len(filenaneEnd)]
-            proessSingleHuman(filepath, personName)
+        if (filenameOnly[-len(filenameEnd):] == filenameEnd):
+            personName = filenameOnly[:-len(filenameEnd)]
+            processSingleHuman(filepath, personName)
     
     mutationTupleList = list(mutationHumanDictionary.items())
     filteredTupleList = [x for x in mutationTupleList if x[1]['fileOccurrences'] >= minOccurences]
@@ -27,14 +27,18 @@ def run():
     
         
 
-def proessSingleHuman(filepath, personName):
+def processSingleHuman(filepath, personName):
     with open(filepath) as mutationFile:
         for line in mutationFile:
+            if line[:-1] == "Reference Amplicon Stats":
+                break
             processSingleLine(line[:-1], personName) # Remove the \n
 
 def processSingleLine(line, personName):
     parts = line.split(", ")
-    occurences = int(parts[0])
+    readSplitPt = parts[0].find("/")
+    occurrences = int(parts[0][:readSplitPt])
+    vaFrequency = round(occurrences / int(parts[0][readSplitPt + 1:]), 2)
     mutationHash = parts[1]
     
     if ( mutationHash not in mutationHumanDictionary ):
@@ -42,12 +46,14 @@ def processSingleLine(line, personName):
             'totalOccurrences' : 0,
             'fileOccurrences': 0,
             'occurrences': [],
+            'VAFrequency': [],
             'humans': []
         }
     
-    mutationHumanDictionary[mutationHash]['totalOccurrences'] += occurences
+    mutationHumanDictionary[mutationHash]['totalOccurrences'] += occurrences
     mutationHumanDictionary[mutationHash]['fileOccurrences'] += 1
-    mutationHumanDictionary[mutationHash]['occurrences'].append(occurences)
+    mutationHumanDictionary[mutationHash]['occurrences'].append(occurrences)
+    mutationHumanDictionary[mutationHash]['VAFrequency'].append(vaFrequency)
     mutationHumanDictionary[mutationHash]['humans'].append(personName)
     
 run()
