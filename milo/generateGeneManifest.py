@@ -1,7 +1,9 @@
+from genomicsUtils import *
+
 def run():
     geneID = 1
-    with open('Manifest.csv') as references:
-        with open('GeneManifest.csv', "w+", newline = "") as outFile:
+    with open('references/Manifest.csv') as references:
+        with open('references/GeneManifest.csv', "w+", newline = "") as outFile:
         
             first = True
             geneAmpliconList = []
@@ -11,10 +13,14 @@ def run():
                     continue
                 csvCells = line.split(',')
                 ampliconID = csvCells[0]
+                direction = csvCells[2]
                 ampliconName = csvCells[1]
                 sequence = csvCells[3]
                 start = int(csvCells[4])
                 end = int(csvCells[5])
+                
+                if ( direction == '-' ):
+                    sequence = reverseComplement(sequence)
                 
                 tileNumber = int(ampliconName[ampliconName.rfind("_")+1:])
                 ampliconNameWithoutTile = ampliconName[:ampliconName.rfind("_tile_")]
@@ -42,14 +48,14 @@ def combineAmpliconsintoGene(geneAmpliconList):
     endCoord = 0
     currentCombined = ''
     for amplicon in geneAmpliconList:
+        sequence = amplicon[2]
         newStartCoord = amplicon[3]
         newEndCoord = amplicon[4]
-        sequence = amplicon[2]
         if ( startCoord == 0 and endCoord == 0 ): # First amplicon
             firstCoord = newStartCoord
             currentCombined = sequence
         else:
-            currentCombined += sequence[newStartCoord - endCoord:]
+            currentCombined += sequence[lastCoord - newStartCoord + 1:]
         startCoord = newStartCoord
         endCoord = lastCoord = newEndCoord
         ampIDList.append(amplicon[0])
