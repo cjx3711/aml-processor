@@ -86,13 +86,16 @@ def pairToJ3X(fq1, fq2, paired, inDir, outDir):
                     pbar.update()
             pbar.close()
             
+            
+            
             sortedCompressedList = readCompressor.getDataList()
             for read in sortedCompressedList:
                 sequence = read[0]
                 count = read[1][0]
-                iddata = read[1][1]
-                quality = read[1][2]
-                outFile.write("{0}, {1}".format(iddata, count))
+                matchCount = read[1][1]
+                iddata = read[1][2]
+                quality = read[1][3]
+                outFile.write("{0}, C:{1}, M:{2}".format(iddata, count, matchCount))
                 outFile.write('\n')
                 outFile.write(sequence)
                 outFile.write('\n')
