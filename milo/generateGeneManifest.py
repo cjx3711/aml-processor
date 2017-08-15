@@ -26,9 +26,10 @@ def run():
                 ampliconNameWithoutTile = ampliconName[:ampliconName.rfind("_tile_")]
                 if ( tileNumber == 1 ):
                     geneStr = combineAmpliconsintoGene(geneAmpliconList)
-                    outFile.write("{0},{1}\n".format(geneID, geneStr))
-                    geneID += 1
-                    geneAmpliconList = []
+                    if ( geneStr != None ):
+                        outFile.write("{0},{1}\n".format(geneID, geneStr))
+                        geneID += 1
+                        geneAmpliconList = []
                     
                 geneAmpliconList.append((ampliconID, ampliconNameWithoutTile, sequence, start, end))
 
@@ -39,7 +40,7 @@ def run():
             
 def combineAmpliconsintoGene(geneAmpliconList):
     if ( len(geneAmpliconList) == 0 ):
-        return
+        return None
     
     ampIDList = []
     firstCoord = 0
