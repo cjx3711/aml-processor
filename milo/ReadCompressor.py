@@ -61,17 +61,65 @@ class ReadCompressor:
                          self.discardCountList[ampID] += 1 # Discard
             else:  # Otherwise, add it to the to-be-merged list
                 self.tbmergedList.append(seq)
+                
     def getStats(self):
         return self.numMergeAttempts, self.mergedCount, self.mergedUnsureCount, self.mergedD1Count, self.mergedD2Count, self.discardCountList, self.ampliconCountList
     
+    def mergeIntoTemplates(self, seq):
+        mergeCandidatesD1 = [] # List containing templates that each sequence might be merged with distance of 1,
+        mergeCandidatesD2 = [] # and distance of 2
+
+        for template in enumerate(self.templateList): # Get edit distance between sequence and every applicable template
+            dist = compare(seq[0], template[1][0])
+            if dist != -1: # If distance is not more than 2, put template in consideration for merge
+                if dist == 1:
+                    mergeCandidatesD1.append(template[0])
+                else:
+                    mergeCandidatesD2.append(template[0])
+                    
+        return mergeCandidatesD1, mergeCandidatesD2, seq
+        
+    def addMergeCadidates(self, mergeCandidatesD1, mergeCandidatesD2, seq):
+        seqReadCount = seq[1][0]
+        self.numMergeAttempts += seqReadCount
+        numCandidates = len(mergeCandidatesD1) + len(mergeCandidatesD2)
+        if numCandidates > 0:
+            if numCandidates > 1:
+                self.mergedUnsureCount += seqReadCount
+            self.mergedCount += seqReadCount
+
+            if mergeCandidatesD1: # Prioritize templates that are a distance of 1, rather than 2, from the current sequence
+                splitValue = seqReadCount / len(mergeCandidatesD1) # Allocate read count equally among templates equally similar to sequence
+                self.mergedD1Count += seqReadCount
+                for templateInd in mergeCandidatesD1:
+                    self.templateList[templateInd][1][0] += splitValue # Increase total read count
+                    self.templateList[templateInd][1][1] += splitValue # Increase read count of merges
+            else:
+                splitValue = seqReadCount / len(mergeCandidatesD2)
+                self.mergedD2Count += seqReadCount
+                for templateInd in mergeCandidatesD2:
+                    self.templateList[templateInd][1][0] += splitValue
+                    self.templateList[templateInd][1][1] += splitValue
+
+        else:
+            if seqReadCount >= self.j3x_readDeletorThreshold: # If we can't merge the sequence but it has a high read depth
+                self.leftoverList.append(seq)
+            else:
+                self.discardCountList[int(seq[1][2].split(',')[0][3:])] += 1 # Discard
+        
+        
+    def getTbmerged(self):
+        return self.tbmergedList
+    
+    def getMergedDataList(self):
+        return self.templateList + self.leftoverList
+        
     def getDataList(self):
         # Merging to-be-merged list with template list
         for seq in self.tbmergedList:
             mergeCandidatesD1 = [] # List containing templates that each sequence might be merged with distance of 1,
             mergeCandidatesD2 = [] # and distance of 2
-            seqReadCount = seq[1][0]
-            self.numMergeAttempts += seqReadCount
-
+            
             for template in self.templateList: # Get edit distance between sequence and every applicable template
                 dist = compare(seq[0], template[0])
                 if dist != -1: # If distance is not more than 2, put template in consideration for merge
@@ -79,7 +127,9 @@ class ReadCompressor:
                         mergeCandidatesD1.append(template)
                     else:
                         mergeCandidatesD2.append(template)
-
+                        
+            seqReadCount = seq[1][0]
+            self.numMergeAttempts += seqReadCount
             numCandidates = len(mergeCandidatesD1) + len(mergeCandidatesD2)
             if numCandidates > 0:
                 if numCandidates > 1:

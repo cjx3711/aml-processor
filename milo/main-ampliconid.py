@@ -90,7 +90,21 @@ def pairToJ3X(fq1, fq2, paired, inDir, outDir):
             readCompressor.prepareForCompression()
             print("\nCompressing\n")
             
-            j3xSeqs = readCompressor.getDataList()
+            # j3xSeqs = readCompressor.getDataList()
+            
+            
+            tbMergedList = readCompressor.getTbmerged()
+            
+            processManager = ProcessPoolExecutor(numThreads)
+            with tqdm(total=estimatedReads) as pbar:
+                result = processManager.map(readCompressor.mergeIntoTemplates, tbMergedList, chunksize = chunksize)
+                for i, data in tqdm(enumerate(result)):
+                    readCompressor.addMergeCadidates(data[0], data[1], data[2])
+                    # outFile.write("\n\n")
+                    pbar.update()
+            pbar.close()
+            
+            j3xSeqs = readCompressor.getMergedDataList()
             numMergeAttempts, mergedCount, mergedUnsureCount, mergedD1Count, mergedD2Count, discardCountList, ampliconCountList = readCompressor.getStats()
             
             # Calculate the total number of discards, and the discard rates relative to each amplicon's read depth
