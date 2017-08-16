@@ -1,11 +1,12 @@
-from genomicsUtils import simpleDistance
+from fastcomp import compare
 import json
 
 class ReadCompressor:
     def __init__(self):
         self.ampliconCountDict = {}
         self.totalReads = 0
-        
+        self.compressorAllowedThreshold = 9
+        self.compressorMergeThreshold = 1
         with open('config.json') as config_file: 
             config_data = json.load(config_file)
             if ( 'compressorAllowedThreshold' in config_data ):
@@ -33,17 +34,28 @@ class ReadCompressor:
         filteredTupleList = [x for x in readTupleList if x[1][0] >= self.compressorAllowedThreshold]
         filteredTupleList.sort(key=lambda tup: -tup[1][0])
         matchedOnes = 0
+        matchedMoreThanOne = 0
         totalOnes = 0
         for ones in onesList:
+            matchedTupleList = [] # Stores the list of tuples that are 1 or 2 distance from the ones
             onesOccurence = ones[1][0]
             totalOnes += onesOccurence
-            for tuples in filteredTupleList:
-                dist = simpleDistance(ones[0], tuples[0])
-                if ( dist < 2 ):
-                    # print("Match\n{0}\n{1}".format(ones[0], tuples[0]))
-                    tuples[1][0] += onesOccurence # Add to total count
-                    tuples[1][1] += onesOccurence # Add to close match count
-                    matchedOnes += onesOccurence
+            for filteredTuple in filteredTupleList:
+                dist = compare(ones[0], filteredTuple[0])
+                if ( dist <= 2 and dist != -1 ):
+                    # filteredTuple[1][0] += onesOccurence # Add to total count
+                    # filteredTuple[1][1] += onesOccurence # Add to close match count
+                    # matchedOnes += onesOccurence
+                    matchedTupleList.append(filteredTuple)
                     break
+            matchCount = len(matchedTupleList)
+            if matchCount > 0:
+                if matchCount > 1:
+                    matchedMoreThanOne += onesOccurence
+                matchedOnes += onesOccurence
+                splitValue = onesOccurence / matchCount
+                for matchedTuple in matchedTupleList:
+                    filteredTuple[1][0] += splitValue
+                    filteredTuple[1][1] += splitValue
                 
-        return filteredTupleList, totalOnes, matchedOnes        
+        return filteredTupleList, totalOnes, matchedOnes, matchedMoreThanOne    

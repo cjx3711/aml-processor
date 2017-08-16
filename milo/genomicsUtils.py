@@ -64,6 +64,7 @@ def getPhredErrorDict():
     
 def simpleDistance(a, b):
     """
+    Deprecated: Replaced by fastcomp
     Checks the distance between two strings.
     Outputs 0, 1 or 2. If it's 2, it means it's more than 2
     """

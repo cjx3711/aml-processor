@@ -88,7 +88,7 @@ def pairToJ3X(fq1, fq2, paired, inDir, outDir):
             
             
             
-            sortedCompressedList, totalOnes, matchedOnes = readCompressor.getDataList()
+            sortedCompressedList, totalOnes, matchedOnes, matchedMoreThanOne = readCompressor.getDataList()
             discardedOnes = totalOnes - matchedOnes
             totalMatched = 0
             for read in sortedCompressedList:
@@ -111,6 +111,7 @@ def pairToJ3X(fq1, fq2, paired, inDir, outDir):
             percCompression = 100 - int(lines / total * 1000)/10
             percUsable = int(totalMatched / total * 1000)/10
             percMatched = int(matchedOnes / total * 1000)/10
+            percMatchedMore = int(matchedMoreThanOne / total * 1000)/10
             percDiscarded = int(discardedOnes / total * 1000)/10
             
             with open(outfile + ".stats", "w+", newline = "") as statsFile:
@@ -118,6 +119,7 @@ def pairToJ3X(fq1, fq2, paired, inDir, outDir):
                 pwrite(statsFile, "Compressed {0} reads into {1} lines. ({2}%% compression)".format(total, lines, percCompression))
                 pwrite(statsFile, "Usable data on {0} of {1}. ({2}%)".format(totalMatched, total, percUsable))
                 pwrite(statsFile, "Close match on {0} of {1}. ({2}%)".format(matchedOnes, total, percMatched))
+                pwrite(statsFile, "Match more than one on {0} of {1}. ({2}%)".format(matchedMoreThanOne, total, percMatchedMore))
                 pwrite(statsFile, "Discarded {0} of {1}. ({2}%)".format(discardedOnes, total, percDiscarded))
                 pwrite(statsFile, "Took {0}s\n\n".format(time.time() - start))
                 
