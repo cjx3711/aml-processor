@@ -136,7 +136,7 @@ def pairToJ3X(fq1, fq2, paired, inDir, outDir):
                 pwrite(statsFile, "Compressed {0} reads into {1} sequences. ({2}%% compression)".format(numOriginal, numSeqs, prcntCompression))
                 pwrite(statsFile, "Usable data on {0} of {1}. ({2}%)".format(totalAcrossAmplicons, numOriginal, prcntUsable))
                 pwrite(statsFile, "Merged {0} of {1}. ({2}%)".format(mergedCount, numOriginal, prcntMerged))
-                pwrite(statsFile, "Match more than one on {0} of {1}. ({2}%)".format(mergedUnsureCount, numOriginal, prcntMergedUnsure))
+                pwrite(statsFile, "Merged with more than one possible template candidate {0} of {1}. ({2}%)".format(mergedUnsureCount, numOriginal, prcntMergedUnsure))
                 pwrite(statsFile, "Discarded {0} of {1}. ({2}%)".format(numDiscarded, numOriginal, prcntDiscarded))
                 pwrite(statsFile, "{0} reads were merged with distance of 1, while {1} were merged with distance of 2.".format(mergedD1, mergedD2))
                 pwrite(statsFile, "Took {0}s\n\n".format(time.time() - start))
