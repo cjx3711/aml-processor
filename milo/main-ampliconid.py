@@ -100,10 +100,6 @@ def pairToJ3X(fq1, fq2, paired, inDir, outDir):
             numDiscarded = sum(discardCountList)
             discardRates = [discarded / total if total != 0 else None for discarded, total in zip(discardCountList, ampliconCounts)]
             avgDiscardRate = median([rate for rate in discardRates if rate != None])
-            if any([rate - avgDiscardRate > 0.1 for rate in discardRates if rate != None]): # If the discards are concentrated in one amplicon
-                print("ALERT: The following amplicons have high discard rates:")
-                print([(ampID, round(rate, 2)) for ampID, rate in enumerate(discardRates) if rate != None and rate - avgDiscardRate > 0.1])
-                print("The average discard rate is {0}%".format(round(avgDiscardRate, 3) * 100))
 
             # Format and write to j3x
             totalAcrossAmplicons = 0
@@ -133,13 +129,17 @@ def pairToJ3X(fq1, fq2, paired, inDir, outDir):
             
             with open(outfile + ".stats", "w+", newline = "") as statsFile:
                 pwrite(statsFile, "{0} Finished writing to j3x {1}".format(time.strftime('%X %d %b %Y'), paired))
-                pwrite(statsFile, "Compressed {0} reads into {1} sequences. ({2}%% compression)".format(numOriginal, numSeqs, prcntCompression))
+                pwrite(statsFile, "Compressed {0} reads into {1} sequences. ({2}% compression)".format(numOriginal, numSeqs, prcntCompression))
                 pwrite(statsFile, "Usable data on {0} of {1}. ({2}%)".format(totalAcrossAmplicons, numOriginal, prcntUsable))
                 pwrite(statsFile, "Merged {0} of {1}. ({2}%)".format(mergedCount, numOriginal, prcntMerged))
-                pwrite(statsFile, "Merged with more than one possible template candidate {0} of {1}. ({2}%)".format(mergedUnsureCount, numOriginal, prcntMergedUnsure))
+                pwrite(statsFile, "Merged with more than one possible template candidate: {0} of {1}. ({2}%)".format(mergedUnsureCount, numOriginal, prcntMergedUnsure))
                 pwrite(statsFile, "Discarded {0} of {1}. ({2}%)".format(numDiscarded, numOriginal, prcntDiscarded))
-                pwrite(statsFile, "{0} reads were merged with distance of 1, while {1} were merged with distance of 2.".format(mergedD1, mergedD2))
+                pwrite(statsFile, "{0}% of merges had distance of 1, while {1}% were merged with distance of 2.".format(round(mergedD1 / mergedCount * 100, 3), round(mergedD2 / mergedCount  * 100, 3)))
                 pwrite(statsFile, "Took {0}s\n\n".format(time.time() - start))
+                if any([rate - avgDiscardRate > 0.1 for rate in discardRates if rate != None]): # If the discards are concentrated in one amplicon
+                    pwrite(statsFile, "ALERT: The following amplicons have high discard rates (ID, Discard %, Read Depth):")
+                    pwrite(statsFile, str([(ampID, str(round(rate, 2) * 100) + "%", ampliconCounts[ampID]) for ampID, rate in enumerate(discardRates) if rate != None and rate - avgDiscardRate > 0.1]))
+                    pwrite(statsFile, "The average discard rate is {0}%".format(round(avgDiscardRate, 3) * 100))
                 
 def pwrite(file, message):
     print(message)
