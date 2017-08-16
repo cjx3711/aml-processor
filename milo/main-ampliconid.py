@@ -96,13 +96,13 @@ def pairToJ3X(fq1, fq2, paired, inDir, outDir):
                 ampliconCounts[ampID] += count
             
             j3xSeqs, numMergeAttempts, mergedCount, mergedUnsureCount, mergedD1, mergedD2, discardCountList = readCompressor.getDataList(ampliconCounts)
-            # Calculate the total number of discards, and the rates relative to each amplicon's read depth
+            # Calculate the total number of discards, and the discard rates relative to each amplicon's read depth
             numDiscarded = sum(discardCountList)
             discardRates = [discarded / total if total != 0 else None for discarded, total in zip(discardCountList, ampliconCounts)]
-            avgDiscardRate = median([x for x in discardRates if x != None])
-            if any([abs(avgDiscardRate - x) > 0.1 for x in discardRates if x != None]): # If the discards are concentrated in one amplicon
+            avgDiscardRate = median([rate for rate in discardRates if rate != None])
+            if any([rate - avgDiscardRate > 0.1 for rate in discardRates if rate != None]): # If the discards are concentrated in one amplicon
                 print("ALERT: The following amplicons have high discard rates:")
-                print([(ampID, round(rate, 2)) for ampID, rate in enumerate(discardRates) if rate != None and abs(avgDiscardRate - rate) > 0.1])
+                print([(ampID, round(rate, 2)) for ampID, rate in enumerate(discardRates) if rate != None and rate - avgDiscardRate > 0.1])
                 print("The average discard rate is {0}%".format(round(avgDiscardRate, 3) * 100))
 
             # Format and write to j3x
