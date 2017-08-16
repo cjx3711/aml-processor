@@ -11,7 +11,7 @@ filenameEnd = "_MUTATIONS.j4x"
 mutationHumanDictionary = {}
 
 def run():
-    minOccurences = 1
+    minOccurences = 5
     for filepath in glob.glob(os.path.join(inDir, '*.j4x')):
         # Read all files in input directory
         filenameParts = filepath.split(os.sep)

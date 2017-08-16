@@ -1,0 +1,182 @@
+[
+  { 
+    "fastq1": "AD01_S1_L001_R1_001.fastq", 
+    "fastq2": "AD01_S1_L001_R2_001.fastq", 
+    "paired": "AD01_S1_L001_PAIRED.j3x", 
+    "mutation": "AD01_S1_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD09_S2_L001_R1_001.fastq", 
+    "fastq2": "AD09_S2_L001_R2_001.fastq", 
+    "paired": "AD09_S2_L001_PAIRED.j3x", 
+    "mutation": "AD09_S2_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD13_S3_L001_R1_001.fastq", 
+    "fastq2": "AD13_S3_L001_R2_001.fastq", 
+    "paired": "AD13_S3_L001_PAIRED.j3x", 
+    "mutation": "AD13_S3_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD18_S4_L001_R1_001.fastq", 
+    "fastq2": "AD18_S4_L001_R2_001.fastq", 
+    "paired": "AD18_S4_L001_PAIRED.j3x", 
+    "mutation": "AD18_S4_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD20_S5_L001_R1_001.fastq", 
+    "fastq2": "AD20_S5_L001_R2_001.fastq", 
+    "paired": "AD20_S5_L001_PAIRED.j3x", 
+    "mutation": "AD20_S5_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD24_S6_L001_R1_001.fastq", 
+    "fastq2": "AD24_S6_L001_R2_001.fastq", 
+    "paired": "AD24_S6_L001_PAIRED.j3x", 
+    "mutation": "AD24_S6_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD34_S7_L001_R1_001.fastq", 
+    "fastq2": "AD34_S7_L001_R2_001.fastq", 
+    "paired": "AD34_S7_L001_PAIRED.j3x", 
+    "mutation": "AD34_S7_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD38_S8_L001_R1_001.fastq", 
+    "fastq2": "AD38_S8_L001_R2_001.fastq", 
+    "paired": "AD38_S8_L001_PAIRED.j3x", 
+    "mutation": "AD38_S8_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD47_S1_L001_R1_001.fastq", 
+    "fastq2": "AD47_S1_L001_R2_001.fastq", 
+    "paired": "AD47_S1_L001_PAIRED.j3x", 
+    "mutation": "AD47_S1_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD48_S2_L001_R1_001.fastq", 
+    "fastq2": "AD48_S2_L001_R2_001.fastq", 
+    "paired": "AD48_S2_L001_PAIRED.j3x", 
+    "mutation": "AD48_S2_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD49_S3_L001_R1_001.fastq", 
+    "fastq2": "AD49_S3_L001_R2_001.fastq", 
+    "paired": "AD49_S3_L001_PAIRED.j3x", 
+    "mutation": "AD49_S3_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD51_S4_L001_R1_001.fastq", 
+    "fastq2": "AD51_S4_L001_R2_001.fastq", 
+    "paired": "AD51_S4_L001_PAIRED.j3x", 
+    "mutation": "AD51_S4_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD58_S5_L001_R1_001.fastq", 
+    "fastq2": "AD58_S5_L001_R2_001.fastq", 
+    "paired": "AD58_S5_L001_PAIRED.j3x", 
+    "mutation": "AD58_S5_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD62_S6_L001_R1_001.fastq", 
+    "fastq2": "AD62_S6_L001_R2_001.fastq", 
+    "paired": "AD62_S6_L001_PAIRED.j3x", 
+    "mutation": "AD62_S6_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD63_S7_L001_R1_001.fastq", 
+    "fastq2": "AD63_S7_L001_R2_001.fastq", 
+    "paired": "AD63_S7_L001_PAIRED.j3x", 
+    "mutation": "AD63_S7_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD68_S8_L001_R1_001.fastq", 
+    "fastq2": "AD68_S8_L001_R2_001.fastq", 
+    "paired": "AD68_S8_L001_PAIRED.j3x", 
+    "mutation": "AD68_S8_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD69_S1_L001_R1_001.fastq", 
+    "fastq2": "AD69_S1_L001_R2_001.fastq", 
+    "paired": "AD69_S1_L001_PAIRED.j3x", 
+    "mutation": "AD69_S1_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD77_S2_L001_R1_001.fastq", 
+    "fastq2": "AD77_S2_L001_R2_001.fastq", 
+    "paired": "AD77_S2_L001_PAIRED.j3x", 
+    "mutation": "AD77_S2_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD90_S3_L001_R1_001.fastq", 
+    "fastq2": "AD90_S3_L001_R2_001.fastq", 
+    "paired": "AD90_S3_L001_PAIRED.j3x", 
+    "mutation": "AD90_S3_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD93_S4_L001_R1_001.fastq", 
+    "fastq2": "AD93_S4_L001_R2_001.fastq", 
+    "paired": "AD93_S4_L001_PAIRED.j3x", 
+    "mutation": "AD93_S4_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD94_S5_L001_R1_001.fastq", 
+    "fastq2": "AD94_S5_L001_R2_001.fastq", 
+    "paired": "AD94_S5_L001_PAIRED.j3x", 
+    "mutation": "AD94_S5_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD95_S6_L001_R1_001.fastq", 
+    "fastq2": "AD95_S6_L001_R2_001.fastq", 
+    "paired": "AD95_S6_L001_PAIRED.j3x", 
+    "mutation": "AD95_S6_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD97_S7_L001_R1_001.fastq", 
+    "fastq2": "AD97_S7_L001_R2_001.fastq", 
+    "paired": "AD97_S7_L001_PAIRED.j3x", 
+    "mutation": "AD97_S7_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD98_S8_L001_R1_001.fastq", 
+    "fastq2": "AD98_S8_L001_R2_001.fastq", 
+    "paired": "AD98_S8_L001_PAIRED.j3x", 
+    "mutation": "AD98_S8_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD108_S2_L001_R1_001.fastq", 
+    "fastq2": "AD108_S2_L001_R2_001.fastq", 
+    "paired": "AD108_S2_L001_PAIRED.j3x", 
+    "mutation": "AD108_S2_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD119_S3_L001_R1_001.fastq", 
+    "fastq2": "AD119_S3_L001_R2_001.fastq", 
+    "paired": "AD119_S3_L001_PAIRED.j3x", 
+    "mutation": "AD119_S3_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD120_S9_L001_R1_001.fastq", 
+    "fastq2": "AD120_S9_L001_R2_001.fastq", 
+    "paired": "AD120_S9_L001_PAIRED.j3x", 
+    "mutation": "AD120_S9_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD135_S4_L001_R1_001.fastq", 
+    "fastq2": "AD135_S4_L001_R2_001.fastq", 
+    "paired": "AD135_S4_L001_PAIRED.j3x", 
+    "mutation": "AD135_S4_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD226_S3_L001_R1_001.fastq", 
+    "fastq2": "AD226_S3_L001_R2_001.fastq", 
+    "paired": "AD226_S3_L001_PAIRED.j3x", 
+    "mutation": "AD226_S3_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD285_S6_L001_R1_001.fastq", 
+    "fastq2": "AD285_S6_L001_R2_001.fastq", 
+    "paired": "AD285_S6_L001_PAIRED.j3x", 
+    "mutation": "AD285_S6_L001_MUTATIONS.j4x" 
+  }
+]

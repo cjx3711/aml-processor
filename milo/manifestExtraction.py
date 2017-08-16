@@ -4,7 +4,7 @@ Algorithms to extract selected data from manifest, and process them into useable
 from itertools import *
 from genomicsUtils import *
 from collections import Counter
-from Levenshtein import distance
+# from Levenshtein import distance
 
 def genTiledReads(inDir, outDir):
     """
