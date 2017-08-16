@@ -5,19 +5,19 @@ class ReadCompressor:
     def __init__(self):
         self.ampliconCountDict = {}
         self.totalReads = 0
-        self.j3x_minReadsForTemplate = 500
+        self.j3x_minVAFForTemplate = 0.05
         self.j3x_maxReadsForMerge = 50
         with open('config.json') as config_file: 
             config_data = json.load(config_file)
-            if ( 'j3x_minReadsForTemplate' in config_data ):
-                self.j3x_minReadsForTemplate = config_data['j3x_minReadsForTemplate']
+            if ( 'j3x_minVAFForTemplate' in config_data ):
+                self.j3x_minVAFForTemplate = config_data['j3x_minVAFForTemplate']
             if ( 'j3x_maxReadsForMerge' in config_data ):
                 self.j3x_maxReadsForMerge = config_data['j3x_maxReadsForMerge']
             if ( 'j3x_readDeletorThreshold' in config_data ):
                 self.j3x_readDeletorThreshold = config_data['j3x_readDeletorThreshold']
             
-        if ( self.j3x_minReadsForTemplate <= self.j3x_maxReadsForMerge ):
-            print("ERROR: j3x_minReadsForTemplate must be greater than j3x_maxReadsForMerge")
+        #if ( self.j3x_minVAFForTemplate <= self.j3x_maxReadsForMerge ):
+        #    print("ERROR: j3x_minVAFForTemplate must be greater than j3x_maxReadsForMerge")
         
     def putPairedRead(self, data):
         self.totalReads += 1
@@ -33,12 +33,22 @@ class ReadCompressor:
     def getRawDataList(self):
         readTupleList = list(self.ampliconCountDict.items())
         return readTupleList
+
     def getDataList(self, ampliconCounts):
         readTupleList = list(self.ampliconCountDict.items())
-        onesList = [x for x in readTupleList if x[1][0] <= self.j3x_maxReadsForMerge ]
-        # Leftovers that should not be deleted. There may be some useful insights in there.
-        leftoverList = [x for x in readTupleList if x[1][0] > self.j3x_maxReadsForMerge and x[1][0] < self.j3x_minReadsForTemplate and x[1][0] >= self.j3x_readDeletorThreshold ]
-        templateTupleList = [x for x in readTupleList if x[1][0] >= self.j3x_minReadsForTemplate]
+        onesList = []
+        leftoverList = []
+        templateTupleList = []
+        for x in readTupleList:
+            ampID = int(x[1][2].split(',')[0][3:])
+            seqReadCount = x[1][0]
+            if seqReadCount > self.j3x_maxReadsForMerge: # If number of reads is too high for merging into template, check if
+                if (seqReadCount / ampliconCounts[ampID - 1]) >= self.j3x_minVAFForTemplate: # It qualifies for a template by having a high VA
+                    templateTupleList.append(x)
+                elif seqReadCount > self.j3x_readDeletorThreshold: # Otherwise, check to make sure the read count isn't high before discarding sequence
+                    leftoverList.append(x)
+            else:  # Otherwise, add it to the to-be-merged list
+                onesList.append(x)
         templateTupleList.sort(key=lambda tup: -tup[1][0])
         matchedOnes = 0
         matchedMoreThanOne = 0
