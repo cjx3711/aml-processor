@@ -19,8 +19,8 @@ def run():
     minMutationCount = 2
     with open('config.json') as config_file: 
         config_data = json.load(config_file)
-        if ( 'minMutationCount' in config_data ):
-            minMutationCount = config_data['minMutationCount']
+        if ( 'j4x_readThresholdForOutput' in config_data ):
+            minMutationCount = config_data['j4x_readThresholdForOutput']
         if ( 'chunksize' in config_data ):
             chunksize = config_data['chunksize'] # TODO: Chunksize does not carry over
     

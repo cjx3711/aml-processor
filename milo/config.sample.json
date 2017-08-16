@@ -1,3 +1,7 @@
 {
-  "minMutationCount": 3
+  "j4x_readThresholdForOutput": 100,
+  "chunksize": 500,
+  "j3x_MinReadsForTemplate": 500,
+  "j3x_MaxReadsForMerge": 10,
+  "readDeletorThreshold": 2
 }

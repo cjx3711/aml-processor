@@ -5,14 +5,14 @@ class ReadCompressor:
     def __init__(self):
         self.ampliconCountDict = {}
         self.totalReads = 0
-        self.compressorAllowedThreshold = 9
-        self.compressorMergeThreshold = 1
+        self.compressorAllowedThreshold = 500
+        self.compressorMergeThreshold = 50
         with open('config.json') as config_file: 
             config_data = json.load(config_file)
-            if ( 'compressorAllowedThreshold' in config_data ):
-                self.compressorAllowedThreshold = config_data['compressorAllowedThreshold']
-            if ( 'compressorMergeThreshold' in config_data ):
-                self.compressorMergeThreshold = config_data['compressorMergeThreshold']
+            if ( 'j3x_MinReadsForTemplate' in config_data ):
+                self.compressorAllowedThreshold = config_data['j3x_MinReadsForTemplate']
+            if ( 'j3x_MaxReadsForMerge' in config_data ):
+                self.compressorMergeThreshold = config_data['j3x_MaxReadsForMerge']
             
         if ( self.compressorAllowedThreshold <= self.compressorMergeThreshold ):
             print("ERROR: compressorAllowedThreshold must be greater than self.compressorMergeThreshold")

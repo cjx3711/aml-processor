@@ -168,10 +168,190 @@
     "mutation": "AD135_S4_L001_MUTATIONS.j4x" 
   },
   { 
+    "fastq1": "AD137_S5_L001_R1_001.fastq", 
+    "fastq2": "AD137_S5_L001_R2_001.fastq", 
+    "paired": "AD137_S5_L001_PAIRED.j3x", 
+    "mutation": "AD137_S5_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD140_S6_L001_R1_001.fastq", 
+    "fastq2": "AD140_S6_L001_R2_001.fastq", 
+    "paired": "AD140_S6_L001_PAIRED.j3x", 
+    "mutation": "AD140_S6_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD141_S7_L001_R1_001.fastq", 
+    "fastq2": "AD141_S7_L001_R2_001.fastq", 
+    "paired": "AD141_S7_L001_PAIRED.j3x", 
+    "mutation": "AD141_S7_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD142_S8_L001_R1_001.fastq", 
+    "fastq2": "AD142_S8_L001_R2_001.fastq", 
+    "paired": "AD142_S8_L001_PAIRED.j3x", 
+    "mutation": "AD142_S8_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD145_S1_L001_R1_001.fastq", 
+    "fastq2": "AD145_S1_L001_R2_001.fastq", 
+    "paired": "AD145_S1_L001_PAIRED.j3x", 
+    "mutation": "AD145_S1_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD152_S2_L001_R1_001.fastq", 
+    "fastq2": "AD152_S2_L001_R2_001.fastq", 
+    "paired": "AD152_S2_L001_PAIRED.j3x", 
+    "mutation": "AD152_S2_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD161_S3_L001_R1_001.fastq", 
+    "fastq2": "AD161_S3_L001_R2_001.fastq", 
+    "paired": "AD161_S3_L001_PAIRED.j3x", 
+    "mutation": "AD161_S3_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD165_S4_L001_R1_001.fastq", 
+    "fastq2": "AD165_S4_L001_R2_001.fastq", 
+    "paired": "AD165_S4_L001_PAIRED.j3x", 
+    "mutation": "AD165_S4_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD169_S5_L001_R1_001.fastq", 
+    "fastq2": "AD169_S5_L001_R2_001.fastq", 
+    "paired": "AD169_S5_L001_PAIRED.j3x", 
+    "mutation": "AD169_S5_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD170_S6_L001_R1_001.fastq", 
+    "fastq2": "AD170_S6_L001_R2_001.fastq", 
+    "paired": "AD170_S6_L001_PAIRED.j3x", 
+    "mutation": "AD170_S6_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD180_S7_L001_R1_001.fastq", 
+    "fastq2": "AD180_S7_L001_R2_001.fastq", 
+    "paired": "AD180_S7_L001_PAIRED.j3x", 
+    "mutation": "AD180_S7_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD188_S8_L001_R1_001.fastq", 
+    "fastq2": "AD188_S8_L001_R2_001.fastq", 
+    "paired": "AD188_S8_L001_PAIRED.j3x", 
+    "mutation": "AD188_S8_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD193_S1_L001_R1_001.fastq", 
+    "fastq2": "AD193_S1_L001_R2_001.fastq", 
+    "paired": "AD193_S1_L001_PAIRED.j3x", 
+    "mutation": "AD193_S1_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD194_S1_L001_R1_001.fastq", 
+    "fastq2": "AD194_S1_L001_R2_001.fastq", 
+    "paired": "AD194_S1_L001_PAIRED.j3x", 
+    "mutation": "AD194_S1_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD195_S2_L001_R1_001.fastq", 
+    "fastq2": "AD195_S2_L001_R2_001.fastq", 
+    "paired": "AD195_S2_L001_PAIRED.j3x", 
+    "mutation": "AD195_S2_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD196_S3_L001_R1_001.fastq", 
+    "fastq2": "AD196_S3_L001_R2_001.fastq", 
+    "paired": "AD196_S3_L001_PAIRED.j3x", 
+    "mutation": "AD196_S3_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD197_S4_L001_R1_001.fastq", 
+    "fastq2": "AD197_S4_L001_R2_001.fastq", 
+    "paired": "AD197_S4_L001_PAIRED.j3x", 
+    "mutation": "AD197_S4_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD203_S5_L001_R1_001.fastq", 
+    "fastq2": "AD203_S5_L001_R2_001.fastq", 
+    "paired": "AD203_S5_L001_PAIRED.j3x", 
+    "mutation": "AD203_S5_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD214_S6_L001_R1_001.fastq", 
+    "fastq2": "AD214_S6_L001_R2_001.fastq", 
+    "paired": "AD214_S6_L001_PAIRED.j3x", 
+    "mutation": "AD214_S6_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD215_S7_L001_R1_001.fastq", 
+    "fastq2": "AD215_S7_L001_R2_001.fastq", 
+    "paired": "AD215_S7_L001_PAIRED.j3x", 
+    "mutation": "AD215_S7_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD220_S8_L001_R1_001.fastq", 
+    "fastq2": "AD220_S8_L001_R2_001.fastq", 
+    "paired": "AD220_S8_L001_PAIRED.j3x", 
+    "mutation": "AD220_S8_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD223_S2_L001_R1_001.fastq", 
+    "fastq2": "AD223_S2_L001_R2_001.fastq", 
+    "paired": "AD223_S2_L001_PAIRED.j3x", 
+    "mutation": "AD223_S2_L001_MUTATIONS.j4x" 
+  },
+  { 
     "fastq1": "AD226_S3_L001_R1_001.fastq", 
     "fastq2": "AD226_S3_L001_R2_001.fastq", 
     "paired": "AD226_S3_L001_PAIRED.j3x", 
     "mutation": "AD226_S3_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD229_S4_L001_R1_001.fastq", 
+    "fastq2": "AD229_S4_L001_R2_001.fastq", 
+    "paired": "AD229_S4_L001_PAIRED.j3x", 
+    "mutation": "AD229_S4_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD230_S5_L001_R1_001.fastq", 
+    "fastq2": "AD230_S5_L001_R2_001.fastq", 
+    "paired": "AD230_S5_L001_PAIRED.j3x", 
+    "mutation": "AD230_S5_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD235_S6_L001_R1_001.fastq", 
+    "fastq2": "AD235_S6_L001_R2_001.fastq", 
+    "paired": "AD235_S6_L001_PAIRED.j3x", 
+    "mutation": "AD235_S6_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD246_S7_L001_R1_001.fastq", 
+    "fastq2": "AD246_S7_L001_R2_001.fastq", 
+    "paired": "AD246_S7_L001_PAIRED.j3x", 
+    "mutation": "AD246_S7_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD247_S8_L001_R1_001.fastq", 
+    "fastq2": "AD247_S8_L001_R2_001.fastq", 
+    "paired": "AD247_S8_L001_PAIRED.j3x", 
+    "mutation": "AD247_S8_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD257_S1_L001_R1_001.fastq", 
+    "fastq2": "AD257_S1_L001_R2_001.fastq", 
+    "paired": "AD257_S1_L001_PAIRED.j3x", 
+    "mutation": "AD257_S1_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD258_S2_L001_R1_001.fastq", 
+    "fastq2": "AD258_S2_L001_R2_001.fastq", 
+    "paired": "AD258_S2_L001_PAIRED.j3x", 
+    "mutation": "AD258_S2_L001_MUTATIONS.j4x" 
+  },
+  { 
+    "fastq1": "AD267_S3_L001_R1_001.fastq", 
+    "fastq2": "AD267_S3_L001_R2_001.fastq", 
+    "paired": "AD267_S3_L001_PAIRED.j3x", 
+    "mutation": "AD267_S3_L001_MUTATIONS.j4x" 
   },
   { 
     "fastq1": "AD285_S6_L001_R1_001.fastq", 
