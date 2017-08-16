@@ -4,6 +4,7 @@ from ReadPairer import *
 from ReadCompressor import *
 from tqdm import tqdm
 from multiprocessing import cpu_count
+from statistics import median
 
 from pprint import pprint
 
@@ -86,26 +87,34 @@ def pairToJ3X(fq1, fq2, paired, inDir, outDir):
                     pbar.update()
             pbar.close()
             
-            # Count the matches for each
+            # Counts the read depth of each amplicon
             ampliconCounts = [0] * readPairer.getReferenceCount()
             rawDataList = readCompressor.getRawDataList()
             for rawTuple in rawDataList:
-                ampID = int(rawTuple[1][2].split(',')[0].strip()[3:]) # Extracts the ampID from the ID data string
+                ampID = int(rawTuple[1][2].split(',')[0].strip()[3:]) # Extracts the ampID from the info line
                 count = rawTuple[1][0]
-                ampliconCounts[ampID - 1] += count
+                ampliconCounts[ampID] += count
             
-            
-            sortedCompressedList, totalOnes, matchedOnes, matchedMoreThanOne = readCompressor.getDataList(ampliconCounts)
-            discardedOnes = totalOnes - matchedOnes
-            totalMatched = 0
-            for read in sortedCompressedList:
-                sequence = read[0]
-                count = read[1][0]
-                matchCount = read[1][1]
-                iddata = read[1][2]
-                quality = read[1][3]
-                totalMatched += count
-                outFile.write("{0}, R:{1}, M:{2}".format(iddata, count, matchCount))
+            j3xSeqs, numMergeAttempts, mergedCount, mergedUnsureCount, mergedD1, mergedD2, discardCountList = readCompressor.getDataList(ampliconCounts)
+            # Calculate the total number of discards, and the rates relative to each amplicon's read depth
+            numDiscarded = sum(discardCountList)
+            discardRates = [discarded / total if total != 0 else None for discarded, total in zip(discardCountList, ampliconCounts)]
+            avgDiscardRate = median([x for x in discardRates if x != None])
+            if any([abs(avgDiscardRate - x) > 0.1 for x in discardRates if x != None]): # If the discards are concentrated in one amplicon
+                print("ALERT: The following amplicons have high discard rates:")
+                print([(ampID, round(rate, 2)) for ampID, rate in enumerate(discardRates) if rate != None and abs(avgDiscardRate - rate) > 0.1])
+                print("The average discard rate is {0}%".format(round(avgDiscardRate, 3) * 100))
+
+            # Format and write to j3x
+            totalAcrossAmplicons = 0
+            for seq in j3xSeqs:
+                sequence = seq[0]
+                numReads = seq[1][0]
+                numReadsMerged = seq[1][1]
+                infoLine = seq[1][2]
+                quality = seq[1][3]
+                totalAcrossAmplicons += numReads
+                outFile.write("{0}, R:{1}, M:{2}".format(infoLine, numReads, numReadsMerged))
                 outFile.write('\n')
                 outFile.write(sequence)
                 outFile.write('\n')
@@ -113,21 +122,23 @@ def pairToJ3X(fq1, fq2, paired, inDir, outDir):
                 outFile.write("\n\n")
             outFile.close()
             
-            lines = len(sortedCompressedList)
-            total = discardedOnes + totalMatched
-            percCompression = 100 - int(lines / total * 1000)/10
-            percUsable = int(totalMatched / total * 1000)/10
-            percMatched = int(matchedOnes / total * 1000)/10
-            percMatchedMore = int(matchedMoreThanOne / total * 1000)/10
-            percDiscarded = int(discardedOnes / total * 1000)/10
+            # Calculate j3x statistics
+            numSeqs = len(j3xSeqs)
+            numOriginal = numDiscarded + totalAcrossAmplicons
+            prcntCompression = round(1 - numSeqs / numOriginal, 3) * 100
+            prcntUsable = round(totalAcrossAmplicons / numOriginal, 3) * 100
+            prcntMerged = round(mergedCount / numOriginal, 3) * 100
+            prcntMergedUnsure = round(mergedUnsureCount / numOriginal, 3) * 100
+            prcntDiscarded = round(numDiscarded / numOriginal, 3) * 100
             
             with open(outfile + ".stats", "w+", newline = "") as statsFile:
-                pwrite(statsFile, "{0} Dumped {1}".format(time.strftime('%X %d %b %Y'), paired))
-                pwrite(statsFile, "Compressed {0} reads into {1} lines. ({2}%% compression)".format(total, lines, percCompression))
-                pwrite(statsFile, "Usable data on {0} of {1}. ({2}%)".format(totalMatched, total, percUsable))
-                pwrite(statsFile, "Close match on {0} of {1}. ({2}%)".format(matchedOnes, total, percMatched))
-                pwrite(statsFile, "Match more than one on {0} of {1}. ({2}%)".format(matchedMoreThanOne, total, percMatchedMore))
-                pwrite(statsFile, "Discarded {0} of {1}. ({2}%)".format(discardedOnes, total, percDiscarded))
+                pwrite(statsFile, "{0} Finished writing to j3x {1}".format(time.strftime('%X %d %b %Y'), paired))
+                pwrite(statsFile, "Compressed {0} reads into {1} sequences. ({2}%% compression)".format(numOriginal, numSeqs, prcntCompression))
+                pwrite(statsFile, "Usable data on {0} of {1}. ({2}%)".format(totalAcrossAmplicons, numOriginal, prcntUsable))
+                pwrite(statsFile, "Merged {0} of {1}. ({2}%)".format(mergedCount, numOriginal, prcntMerged))
+                pwrite(statsFile, "Match more than one on {0} of {1}. ({2}%)".format(mergedUnsureCount, numOriginal, prcntMergedUnsure))
+                pwrite(statsFile, "Discarded {0} of {1}. ({2}%)".format(numDiscarded, numOriginal, prcntDiscarded))
+                pwrite(statsFile, "{0} reads were merged with distance of 1, while {1} were merged with distance of 2.".format(mergedD1, mergedD2))
                 pwrite(statsFile, "Took {0}s\n\n".format(time.time() - start))
                 
 def pwrite(file, message):

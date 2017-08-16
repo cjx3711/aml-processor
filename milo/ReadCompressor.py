@@ -6,7 +6,7 @@ class ReadCompressor:
         self.ampliconCountDict = {}
         self.totalReads = 0
         self.j3x_minVAFForTemplate = 0.05
-        self.j3x_maxReadsForMerge = 50
+        self.j3x_maxReadsForMerge = 10
         with open('config.json') as config_file: 
             config_data = json.load(config_file)
             if ( 'j3x_minVAFForTemplate' in config_data ):
@@ -15,19 +15,16 @@ class ReadCompressor:
                 self.j3x_maxReadsForMerge = config_data['j3x_maxReadsForMerge']
             if ( 'j3x_readDeletorThreshold' in config_data ):
                 self.j3x_readDeletorThreshold = config_data['j3x_readDeletorThreshold']
-            
-        #if ( self.j3x_minVAFForTemplate <= self.j3x_maxReadsForMerge ):
-        #    print("ERROR: j3x_minVAFForTemplate must be greater than j3x_maxReadsForMerge")
         
     def putPairedRead(self, data):
         self.totalReads += 1
-        iddata = data[0]
-        sequence = data[1]
+        seqInfoLine = data[0]
+        seq = data[1]
         quality = data[2]
-        key = sequence
+        key = seq
         if ( key not in self.ampliconCountDict ):
-            # [Total Count, Count from close match, ID data, Quality Hash]
-            self.ampliconCountDict[key] = [0, 0, iddata, quality]
+            # [Total Count, count from merges with distance 1, sequence data, quality hash]
+            self.ampliconCountDict[key] = [0, 0, seqInfoLine, quality]
         self.ampliconCountDict[key][0] += 1
     
     def getRawDataList(self):
@@ -36,46 +33,70 @@ class ReadCompressor:
 
     def getDataList(self, ampliconCounts):
         readTupleList = list(self.ampliconCountDict.items())
-        onesList = []
-        leftoverList = []
-        templateTupleList = []
-        for x in readTupleList:
-            ampID = int(x[1][2].split(',')[0][3:])
-            seqReadCount = x[1][0]
+
+        # Classify sequences into one of 3 groups below, or discard them
+        tbmergedList = [] # 1. Sequences to be merged with template
+        leftoverList = [] # 2. Sequences that cannot be merged, or cannot qualify as a template, but still have a high-ish read depth
+        templateList = [] # 3. Variant templates with high read depth
+        discardCountList = [0] * len(ampliconCounts)
+        for seq in readTupleList:
+            ampID = int(seq[1][2].split(',')[0][3:])
+            seqReadCount = seq[1][0]
             if seqReadCount > self.j3x_maxReadsForMerge: # If number of reads is too high for merging into template, check if
-                if (seqReadCount / ampliconCounts[ampID - 1]) >= self.j3x_minVAFForTemplate: # It qualifies for a template by having a high VA
-                    templateTupleList.append(x)
-                elif seqReadCount > self.j3x_readDeletorThreshold: # Otherwise, check to make sure the read count isn't high before discarding sequence
-                    leftoverList.append(x)
+                if (seqReadCount / ampliconCounts[ampID]) >= self.j3x_minVAFForTemplate: # It qualifies for a template by having a high VA
+                    templateList.append(seq)
+                else:
+                    if seqReadCount > self.j3x_readDeletorThreshold: # Otherwise, check to make sure the read count isn't high before discarding sequence
+                        leftoverList.append(seq)
+                    else:
+                         discardCountList[ampID] += 1 # Discard
             else:  # Otherwise, add it to the to-be-merged list
-                onesList.append(x)
-        templateTupleList.sort(key=lambda tup: -tup[1][0])
-        matchedOnes = 0
-        matchedMoreThanOne = 0
-        totalOnes = 0
-        for ones in onesList:
-            matchedTupleList = [] # Stores the list of tuples that are 1 or 2 distance from the ones
-            onesOccurence = ones[1][0]
-            totalOnes += onesOccurence
-            for filteredTuple in templateTupleList:
-                dist = compare(ones[0], filteredTuple[0])
-                if ( dist <= 2 and dist != -1 ):
-                    # filteredTuple[1][0] += onesOccurence # Add to total count
-                    # filteredTuple[1][1] += onesOccurence # Add to close match count
-                    # matchedOnes += onesOccurence
-                    matchedTupleList.append(filteredTuple)
-                    break
-            matchCount = len(matchedTupleList)
-            if matchCount > 0:
-                if matchCount > 1:
-                    matchedMoreThanOne += onesOccurence
-                matchedOnes += onesOccurence
-                splitValue = onesOccurence / matchCount
-                for matchedTuple in matchedTupleList:
-                    filteredTuple[1][0] += splitValue
-                    filteredTuple[1][1] += splitValue
-            elif onesOccurence >= self.j3x_readDeletorThreshold:
-                leftoverList.append(ones)
-        # Merge the two lists
-        filteredTupleList = templateTupleList + leftoverList
-        return filteredTupleList, totalOnes, matchedOnes, matchedMoreThanOne    
+                tbmergedList.append(seq)
+
+        # Merging to-be-merged list with template list
+        numMergeAttempts = 0
+        mergedCount = 0 # Only successful merges, both sure and unsure
+        mergedUnsureCount = 0 # Count of merges where multiple candidate templates are equal distance away from sequence
+        mergedD1 = 0 # Count of merges with distance of 1
+        mergedD2 = 0 # and distance of 2
+        for seq in tbmergedList:
+            mergeCandidatesD1 = [] # List containing templates that each sequence might be merged with distance of 1,
+            mergeCandidatesD2 = [] # and distance of 2
+            seqReadCount = seq[1][0]
+            numMergeAttempts += seqReadCount
+
+            for template in templateList: # Get edit distance between sequence and every applicable template
+                dist = compare(seq[0], template[0])
+                if dist != -1: # If distance is not more than 2, put template in consideration for merge
+                    if dist == 1:
+                        mergeCandidatesD1.append(template)
+                    else:
+                        mergeCandidatesD2.append(template)
+
+            numCandidates = len(mergeCandidatesD1) + len(mergeCandidatesD2)
+            if numCandidates > 0:
+                if numCandidates > 1:
+                    mergedUnsureCount += seqReadCount
+                mergedCount += seqReadCount
+
+                if mergeCandidatesD1: # Prioritize templates that are a distance of 1, rather than 2, from the current sequence
+                    splitValue = seqReadCount / len(mergeCandidatesD1) # Allocate read count equally among templates equally similar to sequence
+                    mergedD1 += seqReadCount
+                    for template in mergeCandidatesD1:
+                        template[1][0] += splitValue # Increase total read count
+                        template[1][1] += splitValue # Increase read count of merges
+                else:
+                    splitValue = seqReadCount / len(mergeCandidatesD2)
+                    mergedD2 += seqReadCount
+                    for template in mergeCandidatesD2:
+                        template[1][0] += splitValue
+                        template[1][1] += splitValue
+
+            else:
+                if seqReadCount >= self.j3x_readDeletorThreshold: # If we can't merge the sequence but it has a high read depth
+                    leftoverList.append(seq)
+                else:
+                    discardCountList[int(seq[1][2].split(',')[0][3:])] += 1 # Discard
+        # Combine the newly reinforced templates with the leftovers for inckusion in j3x
+        j3xSeqs = templateList + leftoverList
+        return j3xSeqs, numMergeAttempts, mergedCount, mergedUnsureCount, mergedD1, mergedD2, discardCountList
