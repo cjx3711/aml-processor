@@ -86,21 +86,42 @@ def pairToJ3X(fq1, fq2, paired, inDir, outDir):
                     pbar.update()
             pbar.close()
             
-            sortedCompressedList = readCompressor.getDataList()
+            
+            
+            sortedCompressedList, totalOnes, matchedOnes = readCompressor.getDataList()
+            discardedOnes = totalOnes - matchedOnes
+            totalMatched = 0
             for read in sortedCompressedList:
                 sequence = read[0]
                 count = read[1][0]
-                iddata = read[1][1]
-                quality = read[1][2]
-                outFile.write("{0}, {1}".format(iddata, count))
+                matchCount = read[1][1]
+                iddata = read[1][2]
+                quality = read[1][3]
+                totalMatched += count
+                outFile.write("{0}, C:{1}, M:{2}".format(iddata, count, matchCount))
                 outFile.write('\n')
                 outFile.write(sequence)
                 outFile.write('\n')
                 outFile.write(quality)
                 outFile.write("\n\n")
             outFile.close()
+            
+            lines = len(sortedCompressedList)
+            total = discardedOnes + totalMatched
+            percCompression = 100 - int(lines / total * 1000)/10
+            percUsable = int(totalMatched / total * 1000)/10
+            percMatched = int(matchedOnes / total * 1000)/10
+            percDiscarded = int(discardedOnes / total * 1000)/10
+            
+            with open(outfile + ".stats", "w+", newline = "") as statsFile:
+                pwrite(statsFile, "{0} Dumped {1}".format(time.strftime('%X %d %b %Y'), paired))
+                pwrite(statsFile, "Compressed {0} reads into {1} lines. ({2}%% compression)".format(total, lines, percCompression))
+                pwrite(statsFile, "Usable data on {0} of {1}. ({2}%)".format(totalMatched, total, percUsable))
+                pwrite(statsFile, "Close match on {0} of {1}. ({2}%)".format(matchedOnes, total, percMatched))
+                pwrite(statsFile, "Discarded {0} of {1}. ({2}%)".format(discardedOnes, total, percDiscarded))
+                pwrite(statsFile, "Took {0}s\n\n".format(time.time() - start))
                 
-            print("{0} Dumped {1}".format(time.strftime('%X %d %b %Y'), paired))
-            print("Took {0}s\n\n".format(time.time() - start))
-
+def pwrite(file, message):
+    print(message)
+    file.write(message + "\n")
 if __name__ ==  "__main__": run()

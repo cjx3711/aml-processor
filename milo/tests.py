@@ -20,6 +20,26 @@ class GenomicsUtils(unittest.TestCase):
 
     def test_longer_reverse_compliment(self):
         self.assertEqual(reverseComplement("AAAAAAAACCCCCCCCTTTTTTTTGGGGGGGG"), "CCCCCCCCAAAAAAAAGGGGGGGGTTTTTTTT")
+    
+    def test_simple_difference_empty(self):
+        d = simpleDistance("", "")
+        self.assertEqual(d, 0)
+        
+    def test_simple_difference_same(self):
+        d = simpleDistance("AAAATTTT", "AAAATTTT")
+        self.assertEqual(d, 0)
+        
+    def test_simple_difference_different(self):
+        d = simpleDistance("ATATAT", "TATATA")
+        self.assertEqual(d, 2)
+        
+    def test_simple_difference_sub(self):
+        d = simpleDistance("ATATTT", "ATATAT")
+        self.assertEqual(d, 1)
+        
+    def test_simple_difference_add(self):
+        d = simpleDistance("CATATAT", "ATATAT")
+        self.assertEqual(d, 2)
 
 class AmpliconMatcherProbabilisticTests(unittest.TestCase):
     def test_file_read(self):

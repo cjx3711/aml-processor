@@ -66,7 +66,7 @@ class MutationFinder:
         ampliconID = int(iddataParts[0][3:])
         if ( ampliconID == 0 ):
             return None, None, None, None
-        readCount = int(iddataParts[3])
+        readCount = int(iddataParts[3].strip()[2:])
         sequenceData = data[1][:-1]
         referenceAmplicon = self.getReferenceAmplicon(ampliconID)
         
