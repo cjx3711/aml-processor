@@ -33,7 +33,7 @@ class ReadCompressor:
     def getRawDataList(self):
         readTupleList = list(self.ampliconCountDict.items())
         return readTupleList
-    def getDataList(self):
+    def getDataList(self, ampliconCounts):
         readTupleList = list(self.ampliconCountDict.items())
         onesList = [x for x in readTupleList if x[1][0] <= self.j3x_maxReadsForMerge ]
         # Leftovers that should not be deleted. There may be some useful insights in there.

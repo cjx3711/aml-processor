@@ -86,9 +86,16 @@ def pairToJ3X(fq1, fq2, paired, inDir, outDir):
                     pbar.update()
             pbar.close()
             
+            # Count the matches for each
+            ampliconCounts = [0 for x in range(readPairer.getReferenceCount())]
+            rawDataList = readCompressor.getRawDataList()
+            for rawTuple in rawDataList:
+                ampID = int(rawTuple[1][2].split(',')[0].strip()[3:]) # Extracts the ampID from the ID data string
+                count = rawTuple[1][0]
+                ampliconCounts[ampID - 1] += count
             
             
-            sortedCompressedList, totalOnes, matchedOnes, matchedMoreThanOne = readCompressor.getDataList()
+            sortedCompressedList, totalOnes, matchedOnes, matchedMoreThanOne = readCompressor.getDataList(ampliconCount)
             discardedOnes = totalOnes - matchedOnes
             totalMatched = 0
             for read in sortedCompressedList:
