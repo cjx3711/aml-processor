@@ -61,7 +61,7 @@ def readFilenames(filenames):
     
 def pairToJ3X(fq1, fq2, paired, inDir, outDir):
     
-    readCompressor = ReadCompressor()
+    readCompressor = ReadCompressor(readPairer.getReferenceCount())
     if not os.path.exists(outDir):
         os.makedirs(outDir)
     with open(inDir + fq1) as fq1File, open(inDir + fq2) as fq2File:
@@ -87,18 +87,15 @@ def pairToJ3X(fq1, fq2, paired, inDir, outDir):
                     pbar.update()
             pbar.close()
             
-            # Counts the read depth of each amplicon
-            ampliconCounts = [0] * readPairer.getReferenceCount()
-            rawDataList = readCompressor.getRawDataList()
-            for rawTuple in rawDataList:
-                ampID = int(rawTuple[1][2].split(',')[0].strip()[3:]) # Extracts the ampID from the info line
-                count = rawTuple[1][0]
-                ampliconCounts[ampID] += count
+            readCompressor.prepareForCompression()
+            print("\nCompressing\n")
             
-            j3xSeqs, numMergeAttempts, mergedCount, mergedUnsureCount, mergedD1, mergedD2, discardCountList = readCompressor.getDataList(ampliconCounts)
+            j3xSeqs = readCompressor.getDataList()
+            numMergeAttempts, mergedCount, mergedUnsureCount, mergedD1Count, mergedD2Count, discardCountList, ampliconCountList = readCompressor.getStats()
+            
             # Calculate the total number of discards, and the discard rates relative to each amplicon's read depth
             numDiscarded = sum(discardCountList)
-            discardRates = [discarded / total if total != 0 else None for discarded, total in zip(discardCountList, ampliconCounts)]
+            discardRates = [discarded / total if total != 0 else None for discarded, total in zip(discardCountList, ampliconCountList)]
             avgDiscardRate = median([rate for rate in discardRates if rate != None])
 
             # Format and write to j3x
@@ -134,11 +131,11 @@ def pairToJ3X(fq1, fq2, paired, inDir, outDir):
                 pwrite(statsFile, "Merged {0} of {1}. ({2}%)".format(mergedCount, numOriginal, prcntMerged))
                 pwrite(statsFile, "Merged with more than one possible template candidate: {0} of {1}. ({2}%)".format(mergedUnsureCount, numOriginal, prcntMergedUnsure))
                 pwrite(statsFile, "Discarded {0} of {1}. ({2}%)".format(numDiscarded, numOriginal, prcntDiscarded))
-                pwrite(statsFile, "{0}% of merges had distance of 1, while {1}% were merged with distance of 2.".format(round(mergedD1 / mergedCount * 100, 3), round(mergedD2 / mergedCount  * 100, 3)))
+                pwrite(statsFile, "{0}% of merges had distance of 1, while {1}% were merged with distance of 2.".format(round(mergedD1Count / mergedCount * 100, 3), round(mergedD2Count / mergedCount  * 100, 3)))
                 pwrite(statsFile, "Took {0}s\n\n".format(time.time() - start))
                 if any([rate - avgDiscardRate > 0.1 for rate in discardRates if rate != None]): # If the discards are concentrated in one amplicon
                     pwrite(statsFile, "ALERT: The following amplicons have high discard rates (ID, Discard %, Read Depth):")
-                    pwrite(statsFile, str([(ampID, str(round(rate, 2) * 100) + "%", ampliconCounts[ampID]) for ampID, rate in enumerate(discardRates) if rate != None and rate - avgDiscardRate > 0.1]))
+                    pwrite(statsFile, str([(ampID, str(round(rate, 2) * 100) + "%", ampliconCountList[ampID]) for ampID, rate in enumerate(discardRates) if rate != None and rate - avgDiscardRate > 0.1]))
                     pwrite(statsFile, "The average discard rate is {0}%".format(round(avgDiscardRate, 3) * 100))
                 
 def pwrite(file, message):
