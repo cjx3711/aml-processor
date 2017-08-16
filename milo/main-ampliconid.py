@@ -96,7 +96,8 @@ def pairToJ3X(fq1, fq2, paired, inDir, outDir):
             tbMergedList = readCompressor.getTbmerged()
             
             processManager = ProcessPoolExecutor(numThreads)
-            with tqdm(total=estimatedReads) as pbar:
+            readCount = len(tbMergedList)
+            with tqdm(total=readCount) as pbar:
                 result = processManager.map(readCompressor.mergeIntoTemplates, tbMergedList, chunksize = chunksize)
                 for i, data in tqdm(enumerate(result)):
                     readCompressor.addMergeCadidates(data[0], data[1], data[2])
