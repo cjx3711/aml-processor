@@ -1,7 +1,7 @@
 {
   "j4x_readThresholdForOutput": 100,
   "chunksize": 500,
-  "j3x_MinReadsForTemplate": 500,
-  "j3x_MaxReadsForMerge": 10,
-  "readDeletorThreshold": 2
+  "j3x_minReadsForTemplate": 500,
+  "j3x_maxReadsForMerge": 10,
+  "j3x_readDeletorThreshold": 2
 }

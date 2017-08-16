@@ -17,7 +17,7 @@ outDir = "data/2-paired/"
 
 numThreads = cpu_count()
 chunksize = 250
-readPairer = ReadPairer(probabilistic = False)
+readPairer = ReadPairer()
 bytesPerRead = 350 # Estimated
 
 def run():
@@ -59,6 +59,7 @@ def readFilenames(filenames):
     return fq1, fq2, paired, skip
     
 def pairToJ3X(fq1, fq2, paired, inDir, outDir):
+    
     readCompressor = ReadCompressor()
     if not os.path.exists(outDir):
         os.makedirs(outDir)
@@ -75,7 +76,6 @@ def pairToJ3X(fq1, fq2, paired, inDir, outDir):
             
             # Creates iterators which deliver the 4 lines of each FASTQ read as a zip (ID, Sequence, Blank, Quality)
             fq1Iter, fq2Iter = grouper(fq1File, 4), grouper(fq2File, 4)
-            # pool = Pool(numThreads)
             processManager = ProcessPoolExecutor(numThreads)
             with tqdm(total=estimatedReads) as pbar:
                 result = processManager.map(readPairer.alignAndMerge, fq1Iter, fq2Iter, chunksize = chunksize)
@@ -98,7 +98,7 @@ def pairToJ3X(fq1, fq2, paired, inDir, outDir):
                 iddata = read[1][2]
                 quality = read[1][3]
                 totalMatched += count
-                outFile.write("{0}, C:{1}, M:{2}".format(iddata, count, matchCount))
+                outFile.write("{0}, R:{1}, M:{2}".format(iddata, count, matchCount))
                 outFile.write('\n')
                 outFile.write(sequence)
                 outFile.write('\n')
