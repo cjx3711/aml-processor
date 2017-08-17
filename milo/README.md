@@ -1,3 +1,12 @@
+# Requirements
+**tqdm**
+`pip instal tqdm`
+TQDM gives us the progress bar.
+
+**fastcomp**
+`pip install fastcomp`
+Fast distance check up to distance 2
+
 # How to run
 
 1. Ensure you have the files in the correct folders.
