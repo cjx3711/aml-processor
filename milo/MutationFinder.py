@@ -63,10 +63,10 @@ class MutationFinder:
         
     def identifyMutations(self, data):
         iddataParts = data[0].split(', ')
-        ampliconID = int(iddataParts[0][3:])
+        ampliconID = int(float(iddataParts[0][3:]))
         if ( ampliconID == 0 ):
             return None, None, None, None
-        readCount = int(iddataParts[3].strip()[2:])
+        readCount = int(float(iddataParts[3].strip()[2:]))
         sequenceData = data[1][:-1]
         referenceAmplicon = self.getReferenceAmplicon(ampliconID)
         

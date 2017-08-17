@@ -93,7 +93,7 @@ def mutationID(pairedFile, mutationFile, inDir, outDir, minMutationCount):
             for mutationOccurence in mutationList:
                 mutationCount = mutationOccurence[1]
                 mutationHash = mutationOccurence[0]
-                ampliconID = int(mutationHash[:mutationHash.find(' ')])
+                ampliconID = int(float(mutationHash[:mutationHash.find(' ')]))
                 referenceAmplicon = mutationFinder.getReferenceAmplicon(ampliconID)
                 mutationCoordinates = referenceAmplicon[1]
                 appearanceCount = referenceAmplicon[2]
