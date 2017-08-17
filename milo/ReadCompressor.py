@@ -26,7 +26,7 @@ class ReadCompressor:
         quality = data[2]
         key = seq
         if ( key not in self.ampliconCountDict ):
-            # [Total Count, count from merges with distance 1, sequence data, quality hash]
+            # [Total Count, count from merges with distance 1, sequence identification data, quality hash]
             self.ampliconCountDict[key] = [0, 0, seqInfoLine, quality]
         self.ampliconCountDict[key][0] += 1
     
@@ -70,12 +70,13 @@ class ReadCompressor:
         mergeCandidatesD2 = [] # and distance of 2
 
         for template in enumerate(self.templateList): # Get edit distance between sequence and every applicable template
-            dist = compare(seq[0], template[1][0])
-            if dist != -1: # If distance is not more than 2, put template in consideration for merge
-                if dist == 1:
-                    mergeCandidatesD1.append(template[0])
-                else:
-                    mergeCandidatesD2.append(template[0])
+            if ( seq[1][2].split(',')[0] == template[1][1][2].split(',')[0] ):
+                dist = compare(seq[0], template[1][0])
+                if dist != -1: # If distance is not more than 2, put template in consideration for merge
+                    if dist == 1:
+                        mergeCandidatesD1.append(template[0])
+                    else:
+                        mergeCandidatesD2.append(template[0])
                     
         return mergeCandidatesD1, mergeCandidatesD2, seq
         
