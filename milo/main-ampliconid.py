@@ -91,7 +91,7 @@ def pairToJ3X(fq1, fq2, paired, inDir, outDir):
             print("\nCompressing\n")
             
             j3xSeqs = readCompressor.getDataList()
-            numMergeAttempts, mergedCount, mergedUnsureCount, mergedD1Count, mergedD2Count, discardCountList, ampliconCountList = readCompressor.getStats()
+            numMergeAttempts, mergedCount, mergedUnsureCount, mergedD1Count, mergedD2Count, discardCountList, ampliconCountList, templateCount = readCompressor.getStats()
             
             # Calculate the total number of discards, and the discard rates relative to each amplicon's read depth
             numDiscarded = sum(discardCountList)
@@ -127,6 +127,7 @@ def pairToJ3X(fq1, fq2, paired, inDir, outDir):
             with open(outfile + ".stats", "w+", newline = "") as statsFile:
                 pwrite(statsFile, "{0} Finished writing to j3x {1}".format(time.strftime('%X %d %b %Y'), paired))
                 pwrite(statsFile, "Compressed {0} reads into {1} sequences. ({2}% compression)".format(numOriginal, numSeqs, prcntCompression))
+                pwrite(statsFile, "Number of templates: {0}".format(templateCount))
                 pwrite(statsFile, "Usable data on {0} of {1}. ({2}%)".format(totalAcrossAmplicons, numOriginal, prcntUsable))
                 pwrite(statsFile, "Merged {0} of {1}. ({2}%)".format(mergedCount, numOriginal, prcntMerged))
                 pwrite(statsFile, "Merged with more than one possible template candidate: {0} of {1}. ({2}%)".format(mergedUnsureCount, numOriginal, prcntMergedUnsure))
