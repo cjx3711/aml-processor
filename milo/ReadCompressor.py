@@ -66,7 +66,6 @@ class ReadCompressor:
                     if seqReadCount > self.j3x_readDeletorThreshold: # Otherwise, check to make sure the read count isn't high before discarding sequence
                         self.leftoverList.append(seq)
                     else:
-                        print("ASFASGS")
                         self.discardedList.append(seq)
                         self.discardCountList[ampID] += 1 # Discard
             else:  # Otherwise, add it to the to-be-merged list

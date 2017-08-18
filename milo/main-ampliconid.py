@@ -109,7 +109,7 @@ def pairToJ3X(fq1, fq2, paired, inDir, outDir):
             # Calculate the total number of discards, and the discard rates relative to each amplicon's read depth
             numDiscarded = sum(discardCountList)
             discardRates = [discarded / total if total != 0 else None for discarded, total in zip(discardCountList, ampliconCountList)]
-            avgDiscardRate = median([rate for rate in discardRates if rate != None])
+            avgDiscardRate = median([rate for rate in discardRates if rate != None]) * 100
 
             # Format and write to j3x
             numUsableReads = 0
@@ -150,8 +150,10 @@ def pairToJ3X(fq1, fq2, paired, inDir, outDir):
                 statsFile.write("\nReference Amplicon Stats\n")
                 statsFile.write("{0}, {1}, {2}, {3}, {4}\n".format('Ref ampID', 'Amplicon Count', 'Template Count', 'Discard Count', 'Discard Rate'))
                 for i in range(len(templateCountList)):
-                    percent = 'N/A'
-                    statsFile.write("{0}, {1}, {2}, {3}, {4}\n".format(i, ampliconCountList[i], templateCountList[i], discardCountList[i], discardRates[i]))
+                    discardPercent = '-'
+                    if discardRates[i] != None:
+                        discardPercent = niceRound(discardRates[i])
+                    statsFile.write("{0}, {1}, {2}, {3}, {4}\n".format(i, ampliconCountList[i], templateCountList[i], discardCountList[i], discardPercent))
                 
 def writeSeqToFile(oFile, seq):
     sequence = seq[0]
@@ -167,7 +169,7 @@ def writeSeqToFile(oFile, seq):
     oFile.write("\n\n")
     
 def niceRound(num):
-    return int(num * 10)/10
+    return int(num * 100)/100
 def perc(numerator, denominator):
     return int(numerator * 1000 / denominator) / 10
 def pwrite(file, message):
