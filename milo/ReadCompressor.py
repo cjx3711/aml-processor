@@ -20,6 +20,7 @@ class ReadCompressor:
             if ( 'j3x_readDeletorThreshold' in config_data ):
                 self.j3x_readDeletorThreshold = config_data['j3x_readDeletorThreshold']
         
+        self.j3x_minVAFForTemplate = int(self.j3x_minVAFForTemplate * 100000)
         
     def putPairedRead(self, data):
         self.totalReads += 1
@@ -55,7 +56,8 @@ class ReadCompressor:
             
             # Classify sequences into one of 3 groups below, or discard them
             if seqReadCount > self.j3x_maxReadsForMerge: # If number of reads is too high for merging into template, check if
-                if (seqReadCount / self.ampliconCountList[ampID]) >= self.j3x_minVAFForTemplate: # It qualifies for a template by having a high VA
+                if int((seqReadCount * 100000) / self.ampliconCountList[ampID]) >= self.j3x_minVAFForTemplate: # It qualifies for a template by having a high VA
+                # if seqReadCount > 60:
                     self.templateList[ampID].append(seq)
                     self.templateSingleList.append(seq)
                 else:
