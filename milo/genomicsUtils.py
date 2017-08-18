@@ -61,3 +61,27 @@ def getPhredErrorDict():
     0 to 1
     """
     return {x : pow(10, -y/10) for x, y in zip(phredList, range(42, -1, -1))}
+    
+def simpleDistance(a, b):
+    """
+    Deprecated: Replaced by fastcomp
+    Checks the distance between two strings.
+    Outputs 0, 1 or 2. If it's 2, it means it's more than 2
+    """
+    if ( a == b ):
+        return 0
+    if (len(a) != len(b)):
+        return 2
+    cursorA = 0
+    cursorB = 0
+    differences = 0
+    
+    while ( cursorA < len(a) and cursorB < len(b) ):
+        if ( a[cursorA] != b[cursorB] ):
+            differences += 1
+            if ( differences >= 2 ):
+                break;
+        cursorA += 1
+        cursorB += 1
+    
+    return differences

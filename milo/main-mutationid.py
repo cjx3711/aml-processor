@@ -1,71 +1,126 @@
-from manifestExtraction import *
-from concurrent.futures import *
+from manifestExtraction import grouper
 from MutationFinder import *
 import json
 from pprint import pprint
 import time
+import os
+from multiprocessing import Pool, cpu_count
+from tqdm import tqdm
 
-inDir = "data/Processed/"
-outDir = "data/Processed/"
+inDir = "data/2-paired/"
+outDir = "data/3-mutations/"
 
-numThreads = 12
+numThreads = cpu_count()
+chunksize = 250
 mutationFinder = MutationFinder()
+bytesPerRead = 500 # Estimated
 
 def run():
     minMutationCount = 2
     with open('config.json') as config_file: 
         config_data = json.load(config_file)
-        if ( 'minMutationCount' in config_data ):
-            minMutationCount = config_data['minMutationCount']
-            
+        if ( 'j4x_readThresholdForOutput' in config_data ):
+            minMutationCount = config_data['j4x_readThresholdForOutput']
+        if ( 'chunksize' in config_data ):
+            chunksize = config_data['chunksize'] # TODO: Chunksize does not carry over
+    
+    print("MILo Mutation Identifier")
+    print("Minimum Mutation Count: {0}".format(minMutationCount))
+    print("Chunksize (Process Pool): {0}".format(chunksize))
+    print()
+    
     with open('files.json') as file_list_file:    
         filenameArray = json.load(file_list_file)
-
+        
         for filenames in filenameArray:
-            pairedFile, mutationFile = readFilenames(filenames)
-            
+            pairedFile, mutationFile, skip = readFilenames(filenames)
+            if skip:
+                continue
             if (pairedFile == '' or mutationFile == ''):
                 print('Please set the keys "paired" and "mutation" in the config.json file')
                 return
         
         for filenames in filenameArray:
-            pairedFile, mutationFile = readFilenames(filenames)
-            start = time.time()
+            pairedFile, mutationFile, skip = readFilenames(filenames)
+            if skip:
+                continue
             # Don't understand the __name__ thing, but it's required according to SO
-            if __name__ ==  "__main__": mutationID(pairedFile, mutationFile, inDir, outDir, minMutationCount)
-            end = time.time()
-            print("Took {0}s".format(end - start))
-
+            mutationID(pairedFile, mutationFile, inDir, outDir, minMutationCount)
+            
 def readFilenames(filenames):
     pairedFile = mutationFile = ''
+    skip = False
+    
     if ( 'paired' in filenames ):
         pairedFile = filenames['paired']
     if ( 'mutation' in filenames ):
         mutationFile = filenames['mutation']
-    return pairedFile, mutationFile
+    if ( 'skip' in filenames ):
+        skip = filenames['skip']
+    return pairedFile, mutationFile, skip
     
 def mutationID(pairedFile, mutationFile, inDir, outDir, minMutationCount):
+    if not os.path.exists(outDir):
+        os.makedirs(outDir)
     with open(inDir + pairedFile) as inFile:
+        filesize = os.path.getsize(inDir + pairedFile)
+        estimatedReads = int(filesize / bytesPerRead)
         with open(outDir + mutationFile, "w+", newline = "") as outFile:
-            print("Crunching {0}".format(pairedFile))
+            print("{0} Crunching {1}".format(time.strftime('%X %d %b %Y') ,pairedFile))
+            start = time.time()
             mutationFinder.reinit()
             # Creates iterators which deliver the 4 lines of each FASTQ read as a zip (ID, Sequence, Blank, Quality)
             inFileIter = grouper(inFile, 4)
-            with ProcessPoolExecutor(numThreads) as processManager:
-                # Calls alignAndMerge(FASTQ1's (ID, Sequence, Blank, Quality), FASTQ2's (ID, Sequence, Blank, Quality))
-                for ampliconID, mutationHash in processManager.map(mutationFinder.identifyMutations, inFileIter, chunksize = 250):
-                    mutationFinder.putMutationMap(ampliconID, mutationHash)
-                
-                print("Dumping {0}".format(mutationFile))
-                mutationList = mutationFinder.extractHighestOccuringMutations(minMutationCount)
+            pool = Pool(numThreads)
+            with tqdm(total=estimatedReads) as pbar:
+                result = pool.imap_unordered(mutationFinder.identifyMutations, inFileIter, chunksize = chunksize)
+                for i, data in tqdm(enumerate(result)):
+                    ampliconID = data[0]
+                    mutationHash = data[1]
+                    referenceCoordinate = data[2]
+                    readCount = data[3]
+                    if ( ampliconID != None and mutationHash != None and referenceCoordinate != None and readCount != None ):
+                        mutationFinder.putMutationHash(ampliconID, mutationHash, referenceCoordinate, readCount)
+                    pbar.update()
+
+            pbar.close()
+            pool.close()
+            pool.join()
             
-                for mutationOccurence in mutationList:    
-                    outFile.write(str(mutationOccurence[1]))
-                    outFile.write(', ')
-                    outFile.write(mutationOccurence[0])
-                    outFile.write('\n')
+            print("{0} Dumping {1}".format(time.strftime('%X %d %b %Y'), mutationFile))
+            mutationList = mutationFinder.extractHighestOccuringMutations(minMutationCount)
+        
+            for mutationOccurence in mutationList:
+                mutationCount = mutationOccurence[1]
+                mutationHash = mutationOccurence[0]
+                ampliconID = int(float(mutationHash[:mutationHash.find(' ')]))
+                referenceAmplicon = mutationFinder.getReferenceAmplicon(ampliconID)
+                mutationCoordinates = referenceAmplicon[1]
+                appearanceCount = referenceAmplicon[2]
+                outFile.write(str(mutationCount))
+                outFile.write(' / ')
+                outFile.write(str(appearanceCount))
+                outFile.write('\t, ')
+                outFile.write(mutationHash)
+                outFile.write(', ')
+                outFile.write(convertHashPositionsToCoordinates(mutationHash, mutationCoordinates))
+
+                outFile.write('\n')
                 
-                outFile.close()
-                print("Dumped {0}".format(mutationFile))
+            outFile.write('Reference Amplicon Stats\n')
+            referenceAmplicons = mutationFinder.getReferenceAmpliconArray()
+            outFile.write('Count: ' + str(mutationFinder.referenceCount) + '\n')
+            total = 0
+            for i, refAmp in enumerate(referenceAmplicons):
+                total += refAmp[2]
+                outFile.write(str(i+1) + ', ')
+                outFile.write(str(refAmp[2]) + ', ')
+                outFile.write(refAmp[0] + '\n')
+            outFile.write('Total: ' + str(total))
+            
+            
+            outFile.close()
+            print("{0} Dumped {1}".format(time.strftime('%X %d %b %Y'), mutationFile))
+            print("Took {0}s\n\n".format(time.time() - start))
                 
-run()
+if __name__ ==  "__main__": run()

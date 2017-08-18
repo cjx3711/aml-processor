@@ -1,34 +1,52 @@
-from manifestExtraction import *
+from manifestExtraction import grouper
 from unpairedFastqProc import *
 from ReadPairer import *
+from ReadCompressor import *
+from tqdm import tqdm
+from multiprocessing import cpu_count
+from statistics import median
+
+from pprint import pprint
+
+import os
 import json
+import time
 
-inDir = "data/Raw/"
-outDir = "data/Processed/"
 
-numThreads = 12
-readPairer = ReadPairer(probabilistic = False)
+inDir = "data/1-raw/"
+outDir = "data/2-paired/"
+
+numThreads = cpu_count()
+chunksize = 250
+readPairer = ReadPairer()
+bytesPerRead = 350 # Estimated
 
 def run():
+    print("MILo Amplicon Pairer")
+    print("Chunksize (Process Pool): {0}".format(chunksize))
+    print()
+    
     with open('files.json') as file_list_file:    
         filenameArray = json.load(file_list_file)
     
         for filenames in filenameArray:
-            fq1, fq2, paired = readFilenames(filenames)
-            
+            fq1, fq2, paired, skip = readFilenames(filenames)
+            if skip:
+                continue
             if (fq1 == '' or fq2 == '' or paired == ''):
                 print('Please set the keys "fastq1", "fastq2" and "paired" in the config.json file')
                 return
         
         for filenames in filenameArray:
-            fq1, fq2, paired = readFilenames(filenames)
-    
+            fq1, fq2, paired, skip = readFilenames(filenames)
+            if skip:
+                continue
             # Don't understand the __name__ thing, but it's required according to SO
-            if __name__ ==  "__main__": pairToJ3X(fq1, fq2, paired, inDir, outDir) 
-    
-    
+            pairToJ3X(fq1, fq2, paired, inDir, outDir) 
+
 def readFilenames(filenames):
     fq1 = fq2 = paired = ''
+    skip = False
     
     if ( 'fastq1' in filenames ):
         fq1 = filenames['fastq1']
@@ -36,22 +54,104 @@ def readFilenames(filenames):
         fq2 = filenames['fastq2']
     if ( 'paired' in filenames ):
         paired = filenames['paired']
-    return fq1, fq2, paired
+    if ( 'skip' in filenames ):
+        skip = filenames['skip']
+        
+    return fq1, fq2, paired, skip
     
 def pairToJ3X(fq1, fq2, paired, inDir, outDir):
+    
+    readCompressor = ReadCompressor(readPairer.getReferenceCount())
+    if not os.path.exists(outDir):
+        os.makedirs(outDir)
     with open(inDir + fq1) as fq1File, open(inDir + fq2) as fq2File:
+        filesize1 = os.path.getsize(inDir + fq1)
+        filesize2 = os.path.getsize(inDir + fq1)
+        filesize = (filesize1 + filesize2) / 2
+        estimatedReads = int(filesize / bytesPerRead)
+
         outfile = outDir + paired
-        print("Crunching {0} and {1}".format(fq1, fq2))
-        
         with open(outfile, "w+", newline = "") as outFile:
+            print("{0} Crunching {1} and {2}".format(time.strftime('%X %d %b %Y'), fq1, fq2))
+            start = time.time()
+            
             # Creates iterators which deliver the 4 lines of each FASTQ read as a zip (ID, Sequence, Blank, Quality)
             fq1Iter, fq2Iter = grouper(fq1File, 4), grouper(fq2File, 4)
-            with ProcessPoolExecutor(numThreads) as processManager:
-                # Calls alignAndMerge(FASTQ1's (ID, Sequence, Blank, Quality), FASTQ2's (ID, Sequence, Blank, Quality))
-                for x in processManager.map(readPairer.alignAndMerge, fq1Iter, fq2Iter, chunksize = 250):
-                    outFile.write(x)
-                    outFile.write("\n\n")
-                outFile.close()
-                print("Dumped {0}".format(paired))
+            processManager = ProcessPoolExecutor(numThreads)
+            with tqdm(total=estimatedReads) as pbar:
+                result = processManager.map(readPairer.alignAndMerge, fq1Iter, fq2Iter, chunksize = chunksize)
+                for i, data in tqdm(enumerate(result)):
+                    readCompressor.putPairedRead(data)
+                    # outFile.write(data)
+                    # outFile.write("\n\n")
+                    pbar.update()
+            pbar.close()
+            
+            readCompressor.prepareForCompression()
+            print("\nCompressing\n")
+            
+            j3xSeqs = readCompressor.getDataList()
+            numMergeAttempts, mergedCount, mergedUnsureCount, mergedD1Count, mergedD2Count, discardCountList, ampliconCountList, templateCount, templateCountList = readCompressor.getStats()
+            
+            # Calculate the total number of discards, and the discard rates relative to each amplicon's read depth
+            numDiscarded = sum(discardCountList)
+            discardRates = [discarded / total if total != 0 else None for discarded, total in zip(discardCountList, ampliconCountList)]
+            avgDiscardRate = median([rate for rate in discardRates if rate != None])
 
-run()
+            # Format and write to j3x
+            totalAcrossAmplicons = 0
+            for seq in j3xSeqs:
+                sequence = seq[0]
+                numReads = seq[1][0]
+                numReadsMerged = seq[1][1]
+                infoLine = seq[1][2]
+                quality = seq[1][3]
+                totalAcrossAmplicons += numReads
+                outFile.write("{0}, R:{1}, M:{2}".format(infoLine, numReads, numReadsMerged))
+                outFile.write('\n')
+                outFile.write(sequence)
+                outFile.write('\n')
+                outFile.write(quality)
+                outFile.write("\n\n")
+            outFile.close()
+            
+            # Calculate j3x statistics
+            totalAcrossAmplicons = int(totalAcrossAmplicons)
+            numSeqs = len(j3xSeqs)
+            numOriginal = numDiscarded + totalAcrossAmplicons
+            prcntCompression = 100 - perc(numSeqs, numOriginal)
+            prcntUsable = perc(totalAcrossAmplicons, numOriginal)
+            prcntMerged = perc(mergedCount , numOriginal)
+            prcntMergedUnsure = perc(mergedUnsureCount , numOriginal)
+            prcntDiscarded = perc(numDiscarded , numOriginal)
+            
+            with open(outfile + ".stats", "w+", newline = "") as statsFile:
+                statsFile.write("Overall File Stats\n")
+                pwrite(statsFile, "Specimen:        , {0}\t".format(paired))
+                pwrite(statsFile, "TimeTaken / Time:, {0}s\t, {1}\t".format(niceRound(time.time() - start), time.strftime('%X %d %b %Y')))
+                pwrite(statsFile, "Original Reads:  , {0}\t".format(numOriginal))
+                pwrite(statsFile, "Compressed Seq:  , {0}\t".format(numSeqs))
+                pwrite(statsFile, "Compression:     , {0}%\t".format(prcntCompression))
+                pwrite(statsFile, "Templates:       , {0}\t".format(templateCount))
+                pwrite(statsFile, "Usable Data:     , {0}\t, {1}%\t".format(totalAcrossAmplicons, prcntUsable))
+                pwrite(statsFile, "Merged Data:     , {0}\t, {1}%\t, Data that was similar to templates".format(mergedCount, prcntMerged))
+                pwrite(statsFile, "Merged >1 Data:  , {0}\t, {1}%\t, Merges with more than one possible template candidate".format(mergedUnsureCount, prcntMergedUnsure))
+                pwrite(statsFile, "Merges D1:       , {0}\t, {1}%\t, Merges that had distance 1".format(mergedD1Count, perc(mergedD1Count, mergedCount)))
+                pwrite(statsFile, "Merges D2:       , {0}\t, {1}%\t, Merges that had distance 2".format(mergedD2Count, perc(mergedD2Count, mergedCount)))
+                pwrite(statsFile, "Discarded Data:  , {0}\t, {1}%\t".format(numDiscarded, prcntDiscarded))
+                pwrite(statsFile, "Avg Discard Rate:, {0}%\t, , Average discard rate per amplicon".format(niceRound(avgDiscardRate)))
+
+                statsFile.write("\nReference Amplicon Stats\n")
+                statsFile.write("{0}, {1}, {2}, {3}, {4}\n".format('Ref ampID', 'Amplicon Count', 'Template Count', 'Discard Count', 'Discard Rate'))
+                for i in range(len(templateCountList)):
+                    percent = 'N/A'
+                    statsFile.write("{0}, {1}, {2}, {3}, {4}\n".format(i, ampliconCountList[i], templateCountList[i], discardCountList[i], discardRates[i]))
+                
+def niceRound(num):
+    return int(num * 10)/10
+def perc(numerator, denominator):
+    return int(numerator * 1000 / denominator) / 10
+def pwrite(file, message):
+    print(message)
+    file.write(message + "\n")
+if __name__ ==  "__main__": run()

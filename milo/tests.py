@@ -20,6 +20,26 @@ class GenomicsUtils(unittest.TestCase):
 
     def test_longer_reverse_compliment(self):
         self.assertEqual(reverseComplement("AAAAAAAACCCCCCCCTTTTTTTTGGGGGGGG"), "CCCCCCCCAAAAAAAAGGGGGGGGTTTTTTTT")
+    
+    def test_simple_difference_empty(self):
+        d = simpleDistance("", "")
+        self.assertEqual(d, 0)
+        
+    def test_simple_difference_same(self):
+        d = simpleDistance("AAAATTTT", "AAAATTTT")
+        self.assertEqual(d, 0)
+        
+    def test_simple_difference_different(self):
+        d = simpleDistance("ATATAT", "TATATA")
+        self.assertEqual(d, 2)
+        
+    def test_simple_difference_sub(self):
+        d = simpleDistance("ATATTT", "ATATAT")
+        self.assertEqual(d, 1)
+        
+    def test_simple_difference_add(self):
+        d = simpleDistance("CATATAT", "ATATAT")
+        self.assertEqual(d, 2)
 
 class AmpliconMatcherProbabilisticTests(unittest.TestCase):
     def test_file_read(self):
@@ -92,7 +112,15 @@ class AmpliconMatcherHashSweepTests(unittest.TestCase):
         self.assertTrue((0, 10) in ampMat.ampliconRefs['CCGG'])
 
 
-
+class miscj4xUtils(unittest.TestCase):
+    def weirdly_specific_function_1(self):
+        coords = convertHashPositionsToCoordinates('291 S:29:T-A S:102:T-G', 0)
+        self.assertEqual(coords, '29 102')
+        
+    def weirdly_specific_function_2(self):
+        coords = convertHashPositionsToCoordinates('291 S:29:T-A S:102:T-G', 100)
+        self.assertEqual(coords, '129 202')
+        
 class PairedFASTQAligner(unittest.TestCase):
 
     def setUp(self):

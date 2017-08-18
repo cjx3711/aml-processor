@@ -102,6 +102,9 @@ class AmpliconMatcherHashSweep:
                 self.ampliconRefs[kgram] = []
             self.ampliconRefs[kgram].append((lineno,i))
 
+    def getReferenceCount(self):
+        return self.referenceCount
+        
     def resetMatchCounts(self):
         i = 0
         for mc in self.matchCounts:

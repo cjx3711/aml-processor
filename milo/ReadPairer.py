@@ -3,23 +3,21 @@ from manifestExtraction import *
 from concurrent.futures import *
 from itertools import *
 from AmpliconMatcherHashSweep import *
-from AmpliconMatcherProbabilistic import *
 
 class ReadPairer:
-    def __init__(self, probabilistic = False):
+    def __init__(self):
         self.readLength = 151
         self.scoreThreshold = 10
         self.rangeEnd = self.readLength - self.scoreThreshold
         self.rangeStart = -self.rangeEnd
+        self.ampliconMatcher = AmpliconMatcherHashSweep("references/Manifest.csv")
 
-        if probabilistic:
-            self.ampliconMatcher = AmpliconMatcherProbabilistic("references/Manifest.csv")
-        else:
-            self.ampliconMatcher = AmpliconMatcherHashSweep("references/Manifest.csv")
-
+    def getReferenceCount(self):
+        return self.ampliconMatcher.getReferenceCount()
+        
     def mergeUnpaired(self, left, right, lQuality, rQuality):
         """
-        Note: ulnernable to early terminaton upon encountering random repeats or homopolymer sequences
+        Note: vulnerable to early terminaton upon encountering random repeats or homopolymer sequences
         Merges two unpaired reads
         Quality is not taken into consideration for tha calculations, it's only used as a return.
         Returns mergedSequence, qualityScores, numberOfCollisions
@@ -103,4 +101,4 @@ class ReadPairer:
         newID = ["".join(("ID:", ampID, ", C:", basesQualityCollisions[2], ", ", sequenceID))]
         # Adds the sequence and quality, and returns
         newID.extend(basesQualityCollisions[:2])
-        return "\n".join(newID)
+        return newID
