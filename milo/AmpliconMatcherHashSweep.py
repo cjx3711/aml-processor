@@ -8,7 +8,7 @@ class AmpliconMatcherHashSweep:
         self.kgramLength = kgramLength
         self.spacing = spacing
         self.ampliconRefs = {}
-        self.referenceCount = 1;
+        self.referenceCount = 0;
 
         self.noCount = 0
         self.badCount = 0
@@ -88,7 +88,7 @@ class AmpliconMatcherHashSweep:
                 lineno += 1
 
     def generateReferenceFromList(self, references):
-        self.referenceCount = len(references) + 1
+        self.referenceCount = len(references)
         lineno = 0
         for sequence in references:
             self.processSingleReferenceLine(sequence, lineno)
