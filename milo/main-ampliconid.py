@@ -91,7 +91,7 @@ def pairToJ3X(fq1, fq2, paired, inDir, outDir):
             print("\nCompressing\n")
             
             j3xSeqs = readCompressor.getDataList()
-            numMergeAttempts, mergedCount, mergedUnsureCount, mergedD1Count, mergedD2Count, discardCountList, ampliconCountList, templateCount = readCompressor.getStats()
+            numMergeAttempts, mergedCount, mergedUnsureCount, mergedD1Count, mergedD2Count, discardCountList, ampliconCountList, templateCount, templateCountList = readCompressor.getStats()
             
             # Calculate the total number of discards, and the discard rates relative to each amplicon's read depth
             numDiscarded = sum(discardCountList)
@@ -116,29 +116,41 @@ def pairToJ3X(fq1, fq2, paired, inDir, outDir):
             outFile.close()
             
             # Calculate j3x statistics
+            totalAcrossAmplicons = int(totalAcrossAmplicons)
             numSeqs = len(j3xSeqs)
             numOriginal = numDiscarded + totalAcrossAmplicons
-            prcntCompression = round(1 - numSeqs / numOriginal, 3) * 100
-            prcntUsable = round(totalAcrossAmplicons / numOriginal, 3) * 100
-            prcntMerged = round(mergedCount / numOriginal, 3) * 100
-            prcntMergedUnsure = round(mergedUnsureCount / numOriginal, 3) * 100
-            prcntDiscarded = round(numDiscarded / numOriginal, 3) * 100
+            prcntCompression = 100 - perc(numSeqs, numOriginal)
+            prcntUsable = perc(totalAcrossAmplicons, numOriginal)
+            prcntMerged = perc(mergedCount , numOriginal)
+            prcntMergedUnsure = perc(mergedUnsureCount , numOriginal)
+            prcntDiscarded = perc(numDiscarded , numOriginal)
             
             with open(outfile + ".stats", "w+", newline = "") as statsFile:
-                pwrite(statsFile, "{0} Finished writing to j3x {1}".format(time.strftime('%X %d %b %Y'), paired))
-                pwrite(statsFile, "Compressed {0} reads into {1} sequences. ({2}% compression)".format(numOriginal, numSeqs, prcntCompression))
-                pwrite(statsFile, "Number of templates: {0}".format(templateCount))
-                pwrite(statsFile, "Usable data on {0} of {1}. ({2}%)".format(totalAcrossAmplicons, numOriginal, prcntUsable))
-                pwrite(statsFile, "Merged {0} of {1}. ({2}%)".format(mergedCount, numOriginal, prcntMerged))
-                pwrite(statsFile, "Merged with more than one possible template candidate: {0} of {1}. ({2}%)".format(mergedUnsureCount, numOriginal, prcntMergedUnsure))
-                pwrite(statsFile, "Discarded {0} of {1}. ({2}%)".format(numDiscarded, numOriginal, prcntDiscarded))
-                pwrite(statsFile, "{0}% of merges had distance of 1, while {1}% were merged with distance of 2.".format(round(mergedD1Count / mergedCount * 100, 3), round(mergedD2Count / mergedCount  * 100, 3)))
-                pwrite(statsFile, "Took {0}s\n\n".format(time.time() - start))
-                if any([rate - avgDiscardRate > 0.1 for rate in discardRates if rate != None]): # If the discards are concentrated in one amplicon
-                    pwrite(statsFile, "ALERT: The following amplicons have high discard rates (ID, Discard %, Read Depth):")
-                    pwrite(statsFile, str([(ampID, str(round(rate, 2) * 100) + "%", ampliconCountList[ampID]) for ampID, rate in enumerate(discardRates) if rate != None and rate - avgDiscardRate > 0.1]))
-                    pwrite(statsFile, "The average discard rate is {0}%".format(round(avgDiscardRate, 3) * 100))
+                statsFile.write("Overall File Stats\n")
+                pwrite(statsFile, "Specimen:        , {0}\t".format(paired))
+                pwrite(statsFile, "TimeTaken / Time:, {0}s\t, {1}\t".format(niceRound(time.time() - start), time.strftime('%X %d %b %Y')))
+                pwrite(statsFile, "Original Reads:  , {0}\t".format(numOriginal))
+                pwrite(statsFile, "Compressed Seq:  , {0}\t".format(numSeqs))
+                pwrite(statsFile, "Compression:     , {0}%\t".format(prcntCompression))
+                pwrite(statsFile, "Templates:       , {0}\t".format(templateCount))
+                pwrite(statsFile, "Usable Data:     , {0}\t, {1}%\t".format(totalAcrossAmplicons, prcntUsable))
+                pwrite(statsFile, "Merged Data:     , {0}\t, {1}%\t, Data that was similar to templates".format(mergedCount, prcntMerged))
+                pwrite(statsFile, "Merged >1 Data:  , {0}\t, {1}%\t, Merges with more than one possible template candidate".format(mergedUnsureCount, prcntMergedUnsure))
+                pwrite(statsFile, "Merges D1:       , {0}\t, {1}%\t, Merges that had distance 1".format(mergedD1Count, perc(mergedD1Count, mergedCount)))
+                pwrite(statsFile, "Merges D2:       , {0}\t, {1}%\t, Merges that had distance 2".format(mergedD2Count, perc(mergedD2Count, mergedCount)))
+                pwrite(statsFile, "Discarded Data:  , {0}\t, {1}%\t".format(numDiscarded, prcntDiscarded))
+                pwrite(statsFile, "Avg Discard Rate:, {0}%\t, , Average discard rate per amplicon".format(niceRound(avgDiscardRate)))
+
+                statsFile.write("\nReference Amplicon Stats\n")
+                statsFile.write("{0}, {1}, {2}, {3}, {4}\n".format('Ref ampID', 'Amplicon Count', 'Template Count', 'Discard Count', 'Discard Rate'))
+                for i in range(len(templateCountList)):
+                    percent = 'N/A'
+                    statsFile.write("{0}, {1}, {2}, {3}, {4}\n".format(i, ampliconCountList[i], templateCountList[i], discardCountList[i], discardRates[i]))
                 
+def niceRound(num):
+    return int(num * 10)/10
+def perc(numerator, denominator):
+    return int(numerator * 1000 / denominator) / 10
 def pwrite(file, message):
     print(message)
     file.write(message + "\n")

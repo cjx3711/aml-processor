@@ -76,12 +76,13 @@ class ReadCompressor:
                  self.mergedD2Count,
                  self.discardCountList,
                  self.ampliconCountList,
-                 len(self.templateFlatList))
+                 len(self.templateFlatList),
+                  # List of templates for each amplicon
+                 [len(templatesPerAmp) for templatesPerAmp in self.templateNestedList]
+                 )
+                 
     
     def getDataList(self):
-        print("Number of templates: {0}".format(len(self.templateFlatList)))
-        print([len(templatesPerAmp) for templatesPerAmp in self.templateNestedList]) # Print list of templates for each amplicon
-
         # Merging to-be-merged list with template list
         for seq in tqdm(self.tbmergedList):
             mergeCandidatesD1 = [] # List containing templates that each sequence might be merged with distance of 1,
