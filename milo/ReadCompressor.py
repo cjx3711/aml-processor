@@ -36,6 +36,7 @@ class ReadCompressor:
         self.discardCountList = [0] * (self.referenceCount + 1)
         self.tbmergedList = [] # 1. Sequences to be merged with template
         self.leftoverList = [] # 2. Sequences that cannot be merged, or cannot qualify as a template, but still have a high-ish read depth
+        self.discardedList = [] # 3. Store the discarded stuff for possible further processing
         self.templateNestedList = [ [] for x in range(self.referenceCount + 1)] # 3. Double-nested list containing 572 indices for the amplicons, with each inner list holding all templates for that amplicon
         self.templateFlatList = [] # Same as above, but as one big flat list (all amplicons together) for easier output
         self.numOfTemplatesPerAmp = []
@@ -45,6 +46,7 @@ class ReadCompressor:
         self.mergedUnsureCount = 0 # Count of merges where multiple candidate templates are equal distance away from sequence
         self.mergedD1Count = 0 # Count of merges with distance of 1
         self.mergedD2Count = 0 # and distance of 2
+        self.failedMergeAndDiscarded = 0 # Count the number of items that were discarded after failing to merge 
         
         readTupleList = list(self.ampliconCountDict.items())
         # Computes the total read count for each amplicon to calculate VAF
@@ -64,7 +66,9 @@ class ReadCompressor:
                     if seqReadCount > self.j3x_readDeletorThreshold: # Otherwise, check to make sure the read count isn't high before discarding sequence
                         self.leftoverList.append(seq)
                     else:
-                         self.discardCountList[ampID] += 1 # Discard
+                        print("ASFASGS")
+                        self.discardedList.append(seq)
+                        self.discardCountList[ampID] += 1 # Discard
             else:  # Otherwise, add it to the to-be-merged list
                 self.tbmergedList.append(seq)
 
@@ -76,12 +80,14 @@ class ReadCompressor:
                  self.mergedD2Count,
                  self.discardCountList,
                  self.ampliconCountList,
+                 self.failedMergeAndDiscarded,
                  len(self.templateFlatList),
                   # List of templates for each amplicon
                  [len(templatesPerAmp) for templatesPerAmp in self.templateNestedList]
                  )
                  
-    
+    def getDiscardedList(self):
+        return self.discardedList;
     def getDataList(self):
         # Merging to-be-merged list with template list
         for seq in tqdm(self.tbmergedList):
@@ -122,7 +128,9 @@ class ReadCompressor:
                 if seqReadCount >= self.j3x_readDeletorThreshold: # If we can't merge the sequence but it has a high read depth
                     self.leftoverList.append(seq)
                 else:
+                    self.discardedList.append(seq)
                     self.discardCountList[ampID] += 1 # Discard
+                    self.failedMergeAndDiscarded += 1
         # Combine the newly reinforced templates with the leftovers for inckusion in j3x
         j3xSeqs = self.templateFlatList + self.leftoverList
         return j3xSeqs

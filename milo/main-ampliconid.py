@@ -24,6 +24,7 @@ bytesPerRead = 350 # Estimated
 def run():
     print("MILo Amplicon Pairer")
     print("Chunksize (Process Pool): {0}".format(chunksize))
+    print("Number of Threads: {0}".format(numThreads))
     print()
     
     with open('files.json') as file_list_file:    
@@ -91,7 +92,19 @@ def pairToJ3X(fq1, fq2, paired, inDir, outDir):
             print("\nCompressing\n")
             
             j3xSeqs = readCompressor.getDataList()
-            numMergeAttempts, mergedCount, mergedUnsureCount, mergedD1Count, mergedD2Count, discardCountList, ampliconCountList, templateCount, templateCountList = readCompressor.getStats()
+            
+            # Print all the discarded stuff into another file
+            discardedList = readCompressor.getDiscardedList()
+            discardOutDir = outDir + 'discarded/'
+            discardFile = discardOutDir + paired
+            if not os.path.exists(discardOutDir):
+                os.makedirs(discardOutDir)
+            with open(discardFile, "w+", newline = "") as discardedOutFile:
+                for discardSeq in discardedList:
+                    writeSeqToFile(discardedOutFile, discardSeq)
+                discardedOutFile.close()
+            
+            numMergeAttempts, mergedCount, mergedUnsureCount, mergedD1Count, mergedD2Count, discardCountList, ampliconCountList, failedMergeAndDiscarded, templateCount, templateCountList = readCompressor.getStats()
             
             # Calculate the total number of discards, and the discard rates relative to each amplicon's read depth
             numDiscarded = sum(discardCountList)
@@ -99,28 +112,20 @@ def pairToJ3X(fq1, fq2, paired, inDir, outDir):
             avgDiscardRate = median([rate for rate in discardRates if rate != None])
 
             # Format and write to j3x
-            totalAcrossAmplicons = 0
+            numUsableReads = 0
             for seq in j3xSeqs:
-                sequence = seq[0]
                 numReads = seq[1][0]
-                numReadsMerged = seq[1][1]
-                infoLine = seq[1][2]
-                quality = seq[1][3]
-                totalAcrossAmplicons += numReads
-                outFile.write("{0}, R:{1}, M:{2}".format(infoLine, numReads, numReadsMerged))
-                outFile.write('\n')
-                outFile.write(sequence)
-                outFile.write('\n')
-                outFile.write(quality)
-                outFile.write("\n\n")
+                numUsableReads += numReads
+                writeSeqToFile(outFile, seq)
+
             outFile.close()
             
             # Calculate j3x statistics
-            totalAcrossAmplicons = int(totalAcrossAmplicons)
+            numUsableReads = int(numUsableReads)
             numSeqs = len(j3xSeqs)
-            numOriginal = numDiscarded + totalAcrossAmplicons
+            numOriginal = numDiscarded + numUsableReads
             prcntCompression = 100 - perc(numSeqs, numOriginal)
-            prcntUsable = perc(totalAcrossAmplicons, numOriginal)
+            prcntUsable = perc(numUsableReads, numOriginal)
             prcntMerged = perc(mergedCount , numOriginal)
             prcntMergedUnsure = perc(mergedUnsureCount , numOriginal)
             prcntDiscarded = perc(numDiscarded , numOriginal)
@@ -133,12 +138,13 @@ def pairToJ3X(fq1, fq2, paired, inDir, outDir):
                 pwrite(statsFile, "Compressed Seq:  , {0}\t".format(numSeqs))
                 pwrite(statsFile, "Compression:     , {0}%\t".format(prcntCompression))
                 pwrite(statsFile, "Templates:       , {0}\t".format(templateCount))
-                pwrite(statsFile, "Usable Data:     , {0}\t, {1}%\t".format(totalAcrossAmplicons, prcntUsable))
+                pwrite(statsFile, "Usable Data:     , {0}\t, {1}%\t".format(numUsableReads, prcntUsable))
                 pwrite(statsFile, "Merged Data:     , {0}\t, {1}%\t, Data that was similar to templates".format(mergedCount, prcntMerged))
                 pwrite(statsFile, "Merged >1 Data:  , {0}\t, {1}%\t, Merges with more than one possible template candidate".format(mergedUnsureCount, prcntMergedUnsure))
                 pwrite(statsFile, "Merges D1:       , {0}\t, {1}%\t, Merges that had distance 1".format(mergedD1Count, perc(mergedD1Count, mergedCount)))
                 pwrite(statsFile, "Merges D2:       , {0}\t, {1}%\t, Merges that had distance 2".format(mergedD2Count, perc(mergedD2Count, mergedCount)))
                 pwrite(statsFile, "Discarded Data:  , {0}\t, {1}%\t".format(numDiscarded, prcntDiscarded))
+                pwrite(statsFile, "!Merge & Discard , {0}\t, , Discarded due to failed merge".format(failedMergeAndDiscarded))
                 pwrite(statsFile, "Avg Discard Rate:, {0}%\t, , Average discard rate per amplicon".format(niceRound(avgDiscardRate)))
 
                 statsFile.write("\nReference Amplicon Stats\n")
@@ -147,6 +153,19 @@ def pairToJ3X(fq1, fq2, paired, inDir, outDir):
                     percent = 'N/A'
                     statsFile.write("{0}, {1}, {2}, {3}, {4}\n".format(i, ampliconCountList[i], templateCountList[i], discardCountList[i], discardRates[i]))
                 
+def writeSeqToFile(oFile, seq):
+    sequence = seq[0]
+    numReads = seq[1][0]
+    numReadsMerged = seq[1][1]
+    infoLine = seq[1][2]
+    quality = seq[1][3]
+    oFile.write("{0}, R:{1}, M:{2}".format(infoLine, numReads, numReadsMerged))
+    oFile.write('\n')
+    oFile.write(sequence)
+    oFile.write('\n')
+    oFile.write(quality)
+    oFile.write("\n\n")
+    
 def niceRound(num):
     return int(num * 10)/10
 def perc(numerator, denominator):

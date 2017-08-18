@@ -27,6 +27,7 @@ def run():
     print("MILo Mutation Identifier")
     print("Minimum Mutation Count: {0}".format(minMutationCount))
     print("Chunksize (Process Pool): {0}".format(chunksize))
+    print("Number of Threads: {0}".format(numThreads))
     print()
     
     with open('files.json') as file_list_file:    
