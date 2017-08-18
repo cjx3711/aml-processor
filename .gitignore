@@ -11,4 +11,5 @@ milo/config.json
 milo/config*.json
 !milo/config.sample.json
 milo/files.json
+milo/files*.json
 !milo/files.sample.json
