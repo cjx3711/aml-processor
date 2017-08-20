@@ -80,7 +80,7 @@ def pairToJ3X(fq1, fq2, paired, inDir, outDir):
             fq1Iter, fq2Iter = grouper(fq1File, 4), grouper(fq2File, 4)
             processManager = ProcessPoolExecutor(numThreads)
             with tqdm(total=estimatedReads) as pbar:
-                result = processManager.map(readPairer.alignAndMerge, fq1Iter, fq2Iter, chunksize = chunksize)
+                result = processManager.map(readPairer.alignAndMerge, fq1Iter, fq2Iter, alignByMaxima = False, chunksize = chunksize)
                 for i, data in tqdm(enumerate(result)):
                     readCompressor.putPairedRead(data)
                     # outFile.write(data)

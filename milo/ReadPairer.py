@@ -86,6 +86,7 @@ class ReadPairer:
                 score -= 5
             count += 1
 
+            # Terminate early if remaining bases can never give score that exceeds the current maxima
             if (score + overlapLength - count) <= maxScore:
                 break
         return score
@@ -133,19 +134,17 @@ class ReadPairer:
             return bases[0], quality[0]
         return tuple("".join(y) for y in zip(*(pickBetter(*x) for x in zip(overlapPairs, overlapQuality)))), collisions[0]
 
-    def alignAndMerge(self, left, right):
-        # DEPRACATED: Merges (left sequence, reverseComplement(right sequence), left quality, reversed(right quality))
-        #basesQualityCollisions = self.mergeUnpaired(left[1][:-1], reverseComplement(right[1][:-1]), left[3][:-1], right[3][:-1][::-1])
-
-        # TEST CODE: Validates if non-global-maxima based pairing is accurate
-        basesQualityCollisions = self.mergeUnpairedMaxima(left[1][:-1], reverseComplement(right[1][:-1]), left[3][:-1], right[3][:-1][::-1])
+    def alignAndMerge(self, left, right, alignByMaxima = False):
+        # Decides whether or not to use the faster aligner that is vulnerable to homopolymer seqs, or the slower but more robust one.
+        if not maxima:
+            # Merges (left sequence, reverseComplement(right sequence), left quality, reversed(right quality))
+            bases, quality, collisions = self.mergeUnpaired(left[1][:-1], reverseComplement(right[1][:-1]), left[3][:-1], right[3][:-1][::-1])
+        else:
+            bases, quality, collisions = self.mergeUnpairedMaxima(left[1][:-1], reverseComplement(right[1][:-1]), left[3][:-1], right[3][:-1][::-1])
         # Retrieves the coordinates from the existing FASTQ read ID
         coordIndices = nthAndKthLetter(left[0], ":", 5, 7)
         sequenceID = left[0][coordIndices[0]: coordIndices[1] - 2]
         # Checks which amplicon a read belongs to
-        ampID = self.ampliconMatcher.findAmplicon(basesQualityCollisions[0])
-        # Joins amplicon number, collision number, and coordinate as new ID
-        newID = ["".join(("ID:", ampID, ", C:", basesQualityCollisions[2], ", ", sequenceID))]
-        # Adds the sequence and quality, and returns
-        newID.extend(basesQualityCollisions[:2])
-        return newID
+        ampID = self.ampliconMatcher.findAmplicon(bases)
+        # Joins amplicon number, collision number, and coordinate as new ID, then appends the bases and quality seqs
+        return ["".join(("ID:", ampID, ", C:", collisions, ", ", sequenceID)), bases, quality]
