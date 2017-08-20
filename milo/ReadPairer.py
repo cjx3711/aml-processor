@@ -24,11 +24,8 @@ class ReadPairer:
         """
         #Align unpaired reads
         for x in range(self.rangeStart, self.rangeEnd):
-            # x is the relative position of the left read to the right, as it slides rightward
-            # lRange and rRange contain the (start, end) indices of the overlap in the left and right reads
             lRange = (max(0, -x), min(self.readLength, -x + self.readLength))
             rRange = (max(0, x), min(self.readLength, x + self.readLength))
-            # Generates 2D tuples of paired (left base, right base), and (left quality, right quality)
             overlapPairs = tuple(zip(left[lRange[0]:lRange[1]], right[rRange[0]:rRange[1]]))
             overlapQuality = tuple(zip(lQuality[lRange[0]:lRange[1]], rQuality[rRange[0]:rRange[1]]))
             overlapLength = lRange[1] - lRange[0]
@@ -46,23 +43,37 @@ class ReadPairer:
         # If alignment fails, return both reads separated with a space
         return " ".join((left, right)), " ".join((lQuality, rQuality)), "?"
 
-    def mergeUnpairedMaxima(self, left, right, lQuality, rQuality):
+    def mergeUnpaired(self, left, right, lQuality, rQuality, byMaxima = False):
         maxScore = 0 # Local maxima for overlap similarity
         newScore = 0 # Overlap score in current iteration
         bestMatch = [] # Stores the overlap coordinates of local maxima of overlap score [lRange, rRange]
         # Slides left read rightward
         for x in range(self.rangeStart, self.rangeEnd):
+            # x is the relative position of the left read to the right, as it slides rightward
+            # lRange and rRange contain the (start, end) indices of the overlap in the left and right reads
             lRange = (max(0, -x), min(self.readLength, -x + self.readLength))
             rRange = (max(0, x), min(self.readLength, x + self.readLength))
+
             overlapPairs = zip(left[lRange[0]:lRange[1]], right[rRange[0]:rRange[1]]) # Generates overlap on left and right read, and zips each opposing pair of bases as a tuple
             overlapLength = lRange[1] - lRange[0] # Equivalent to number of elements in overlapPairs
-            newScore = self.calcScoreMaxima(overlapPairs, overlapLength, maxScore)
-            
-            if newScore > maxScore: # If we encounter a new local maxima, record the score and its overlap coordinates
-                maxScore = newScore
-                bestMatch = [lRange, rRange]
+            newScore = self.calcScore(overlapPairs, overlapLength, maxScore, byMaxima = byMaxima)
+
+            if byMaxima: # If we are aligning by checking every overlap for global maxima
+                if newScore > maxScore: # If we encounter a new local maxima, record the score and its overlap coordinates
+                    maxScore = newScore
+                    bestMatch = [lRange, rRange]
+            elif newScore > self.scoreThreshold: # If we are not, the moment our overlap exceeds the score threshold, merge and return
+                # mergedSeq = ((bases, quality), collisions)
+                mergedSeq = self.mergeOverlap(overlapPairs, overlapQuality)
+                # Append the non-overlapping bases to the left and right of the merged sequence
+                allBases = chain(left[0:lRange[0]], mergedSeq[0][0], right[rRange[1]:self.readLength])
+                allQuality = chain(lQuality[0:lRange[0]], mergedSeq[0][1], rQuality[rRange[1]:self.readLength])
+                # Convert to j3x format
+                j3xBases = "".join("_" if x == "N" else x for x in allBases)
+                j3xQuality = "".join(simplifyQuality(qualityDict[x]) for x in allQuality)
+                return j3xBases, j3xQuality, str(mergedSeq[1])
         
-        if maxScore > 0: # If there exists a global maxima better than not pairing at all
+        if maxScore > 0 and byMaxima: # If we are aligning by maxima, and there exists a global maxima better than not pairing at all
             lRange = bestMatch[0]
             rRange = bestMatch[1]
             mergedSeq, collisions = self.mergeOverlap(zip(left[lRange[0]:lRange[1]], right[rRange[0]:rRange[1]]), zip(lQuality[lRange[0]:lRange[1]], rQuality[rRange[0]:rRange[1]]))
@@ -74,24 +85,7 @@ class ReadPairer:
         else:
             return " ".join((left, right)), " ".join((lQuality, rQuality)), "?"
 
-
-    def calcScoreMaxima(self, overlapPairs, overlapLength, maxScore):
-        score, count = 0, 0
-        for x, y in overlapPairs:
-            if x == "N" or y == "N":
-                pass
-            elif x == y:
-                score += 1
-            elif x != y:
-                score -= 5
-            count += 1
-
-            # Terminate early if remaining bases can never give score that exceeds the current maxima
-            if (score + overlapLength - count) <= maxScore:
-                break
-        return score
-
-    def calcScore(self, overlapPairs, overlapLength):
+    def calcScore(self, overlapPairs, overlapLength, byMaxima = False):
         """
         Checks if the overlap is legit.
         Returns a nice score for the overlap
@@ -107,10 +101,13 @@ class ReadPairer:
                 score -= 5
             count += 1
 
-            # If score is too low to possibly pass required score, break
-            if (score + overlapLength - count) <= self.scoreThreshold:
-                # Note: Low quality scores are not correctly calculated because of this
-                break
+            if byMaxima: # Choose early break condition depending on the alignment algorithm used
+                # Terminate early if remaining bases can never give score that exceeds the current maxima
+                if (score + overlapLength - count) <= maxScore:
+                    break
+            elif (score + overlapLength - count) <= self.scoreThreshold: # If score is too low to possibly pass required score, break
+                    # Note: Low quality scores are not correctly calculated because of this
+                    break
         return score
 
     def mergeOverlap(self, overlapPairs, overlapQuality):
@@ -135,12 +132,8 @@ class ReadPairer:
         return tuple("".join(y) for y in zip(*(pickBetter(*x) for x in zip(overlapPairs, overlapQuality)))), collisions[0]
 
     def alignAndMerge(self, left, right, alignByMaxima = False):
-        # Decides whether or not to use the faster aligner that is vulnerable to homopolymer seqs, or the slower but more robust one.
-        if not maxima:
-            # Merges (left sequence, reverseComplement(right sequence), left quality, reversed(right quality))
-            bases, quality, collisions = self.mergeUnpaired(left[1][:-1], reverseComplement(right[1][:-1]), left[3][:-1], right[3][:-1][::-1])
-        else:
-            bases, quality, collisions = self.mergeUnpairedMaxima(left[1][:-1], reverseComplement(right[1][:-1]), left[3][:-1], right[3][:-1][::-1])
+        # Merges (left sequence, reverseComplement(right sequence), left quality, reversed(right quality))
+        bases, quality, collisions = self.mergeUnpaired(left[1][:-1], reverseComplement(right[1][:-1]), left[3][:-1], right[3][:-1][::-1], byMaxima = alignByMaxima)
         # Retrieves the coordinates from the existing FASTQ read ID
         coordIndices = nthAndKthLetter(left[0], ":", 5, 7)
         sequenceID = left[0][coordIndices[0]: coordIndices[1] - 2]
