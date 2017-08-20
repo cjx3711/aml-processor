@@ -63,6 +63,10 @@ class MutationFinder:
         
     def identifyMutations(self, data):
         iddataParts = data[0].split(', ')
+        # Ignore translocations
+        if ( iddataParts[0].startswith('TL:') ):
+            return None, None, None, None
+            
         ampliconID = int(float(iddataParts[0][3:]))
         if ( ampliconID == 0 ):
             return None, None, None, None
