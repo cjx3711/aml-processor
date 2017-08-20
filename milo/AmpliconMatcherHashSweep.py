@@ -11,8 +11,8 @@ class AmpliconMatcherHashSweep:
         self.referenceCount = 0;
         
         # Config
-        self.seqStartWeight = 2
-        self.seqRemainderWeight = 1
+        self.seqEndsWeight = 2
+        self.seqMidWeight = 1
 
         self.noCount = 0
         self.badCount = 0
@@ -31,15 +31,15 @@ class AmpliconMatcherHashSweep:
         # ]
         self.resetMatchScore()
 
-    def getWeight(self, cursorPos):
+    def getWeight(self, cursorPos, readLen):
         """
         We want to weight the beginning of the sequence higher
         This is because the probe sequence is likely to be correct
         """
-        if cursorPos > 30:
-            return self.seqRemainderWeight
+        if cursorPos > 30 or cursorPos < readLen - 30:
+            return self.seqMidWeight
         else:
-            return self.seqStartWeight
+            return self.seqEndsWeight
 
     def calculateMatchScore(self, read):
         """
@@ -49,14 +49,15 @@ class AmpliconMatcherHashSweep:
         matches = []
         self.resetMatchScore()
         readCursor = 0 # The read cursor scans through the whole sequence one by one
-        while readCursor < len(read) - self.kgramLength + 1:
+        readLen = len(read)
+        while readCursor < readLen - self.kgramLength + 1:
             kgram = read[readCursor:readCursor + self.kgramLength]
             if kgram in self.ampliconRefs:
                 currentMatches = self.ampliconRefs[kgram]
                 for match in currentMatches:
                     if (match in matches) == False: # This prevents multi counting.
                         ampID = match[0]
-                        self.matchScore[ampID - 1][0] += self.getWeight(readCursor)
+                        self.matchScore[ampID - 1][0] += self.getWeight(readCursor, readLen)
                         matches.append(match)
 
             readCursor += 1
@@ -72,20 +73,32 @@ class AmpliconMatcherHashSweep:
         
         largest1, largest2 = self.calculateMatchScore(read)
 
-        if ( largest1[0] < self.seqStartWeight and largest2[0] == 0):
+        if ( largest1[0] < self.seqEndsWeight and largest2[0] == 0):
             self.noCount += 1
-            return '000'
+            return '000', None, 'nah'
 
         ampID = str(largest1[1]).rjust(3,'0')
-
+        ampID2 = None
+        matchType = 'kay'
+        
         secondPercent = largest2[0] / largest1[0]
             
-        if ( secondPercent > 0.6 ):
+        if ( secondPercent > 0.5 ):
             self.badCount += 1
+            ampID2 = str(largest2[1]).rjust(3,'0')
+            matchType = 'bad'
+            # umPerc = self.ummCount / self.total
+            # badPerc = self.badCount / self.total
+            # print("Umm, bad {0},{1} ({2},{3}) / {4}".format(self.ummCount, self.badCount, umPerc, badPerc, self.total))
         elif ( secondPercent > 0.3 ):
             self.ummCount += 1
-
-        return ampID
+            ampID2 = str(largest2[1]).rjust(3,'0')
+            matchType = 'umm'
+            # umPerc = self.ummCount / self.total
+            # badPerc = self.badCount / self.total
+            # print("Umm, bad {0},{1} ({2},{3}) / {4}".format(self.ummCount, self.badCount, umPerc, badPerc, self.total))
+            
+        return ampID, ampID2, matchType
 
     def generateReferenceFromFile(self, filename):
         with open(filename) as references:

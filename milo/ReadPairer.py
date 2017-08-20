@@ -114,10 +114,19 @@ class ReadPairer:
 
     def alignAndMerge(self, left, right):
         bases, quality, collisions = self.mergeUnpaired(left[1][:-1], reverseComplement(right[1][:-1]), left[3][:-1], right[3][:-1][::-1], self.alignByMaxima)
+        
+        failedToPair = 1 if collisions == '?' else 0
+        
         # Retrieves the coordinates from the existing FASTQ read ID
         coordIndices = nthAndKthLetter(left[0], ":", 5, 7)
         sequenceID = left[0][coordIndices[0]: coordIndices[1] - 2]
         # Checks which amplicon a read belongs to
-        ampID = self.ampliconMatcher.findAmplicon(bases)
-        # Joins amplicon number, collision number, and coordinate as new ID, and appends bases and quality
-        return ["".join(("ID:", ampID, ", C:", collisions, ", ", sequenceID)), bases, quality]
+        ampID, ampID2, matchType = self.ampliconMatcher.findAmplicon(bases)
+        otherStats = (failedToPair, matchType)
+        if ampID2 != None:
+            # Joins amplicon number, collision number, and coordinate as new ID, and appends bases and quality
+            return (otherStats, ["".join(("TL:", ampID + '/' + ampID2, ", C:", collisions, ", ", sequenceID)), bases, quality])            
+        else:
+            # Joins amplicon number, collision number, and coordinate as new ID, and appends bases and quality
+            return (otherStats, ["".join(("ID:", ampID, ", C:", collisions, ", ", sequenceID)), bases, quality])
+            

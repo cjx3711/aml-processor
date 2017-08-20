@@ -51,12 +51,12 @@ class ReadCompressor:
         readTupleList = list(self.ampliconCountDict.items())
         # Computes the total read count for each amplicon to calculate VAF
         for seq in readTupleList:
-            ampID = int(seq[1][2].split(',')[0].strip()[3:]) # Extracts the ampID from the info line
+            ampID = int(seq[1][2].split(',')[0].strip()[3:6]) # Extracts the ampID from the info line
             seqReadCount = seq[1][0]
             self.ampliconCountList[ampID] += seqReadCount
         # Classify sequences into one of 3 groups, or discard them
         for seq in readTupleList:
-            ampID = int(seq[1][2].split(',')[0].strip()[3:])
+            ampID = int(seq[1][2].split(',')[0].strip()[3:6])
             seqReadCount = seq[1][0]
             if seqReadCount > self.j3x_maxReadsForMerge: # If number of reads is too high for merging into template, check if
                 if seqReadCount / int(self.ampliconCountList[ampID]) >= self.j3x_minVAFForTemplate: # It qualifies for a template by having a high VA
@@ -93,7 +93,7 @@ class ReadCompressor:
             mergeCandidatesD1 = [] # List containing templates that each sequence might be merged with distance of 1,
             mergeCandidatesD2 = [] # and distance of 2
             seqReadCount = seq[1][0]
-            ampID = int(seq[1][2].split(',')[0][3:])
+            ampID = int(seq[1][2].split(',')[0][3:6])
             self.numMergeAttempts += seqReadCount
 
             for template in self.templateNestedList[ampID]: # Get edit distance between sequence and every applicable template
