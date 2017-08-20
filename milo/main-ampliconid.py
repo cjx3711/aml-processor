@@ -42,7 +42,6 @@ def run():
             fq1, fq2, paired, skip = readFilenames(filenames)
             if skip:
                 continue
-            # Don't understand the __name__ thing, but it's required according to SO
             pairToJ3X(fq1, fq2, paired, inDir, outDir) 
 
 def readFilenames(filenames):
