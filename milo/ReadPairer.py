@@ -56,7 +56,7 @@ class ReadPairer:
 
             overlapPairs = zip(left[lRange[0]:lRange[1]], right[rRange[0]:rRange[1]]) # Generates overlap on left and right read, and zips each opposing pair of bases as a tuple
             overlapLength = lRange[1] - lRange[0] # Equivalent to number of elements in overlapPairs
-            newScore = self.calcScore(overlapPairs, overlapLength, maxScore, byMaxima = byMaxima)
+            newScore = self.calcScore(overlapPairs, overlapLength, maxScore, byMaxima)
 
             if byMaxima: # If we are aligning by checking every overlap for global maxima
                 if newScore > maxScore: # If we encounter a new local maxima, record the score and its overlap coordinates
@@ -64,7 +64,7 @@ class ReadPairer:
                     bestMatch = [lRange, rRange]
             elif newScore > self.scoreThreshold: # If we are not, the moment our overlap exceeds the score threshold, merge and return
                 # mergedSeq = ((bases, quality), collisions)
-                mergedSeq = self.mergeOverlap(overlapPairs, overlapQuality)
+                mergedSeq = self.mergeOverlap(overlapPairs, zip(lQuality[lRange[0]:lRange[1]], rQuality[rRange[0]:rRange[1]]))
                 # Append the non-overlapping bases to the left and right of the merged sequence
                 allBases = chain(left[0:lRange[0]], mergedSeq[0][0], right[rRange[1]:self.readLength])
                 allQuality = chain(lQuality[0:lRange[0]], mergedSeq[0][1], rQuality[rRange[1]:self.readLength])
@@ -85,7 +85,7 @@ class ReadPairer:
         else:
             return " ".join((left, right)), " ".join((lQuality, rQuality)), "?"
 
-    def calcScore(self, overlapPairs, overlapLength, byMaxima = False):
+    def calcScore(self, overlapPairs, overlapLength, maxScore, byMaxima = False):
         """
         Checks if the overlap is legit.
         Returns a nice score for the overlap
@@ -133,7 +133,7 @@ class ReadPairer:
 
     def alignAndMerge(self, left, right, alignByMaxima = False):
         # Merges (left sequence, reverseComplement(right sequence), left quality, reversed(right quality))
-        bases, quality, collisions = self.mergeUnpaired(left[1][:-1], reverseComplement(right[1][:-1]), left[3][:-1], right[3][:-1][::-1], byMaxima = alignByMaxima)
+        bases, quality, collisions = self.mergeUnpaired(left[1][:-1], reverseComplement(right[1][:-1]), left[3][:-1], right[3][:-1][::-1], alignByMaxima)
         # Retrieves the coordinates from the existing FASTQ read ID
         coordIndices = nthAndKthLetter(left[0], ":", 5, 7)
         sequenceID = left[0][coordIndices[0]: coordIndices[1] - 2]
