@@ -3,5 +3,8 @@
   "chunksize": 500,
   "j3x_minVAFForTemplate": 0.05,
   "j3x_maxReadsForMerge": 10,
-  "j3x_readDeletorThreshold": 2
+  "j3x_readDeletorThreshold": 2,
+  "readPairer_alignByMaxima": false,
+  "readPairer_matchScore": 1,
+  "readPairer_mismatchPenalty": 5
 }

@@ -3,10 +3,23 @@ from manifestExtraction import *
 from concurrent.futures import *
 from itertools import *
 from AmpliconMatcherHashSweep import *
+import json
 
 class ReadPairer:
-    def __init__(self):
+    def __init__(self, useConfig = True):
         self.alignByMaxima = False # Whether or not to robustly align by detecting global maxima for overlap scores
+        self.matchScore = 1
+        self.mismatchPenalty = 5
+        if useConfig:
+            with open('config.json') as config_file: 
+                config_data = json.load(config_file)
+                if ( 'readPairer_alignByMaxima' in config_data ):
+                    self.alignByMaxima = config_data['readPairer_alignByMaxima']
+                if ( 'readPairer_matchScore' in config_data ):
+                    self.matchScore = abs(config_data['readPairer_matchScore'])
+                if ( 'readPairer_mismatchPenalty' in config_data ):
+                    self.mismatchPenalty = abs(config_data['readPairer_mismatchPenalty'])
+        
         self.readLength = 151
         self.scoreThreshold = 10
         self.rangeEnd = self.readLength - self.scoreThreshold
@@ -50,9 +63,9 @@ class ReadPairer:
             if x == "N" or y == "N":
                 pass
             elif x == y:
-                score += 1
+                score += self.matchScore
             elif x != y:
-                score -= 5
+                score -= self.mismatchPenalty
             count += 1
 
             # If the remaining bases can never give a score higher than the maxima/threshold, break

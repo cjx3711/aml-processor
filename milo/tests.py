@@ -140,7 +140,7 @@ class miscj4xUtils(unittest.TestCase):
 class PairedFASTQAligner(unittest.TestCase):
 
     def setUp(self):
-        self.readPairer = ReadPairer()
+        self.readPairer = ReadPairer(False)
 
     def test_scoring(self):
         left = "AAAAAAAAAAAAA"
