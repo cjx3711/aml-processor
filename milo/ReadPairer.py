@@ -6,6 +6,7 @@ from AmpliconMatcherHashSweep import *
 
 class ReadPairer:
     def __init__(self):
+        self.alignByMaxima = False # Whether or not to robustly align by detecting global maxima for overlap scores
         self.readLength = 151
         self.scoreThreshold = 10
         self.rangeEnd = self.readLength - self.scoreThreshold
@@ -14,83 +15,31 @@ class ReadPairer:
 
     def getReferenceCount(self):
         return self.ampliconMatcher.getReferenceCount()
-        
-    def mergeUnpaired(self, left, right, lQuality, rQuality):
-        """
-        Note: vulnerable to early terminaton upon encountering random repeats or homopolymer sequences
-        Merges two unpaired reads
-        Quality is not taken into consideration for tha calculations, it's only used as a return.
-        Returns mergedSequence, qualityScores, numberOfCollisions
-        """
-        #Align unpaired reads
-        for x in range(self.rangeStart, self.rangeEnd):
-            # x is the relative position of the left read to the right, as it slides rightward
-            # lRange and rRange contain the (start, end) indices of the overlap in the left and right reads
-            lRange = (max(0, -x), min(self.readLength, -x + self.readLength))
-            rRange = (max(0, x), min(self.readLength, x + self.readLength))
-            # Generates 2D tuples of paired (left base, right base), and (left quality, right quality)
-            overlapPairs = tuple(zip(left[lRange[0]:lRange[1]], right[rRange[0]:rRange[1]]))
-            overlapQuality = tuple(zip(lQuality[lRange[0]:lRange[1]], rQuality[rRange[0]:rRange[1]]))
-            overlapLength = lRange[1] - lRange[0]
-            # If score in overlapping region is high, combine left and right reads
-            if self.calcScore(overlapPairs, overlapLength) > self.scoreThreshold:
-                # mergedSeq = ((bases, quality), collisions)
-                mergedSeq = self.mergeOverlap(overlapPairs, overlapQuality)
-                # Append the non-overlapping bases to the left and right of the merged sequence
-                allBases = chain(left[0:lRange[0]], mergedSeq[0][0], right[rRange[1]:self.readLength])
-                allQuality = chain(lQuality[0:lRange[0]], mergedSeq[0][1], rQuality[rRange[1]:self.readLength])
-                # Convert to j3x format
-                j3xBases = "".join("_" if x == "N" else x for x in allBases)
-                j3xQuality = "".join(simplifyQuality(qualityDict[x]) for x in allQuality)
-                return j3xBases, j3xQuality, str(mergedSeq[1])
-        # If alignment fails, return both reads separated with a space
-        return " ".join((left, right)), " ".join((lQuality, rQuality)), "?"
 
-    def mergeUnpairedMaxima(self, left, right, lQuality, rQuality):
-        maxScore = 0 # Local maxima for overlap similarity
+    def mergeUnpaired(self, left, right, lQuality, rQuality, alignByMaxima):
         newScore = 0 # Overlap score in current iteration
+        maxScore = 0 # Local maxima for overlap similarity
         bestMatch = [] # Stores the overlap coordinates of local maxima of overlap score [lRange, rRange]
         # Slides left read rightward
         for x in range(self.rangeStart, self.rangeEnd):
-            lRange = (max(0, -x), min(self.readLength, -x + self.readLength))
+            lRange = (max(0, -x), min(self.readLength, -x + self.readLength)) # The indices of the overlap zone on the left read
             rRange = (max(0, x), min(self.readLength, x + self.readLength))
-            overlapPairs = zip(left[lRange[0]:lRange[1]], right[rRange[0]:rRange[1]]) # Generates overlap on left and right read, and zips each opposing pair of bases as a tuple
-            overlapLength = lRange[1] - lRange[0] # Equivalent to number of elements in overlapPairs
-            newScore = self.calcScoreMaxima(overlapPairs, overlapLength, maxScore)
+            newScore = self.calcScore(self.getOverlapPairs(left, right, lRange, rRange), lRange[1] - lRange[0], maxScore, alignByMaxima)
             
-            if newScore > maxScore: # If we encounter a new local maxima, record the score and its overlap coordinates
-                maxScore = newScore
-                bestMatch = [lRange, rRange]
+            if alignByMaxima:
+                if newScore > maxScore: # If we encounter a new local maxima, record the score and its overlap coordinates
+                    maxScore = newScore
+                    bestMatch = [lRange, rRange]
+            elif newScore > self.scoreThreshold: # If we aren't checking for the maxima, then whenever we exceed the score threshold, merge and return
+                return self.alignCoordsToJ3x(left, right, lQuality, rQuality, lRange, rRange)
         
-        if maxScore > 0: # If there exists a global maxima better than not pairing at all
-            lRange = bestMatch[0]
-            rRange = bestMatch[1]
-            mergedSeq, collisions = self.mergeOverlap(zip(left[lRange[0]:lRange[1]], right[rRange[0]:rRange[1]]), zip(lQuality[lRange[0]:lRange[1]], rQuality[rRange[0]:rRange[1]]))
-            allBases = chain(left[0:lRange[0]], mergedSeq[0], right[rRange[1]:self.readLength])
-            allQuality = chain(lQuality[0:lRange[0]], mergedSeq[1], rQuality[rRange[1]:self.readLength])
-            j3xBases = "".join("_" if x == "N" else x for x in allBases)
-            j3xQuality = "".join(simplifyQuality(qualityDict[x]) for x in allQuality)
-            return j3xBases, j3xQuality, str(collisions)
-        else:
+        if alignByMaxima and maxScore > 0: # If we are aligning by maxima, and there exists a global maxima better than not pairing at all
+            lRange, rRange = bestMatch
+            return self.alignCoordsToJ3x(left, right, lQuality, rQuality, lRange, rRange)
+        else: # If we cannot pair properly, return both reads separated with a space
             return " ".join((left, right)), " ".join((lQuality, rQuality)), "?"
 
-
-    def calcScoreMaxima(self, overlapPairs, overlapLength, maxScore):
-        score, count = 0, 0
-        for x, y in overlapPairs:
-            if x == "N" or y == "N":
-                pass
-            elif x == y:
-                score += 1
-            elif x != y:
-                score -= 5
-            count += 1
-
-            if (score + overlapLength - count) <= maxScore:
-                break
-        return score
-
-    def calcScore(self, overlapPairs, overlapLength):
+    def calcScore(self, overlapPairs, overlapLength, maxScore, alignByMaxima):
         """
         Checks if the overlap is legit.
         Returns a nice score for the overlap
@@ -106,11 +55,28 @@ class ReadPairer:
                 score -= 5
             count += 1
 
-            # If score is too low to possibly pass required score, break
-            if (score + overlapLength - count) <= self.scoreThreshold:
-                # Note: Low quality scores are not correctly calculated because of this
+            # If the remaining bases can never give a score higher than the maxima/threshold, break
+            if alignByMaxima:
+                if (score + overlapLength - count) <= maxScore:
+                    break
+            elif (score + overlapLength - count) <= self.scoreThreshold:
                 break
         return score
+
+    def getOverlapPairs(self, left, right, lRange, rRange):
+        # Takes the overlapping regions from left and right, and returns tuple of opposing pairs
+        return zip(left[lRange[0]:lRange[1]], right[rRange[0]:rRange[1]])
+
+    def alignCoordsToJ3x(self, left, right, lQuality, rQuality, lRange, rRange):
+        # Get the merged reads and quality sequences
+        mergedSeq, collisions = self.mergeOverlap(self.getOverlapPairs(left, right, lRange, rRange), self.getOverlapPairs(lQuality, rQuality, lRange, rRange))
+        # Paste the non-overlapping parts at the front and back
+        allBases = chain(left[0:lRange[0]], mergedSeq[0], right[rRange[1]:self.readLength])
+        allQuality = chain(lQuality[0:lRange[0]], mergedSeq[1], rQuality[rRange[1]:self.readLength])
+        # Convert to j3x format
+        j3xBases = "".join("_" if x == "N" else x for x in allBases)
+        j3xQuality = "".join(simplifyQuality(qualityDict[x]) for x in allQuality)
+        return j3xBases, j3xQuality, str(collisions)
 
     def mergeOverlap(self, overlapPairs, overlapQuality):
         # Collisions are the number of contradictions during a merge, defined as bases whose quality scores do not diverge significantly
@@ -134,18 +100,11 @@ class ReadPairer:
         return tuple("".join(y) for y in zip(*(pickBetter(*x) for x in zip(overlapPairs, overlapQuality)))), collisions[0]
 
     def alignAndMerge(self, left, right):
-        # DEPRACATED: Merges (left sequence, reverseComplement(right sequence), left quality, reversed(right quality))
-        #basesQualityCollisions = self.mergeUnpaired(left[1][:-1], reverseComplement(right[1][:-1]), left[3][:-1], right[3][:-1][::-1])
-
-        # TEST CODE: Validates if non-global-maxima based pairing is accurate
-        basesQualityCollisions = self.mergeUnpairedMaxima(left[1][:-1], reverseComplement(right[1][:-1]), left[3][:-1], right[3][:-1][::-1])
+        bases, quality, collisions = self.mergeUnpaired(left[1][:-1], reverseComplement(right[1][:-1]), left[3][:-1], right[3][:-1][::-1], self.alignByMaxima)
         # Retrieves the coordinates from the existing FASTQ read ID
         coordIndices = nthAndKthLetter(left[0], ":", 5, 7)
         sequenceID = left[0][coordIndices[0]: coordIndices[1] - 2]
         # Checks which amplicon a read belongs to
-        ampID = self.ampliconMatcher.findAmplicon(basesQualityCollisions[0])
-        # Joins amplicon number, collision number, and coordinate as new ID
-        newID = ["".join(("ID:", ampID, ", C:", basesQualityCollisions[2], ", ", sequenceID))]
-        # Adds the sequence and quality, and returns
-        newID.extend(basesQualityCollisions[:2])
-        return newID
+        ampID = self.ampliconMatcher.findAmplicon(bases)
+        # Joins amplicon number, collision number, and coordinate as new ID, and appends bases and quality
+        return ["".join(("ID:", ampID, ", C:", collisions, ", ", sequenceID)), bases, quality]
