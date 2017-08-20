@@ -65,14 +65,14 @@ class AmpliconMatcherHashSweepTests(unittest.TestCase):
         self.assertEqual(ampMat.referenceCount, 2)
 
         # Check if the hash structure is correct
-        self.assertTrue('AAAA' in ampMat.ampliconRefs)
-        self.assertTrue('TTTT' in ampMat.ampliconRefs)
-        self.assertTrue('CCCC' in ampMat.ampliconRefs)
-        self.assertTrue('GGGG' in ampMat.ampliconRefs)
-        self.assertTrue((0, 0) in ampMat.ampliconRefs['AAAA'])
-        self.assertTrue((0, 4) in ampMat.ampliconRefs['TTTT'])
-        self.assertTrue((1, 0) in ampMat.ampliconRefs['CCCC'])
-        self.assertTrue((1, 4) in ampMat.ampliconRefs['GGGG'])
+        self.assertEqual(len(ampMat.ampliconRefs), 4)
+        for seq in ['AAAA', 'TTTT', 'GGGG', 'CCCC']:
+            self.assertTrue(seq in ampMat.ampliconRefs)
+        # (ampID, index) ampID is 1-indexed
+        self.assertTrue((1, 0) in ampMat.ampliconRefs['AAAA'])
+        self.assertTrue((1, 4) in ampMat.ampliconRefs['TTTT'])
+        self.assertTrue((2, 0) in ampMat.ampliconRefs['CCCC'])
+        self.assertTrue((2, 4) in ampMat.ampliconRefs['GGGG'])
 
     def test_overlapping_data(self):
         sample_data = [
@@ -81,17 +81,18 @@ class AmpliconMatcherHashSweepTests(unittest.TestCase):
         ]
         ampMat = AmpliconMatcherHashSweep(sample_data, 4, 4)
         self.assertEqual(ampMat.referenceCount, 2)
-
+        self.assertEqual(len(ampMat.ampliconRefs), 3)
+        
         # Check if the hash structure is correct
-        self.assertTrue('AAAA' in ampMat.ampliconRefs)
-        self.assertTrue('TTTT' in ampMat.ampliconRefs)
+        for seq in ['AAAA', 'TTTT', 'GGGG']:
+            self.assertTrue(seq in ampMat.ampliconRefs)
         self.assertFalse('CCCC' in ampMat.ampliconRefs)
-        self.assertTrue('GGGG' in ampMat.ampliconRefs)
         self.assertEqual(len(ampMat.ampliconRefs['TTTT']), 2)
-        self.assertTrue((0, 0) in ampMat.ampliconRefs['AAAA'])
-        self.assertTrue((0, 4) in ampMat.ampliconRefs['TTTT'])
-        self.assertTrue((1, 0) in ampMat.ampliconRefs['TTTT'])
-        self.assertTrue((1, 4) in ampMat.ampliconRefs['GGGG'])
+        # (ampID, index) ampID is 1-indexed
+        self.assertTrue((1, 0) in ampMat.ampliconRefs['AAAA'])
+        self.assertTrue((1, 4) in ampMat.ampliconRefs['TTTT'])
+        self.assertTrue((2, 0) in ampMat.ampliconRefs['TTTT'])
+        self.assertTrue((2, 4) in ampMat.ampliconRefs['GGGG'])
 
     def test_skip_data(self):
         sample_data = [
@@ -101,17 +102,32 @@ class AmpliconMatcherHashSweepTests(unittest.TestCase):
         self.assertEqual(ampMat.referenceCount, 1)
 
         # Check if the hash structure is correct
-        self.assertTrue('AAAA' in ampMat.ampliconRefs)
-        self.assertFalse('TTTT' in ampMat.ampliconRefs)
-        self.assertFalse('CCCC' in ampMat.ampliconRefs)
-        self.assertFalse('GGGG' in ampMat.ampliconRefs)
-        self.assertTrue('TTTC' in ampMat.ampliconRefs)
-        self.assertTrue('CCGG' in ampMat.ampliconRefs)
-        self.assertTrue((0, 0) in ampMat.ampliconRefs['AAAA'])
-        self.assertTrue((0, 5) in ampMat.ampliconRefs['TTTC'])
-        self.assertTrue((0, 10) in ampMat.ampliconRefs['CCGG'])
+        self.assertEqual(len(ampMat.ampliconRefs), 3)
+        for seq in ['AAAA', 'TTTC', 'CCGG']:
+            self.assertTrue(seq in ampMat.ampliconRefs)
+        # (ampID, index) ampID is 1-indexed
+        self.assertTrue((1, 0) in ampMat.ampliconRefs['AAAA'])
+        self.assertTrue((1, 5) in ampMat.ampliconRefs['TTTC'])
+        self.assertTrue((1, 10) in ampMat.ampliconRefs['CCGG'])
 
+    def test_scoring(self):
+        sample_data = [
+            'AAAATTTTCCCC',
+            'CCAATTTTGGGG'
+        ]
+        amplicon = "AATTTTCCCC"
+        ampMat = AmpliconMatcherHashSweep(sample_data, 4, 4)
+        self.assertEqual(ampMat.referenceCount, 2)
 
+        # Check if the hash structure is correct
+        for seq in ['AAAA', 'TTTT', 'CCCC', 'CCAA', 'GGGG']:
+            self.assertTrue(seq in ampMat.ampliconRefs)
+            
+        largest1, largest2 = ampMat.calculateMatchScore(amplicon)
+        self.assertEqual([4, 1], largest1)
+        self.assertEqual([2, 2], largest2)
+        
+        
 class miscj4xUtils(unittest.TestCase):
     def weirdly_specific_function_1(self):
         coords = convertHashPositionsToCoordinates('291 S:29:T-A S:102:T-G', 0)
