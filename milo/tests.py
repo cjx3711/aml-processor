@@ -287,6 +287,19 @@ class TranslocatedBlockMatcherTests(unittest.TestCase):
         self.assertTrue("('R2', Match(a=4, b=4, size=5))" in blocks)
         self.assertTrue("('R2', Match(a=0, b=1, size=3))" in blocks)
         self.assertTrue("('R1', Match(a=17, b=21, size=1))" in blocks)
+        
+    def test_end_translocation(self):
+        read = "ESTEST000012345TESTESTES"
+        ref1 = "0000000000001234567890"
+        ref2 = "TESTESTESTESTESTESTEST"
+        
+        matchingBlocks = self.translocatedBlockMatcher.findTranslocatedMatchingBlocks(read, ref1, ref2)
+
+        blocks = []
+        for match in matchingBlocks:
+            blocks.append(str(match))
+        self.assertTrue("('R2', Match(a=15, b=0, size=9))" in blocks)
+        self.assertTrue("('R1', Match(a=6, b=8, size=9))" in blocks)
 
 class MutationApplication(unittest.TestCase):
     # Test when mutant in front

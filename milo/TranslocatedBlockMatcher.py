@@ -1,10 +1,11 @@
 from difflib import SequenceMatcher
 from collections import namedtuple
 
+EmptyMatch = namedtuple("EmptyMatch", ["a", "b", "size"])
 class TranslocatedBlockMatcher:
 	def __init__(self):
-		self.EmptyMatch = namedtuple("EmptyMatch", ["a", "b", "size"])
-
+		pass
+		
 	def findLongestMatch(self, partitionsOnRef, partitionsOnRead, availableOnRead, seqMatcher):
 		matchList = []
 		for i in range(len(partitionsOnRead)):
