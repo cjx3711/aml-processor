@@ -73,7 +73,9 @@ class MutationFinder:
             
         self.getReferenceAmplicon(ampID1)[4] += readCount
         self.getReferenceAmplicon(ampID2)[4] += readCount
-        self.ampliconTranslocationList.append(('{0} {1}'.format(ampID1, ampID2), readCount))
+        matchingBlockString = str(matchingBlocks)
+        matchingBlockString = matchingBlockString.replace('Match', '').replace("'R1'", str(ampID1)).replace("'R2'", str(ampID2))
+        self.ampliconTranslocationList.append(('{0} {1} {2}'.format(ampID1, ampID2, matchingBlockString), readCount))
         
     def extractHighestOccuringMutations(self, minOccurences):
         filteredTupleList = [x for x in self.ampliconMutationHashList if x[1] >= minOccurences]
@@ -91,7 +93,7 @@ class MutationFinder:
         ampID1 = int(amplicons[0])
         ampID2 = int(amplicons[1])
         if ampID1 == 0 or ampID2 == 0:
-            return 'T', None
+            return 'T', None, None, None, None
             
         readCount = int(float(iddataParts[3].strip()[2:]))
         sequenceData = data[1][:-1]
