@@ -75,7 +75,7 @@ class TranslocatedBlockMatcher:
 		matchingBlocks = []
 
 		while True: 
-			# Calculate the longest match between the read and both 
+			# Calculate the longest match between the read and both references
 			longestMatchR1 = self.findLongestMatch(partitionsOnRefR1, partitionsOnReadR1, availableOnRead, seqMatcherR1)
 			longestMatchR2 = self.findLongestMatch(partitionsOnRefR2, partitionsOnReadR2, availableOnRead, seqMatcherR2)
 
@@ -94,11 +94,3 @@ class TranslocatedBlockMatcher:
 				if not emptyChecker:
 					emptyChecker.append((0,0))
 		return matchingBlocks
-
-# TEST
-read = "ABCZDEFGH1234567809"
-ref1 = "0000000000001234567890"
-ref2 = "ZABCDEFGHIJKLMNOPQR"
-foo = TranslocatedBlockMatcher()
-
-print(foo.findTranslocatedMatchingBlocks(read, ref1, ref2))

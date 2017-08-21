@@ -5,6 +5,8 @@ from j4xUtils import *
 from AmpliconMatcherProbabilistic import *
 from AmpliconMatcherHashSweep import *
 from ReadPairer import *
+from TranslocatedBlockMatcher import *
+from pprint import pprint
 
 # Here's our "unit tests".
 class GenomicsUtils(unittest.TestCase):
@@ -264,6 +266,27 @@ class PairedFASTQAligner(unittest.TestCase):
         self.assertEqual(mergedSequence, expectedMerged)
         self.assertEqual(qualityScores, expecedQuality)
         self.assertEqual(noOfCol, expectedCol)
+
+class TranslocatedBlockMatcherTests(unittest.TestCase):
+    
+    def setUp(self):
+        self.translocatedBlockMatcher = TranslocatedBlockMatcher()
+        
+    def test_simple(self):
+        read = "ABCZDEFGH1234567809"
+        ref1 = "0000000000001234567890"
+        ref2 = "ZABCDEFGHIJKLMNOPQR"
+        
+        matchingBlocks = self.translocatedBlockMatcher.findTranslocatedMatchingBlocks(read, ref1, ref2)
+        self.assertEqual(len(matchingBlocks), 4)
+        blocks = []
+        for match in matchingBlocks:
+            blocks.append(str(match))
+            
+        self.assertTrue("('R1', Match(a=9, b=12, size=8))" in blocks)
+        self.assertTrue("('R2', Match(a=4, b=4, size=5))" in blocks)
+        self.assertTrue("('R2', Match(a=0, b=1, size=3))" in blocks)
+        self.assertTrue("('R1', Match(a=17, b=21, size=1))" in blocks)
 
 class MutationApplication(unittest.TestCase):
     # Test when mutant in front
