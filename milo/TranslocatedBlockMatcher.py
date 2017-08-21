@@ -3,7 +3,7 @@ from collections import namedtuple
 
 class TranslocatedBlockMatcher:
 	def __init__(self):
-		self.emptyMatch = namedtuple("emptyMatch", ["a", "b", "size"])
+		self.EmptyMatch = namedtuple("EmptyMatch", ["a", "b", "size"])
 
 	def findLongestMatch(self, partitionsOnRef, partitionsOnRead, availableOnRead, seqMatcher):
 		matchList = []
@@ -13,16 +13,16 @@ class TranslocatedBlockMatcher:
 			for minAvailable, maxAvailable in availableOnRead:
 				if minAvailable > maxPartOnRead: # If current segment is entirely beyond partition bounds, break
 					break
-				elif maxAvailable < minPartOnRead: # If it's entirely before partition bounds, continue
+				elif maxAvailable < minPartOnRead: # If current segment is entirely before partition bounds, continue
 					continue
-				else: # If it's entirely within partition bounds, append and continue
+				else: # If current segment is entirely within partition bounds, append and continue
 					matchListPerPart.append((minAvailable, maxAvailable))
 
 			minPartOnRef, maxPartOnRef = partitionsOnRef[i]
 			if matchListPerPart: # Find longest common substring between a partition and all applicable locations on read
 				matchList.append(max([seqMatcher.find_longest_match(readLow, readHigh, minPartOnRef, maxPartOnRef) for readLow, readHigh in matchListPerPart], key = lambda x: x.size))
-			else: # If there are no applicable locations on read, append an emptyMatch
-				matchList.append(emptyMatch(0, 0, 0))
+			else: # If there are no applicable locations on read, append an EmptyMatch
+				matchList.append(EmptyMatch(0, 0, 0))
 		# Return the longest common substring across all partitions
 		return max(matchList, key = lambda x: x.size)
 
@@ -51,16 +51,18 @@ class TranslocatedBlockMatcher:
 				regsAftExcisionRead.append(regRead)
 				regsAftExcisionRef.append(regRef)
 			else:
+				# When excising, iff we do not completely excise every base from the ends of both reference and read partitions, a new, smaller partition is formed at said end
 				if regRead[0] < excisionData.a and regRef[0] < excisionData.b:
 					regsAftExcisionRead.append((regRead[0], excisionData.a))
 					regsAftExcisionRef.append((regRef[0], excisionData.b))
 				if regRead[1] > excisionEndRead and regRef[1] > excisionEndRead:
 					regsAftExcisionRead.append((excisionEndRead, regRead[1]))
 					regsAftExcisionRef.append((excisionEndRef, regRef[1]))
+				# If every base is completely excised from the end of either reference or read partition, or both, no new partition is added
 		return regsAftExcisionRead, regsAftExcisionRef
 
 	def findTranslocatedMatchingBlocks(self, read, ref1, ref2):
-
+		# Sets the coordinates of the partitions of both references onto the read
 		partitionsOnRefR1 = [(0, len(ref1))]
 		partitionsOnReadR1 = [(0, len(read))]
 		seqMatcherR1 = SequenceMatcher(None, read, ref1, False)
@@ -69,16 +71,17 @@ class TranslocatedBlockMatcher:
 		partitionsOnReadR2 = [(0, len(read))]
 		seqMatcherR2 = SequenceMatcher(None, read, ref2, False)
 
-		availableOnRead = partitionsOnReadR1[:]
+		availableOnRead = partitionsOnReadR1[:] # Bases available for matching shared between both reads (i.e. the same part of a read cannot be assigned to parts of both references)
 		matchingBlocks = []
 
-		while True:
+		while True: 
+			# Calculate the longest match between the read and both 
 			longestMatchR1 = self.findLongestMatch(partitionsOnRefR1, partitionsOnReadR1, availableOnRead, seqMatcherR1)
 			longestMatchR2 = self.findLongestMatch(partitionsOnRefR2, partitionsOnReadR2, availableOnRead, seqMatcherR2)
 
-			if longestMatchR1.size == 0 and longestMatchR2.size == 0:
+			if longestMatchR1.size == 0 and longestMatchR2.size == 0: # If we no longer have a single matching block, break and return all previous matching blocks
 				break
-			elif longestMatchR1.size > longestMatchR2.size:
+			elif longestMatchR1.size > longestMatchR2.size: # Pick the better matching block and confirm it as the match for this iteration, excise the block from the partitions and available bases
 				partitionsOnReadR1, partitionsOnRefR1 = self.excisePartitions(longestMatchR1, partitionsOnReadR1, partitionsOnRefR1)
 				matchingBlocks.append(("R1", longestMatchR1))
 				availableOnRead = self.exciseAvailable(longestMatchR1.a, longestMatchR1.size, availableOnRead)
@@ -87,7 +90,7 @@ class TranslocatedBlockMatcher:
 				matchingBlocks.append(("R2", longestMatchR2))
 				availableOnRead = self.exciseAvailable(longestMatchR2.a, longestMatchR2.size, availableOnRead)
 
-			for emptyChecker in [partitionsOnReadR1, partitionsOnRefR1, partitionsOnReadR2, partitionsOnRefR2, availableOnRead]:
+			for emptyChecker in [partitionsOnReadR1, partitionsOnRefR1, partitionsOnReadR2, partitionsOnRefR2, availableOnRead]: # Put EmptyMatch objects into empty partitions, so even when one reference has exhausted, the other can continue matching
 				if not emptyChecker:
 					emptyChecker.append((0,0))
 		return matchingBlocks
