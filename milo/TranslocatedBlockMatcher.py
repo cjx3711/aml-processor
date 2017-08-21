@@ -56,7 +56,7 @@ class TranslocatedBlockMatcher:
 				if regRead[0] < excisionData.a and regRef[0] < excisionData.b:
 					regsAftExcisionRead.append((regRead[0], excisionData.a))
 					regsAftExcisionRef.append((regRef[0], excisionData.b))
-				if regRead[1] > excisionEndRead and regRef[1] > excisionEndRead:
+				if regRead[1] > excisionEndRead and regRef[1] > excisionEndRef:
 					regsAftExcisionRead.append((excisionEndRead, regRead[1]))
 					regsAftExcisionRef.append((excisionEndRef, regRef[1]))
 				# If every base is completely excised from the end of either reference or read partition, or both, no new partition is added
@@ -75,7 +75,7 @@ class TranslocatedBlockMatcher:
 		availableOnRead = partitionsOnReadR1[:] # Bases available for matching shared between both reads (i.e. the same part of a read cannot be assigned to parts of both references)
 		matchingBlocks = []
 
-		while True: 
+		while True:
 			# Calculate the longest match between the read and both references
 			longestMatchR1 = self.findLongestMatch(partitionsOnRefR1, partitionsOnReadR1, availableOnRead, seqMatcherR1)
 			longestMatchR2 = self.findLongestMatch(partitionsOnRefR2, partitionsOnReadR2, availableOnRead, seqMatcherR2)

@@ -271,6 +271,234 @@ class TranslocatedBlockMatcherTests(unittest.TestCase):
     
     def setUp(self):
         self.translocatedBlockMatcher = TranslocatedBlockMatcher()
+
+    def test_1(self): # Refs completely matched to read
+        read = "ABCDEFGH1234567"
+        ref1 = "1234567"
+        ref2 = "ABCDEFGH"
+        
+        matchingBlocks = self.translocatedBlockMatcher.findTranslocatedMatchingBlocks(read, ref1, ref2)
+        self.assertEqual(len(matchingBlocks), 2)
+        blocks = []
+        for match in matchingBlocks:
+            blocks.append(str(match))
+        
+        self.assertTrue("('R2', Match(a=0, b=0, size=8))" in blocks)
+        self.assertTrue("('R1', Match(a=8, b=0, size=7))" in blocks)
+
+    def test_2(self): # Refs incompletely matched to read
+        read = "ABCDEFGH1234567"
+        ref1 = "12345670000000"
+        ref2 = "ZZZZZZABCDEFGH"
+        
+        matchingBlocks = self.translocatedBlockMatcher.findTranslocatedMatchingBlocks(read, ref1, ref2)
+        self.assertEqual(len(matchingBlocks), 2)
+        blocks = []
+        for match in matchingBlocks:
+            blocks.append(str(match))
+        
+        self.assertTrue("('R2', Match(a=0, b=6, size=8))" in blocks)
+        self.assertTrue("('R1', Match(a=8, b=0, size=7))" in blocks)
+
+    def test_3(self): # Same as test_2, but with unpaired areas on opposite ends
+        read = "ABCDEFGH1234567"
+        ref1 = "00001234567"
+        ref2 = "ABCDEFGHZZZZZ"
+        
+        matchingBlocks = self.translocatedBlockMatcher.findTranslocatedMatchingBlocks(read, ref1, ref2)
+        self.assertEqual(len(matchingBlocks), 2)
+        blocks = []
+        for match in matchingBlocks:
+            blocks.append(str(match))
+        
+        self.assertTrue("('R2', Match(a=0, b=0, size=8))" in blocks)
+        self.assertTrue("('R1', Match(a=8, b=4, size=7))" in blocks)
+
+    def test_4(self): # 1bp insertions on both refs
+        read = "ABCDEFGH1234567"
+        ref1 = "12345687"
+        ref2 = "ABCZDEFGH"
+        
+        matchingBlocks = self.translocatedBlockMatcher.findTranslocatedMatchingBlocks(read, ref1, ref2)
+        #self.assertEqual(len(matchingBlocks), 4)
+        blocks = []
+        for match in matchingBlocks:
+            blocks.append(str(match))
+        
+        self.assertTrue("('R1', Match(a=8, b=0, size=6))" in blocks)
+        self.assertTrue("('R2', Match(a=3, b=4, size=5))" in blocks)
+        self.assertTrue("('R2', Match(a=0, b=0, size=3))" in blocks)
+        self.assertTrue("('R1', Match(a=14, b=7, size=1))" in blocks)
+
+    def test_5(self): # Insertions on both refs, with one >1bp long
+        read = "ABCDEFGH1234567"
+        ref1 = "12345688887"
+        ref2 = "ABCZDEFGH"
+        
+        matchingBlocks = self.translocatedBlockMatcher.findTranslocatedMatchingBlocks(read, ref1, ref2)
+        #self.assertEqual(len(matchingBlocks), 4)
+        blocks = []
+        for match in matchingBlocks:
+            blocks.append(str(match))
+        
+        self.assertTrue("('R1', Match(a=8, b=0, size=6))" in blocks)
+        self.assertTrue("('R2', Match(a=3, b=4, size=5))" in blocks)
+        self.assertTrue("('R2', Match(a=0, b=0, size=3))" in blocks)
+        self.assertTrue("('R1', Match(a=14, b=10, size=1))" in blocks)
+
+    def test_6(self): # 1bp insertiion on one ref
+        read = "ABCDEFGH1234567"
+        ref1 = "1234567"
+        ref2 = "ABCZDEFGH"
+        
+        matchingBlocks = self.translocatedBlockMatcher.findTranslocatedMatchingBlocks(read, ref1, ref2)
+        self.assertEqual(len(matchingBlocks), 3)
+        blocks = []
+        for match in matchingBlocks:
+            blocks.append(str(match))
+        
+        self.assertTrue("('R1', Match(a=8, b=0, size=7))" in blocks)
+        self.assertTrue("('R2', Match(a=3, b=4, size=5))" in blocks)
+        self.assertTrue("('R2', Match(a=0, b=0, size=3))" in blocks)
+
+    def test_7(self): # 4bp + 1bp insertion on one ref
+        read = "ABCDEFGH1234567"
+        ref1 = "1234567"
+        ref2 = "ABCZZZZDEFGZH"
+        
+        matchingBlocks = self.translocatedBlockMatcher.findTranslocatedMatchingBlocks(read, ref1, ref2)
+        self.assertEqual(len(matchingBlocks), 4)
+        blocks = []
+        for match in matchingBlocks:
+            blocks.append(str(match))
+        
+        self.assertTrue("('R1', Match(a=8, b=0, size=7))" in blocks)
+        self.assertTrue("('R2', Match(a=3, b=7, size=4))" in blocks)
+        self.assertTrue("('R2', Match(a=0, b=0, size=3))" in blocks)
+        self.assertTrue("('R2', Match(a=7, b=12, size=1))" in blocks)
+
+    def test_8(self): # Multiple insertions of varying lengths on both refs
+        read = "ABCDEFGH1234567"
+        ref1 = "12000034560007"
+        ref2 = "ABCZZDEFGHZZZZZ"
+        
+        matchingBlocks = self.translocatedBlockMatcher.findTranslocatedMatchingBlocks(read, ref1, ref2)
+        #self.assertEqual(len(matchingBlocks), 5)
+        blocks = []
+        for match in matchingBlocks:
+            blocks.append(str(match))
+        
+        self.assertTrue("('R2', Match(a=3, b=5, size=5))" in blocks)
+        self.assertTrue("('R1', Match(a=10, b=6, size=4))" in blocks)
+        self.assertTrue("('R2', Match(a=0, b=0, size=3))" in blocks)
+        self.assertTrue("('R1', Match(a=8, b=0, size=2))" in blocks)
+        self.assertTrue("('R1', Match(a=14, b=13, size=1))" in blocks)
+
+    def test_9(self): # 1bp deletion on one ref
+        read = "ABCDEFGH1234567"
+        ref1 = "123467"
+        ref2 = "ABCDEFGH"
+        
+        matchingBlocks = self.translocatedBlockMatcher.findTranslocatedMatchingBlocks(read, ref1, ref2)
+        #self.assertEqual(len(matchingBlocks), 3)
+        blocks = []
+        for match in matchingBlocks:
+            blocks.append(str(match))
+        
+        self.assertTrue("('R2', Match(a=0, b=0, size=8))" in blocks)
+        self.assertTrue("('R1', Match(a=8, b=0, size=4))" in blocks)
+        self.assertTrue("('R1', Match(a=13, b=4, size=2))" in blocks)
+
+    def test_10(self): # >1bp deletion on one ref
+        read = "ABCDEFGH1234567"
+        ref1 = "1237"
+        ref2 = "ABCDEFGH"
+        
+        matchingBlocks = self.translocatedBlockMatcher.findTranslocatedMatchingBlocks(read, ref1, ref2)
+        #self.assertEqual(len(matchingBlocks), 3)
+        blocks = []
+        for match in matchingBlocks:
+            blocks.append(str(match))
+        
+        self.assertTrue("('R2', Match(a=0, b=0, size=8))" in blocks)
+        self.assertTrue("('R1', Match(a=8, b=0, size=3))" in blocks)
+        self.assertTrue("('R1', Match(a=14, b=3, size=1))" in blocks)
+
+    def test_11(self): # 1bp deletion on both refs
+        read = "ABCDEFGH1234567"
+        ref1 = "123467"
+        ref2 = "ACDEFGH"
+        
+        matchingBlocks = self.translocatedBlockMatcher.findTranslocatedMatchingBlocks(read, ref1, ref2)
+        #self.assertEqual(len(matchingBlocks), 4)
+        blocks = []
+        for match in matchingBlocks:
+            blocks.append(str(match))
+        
+        self.assertTrue("('R2', Match(a=2, b=1, size=6))" in blocks)
+        self.assertTrue("('R1', Match(a=8, b=0, size=4))" in blocks)
+        self.assertTrue("('R1', Match(a=13, b=4, size=2))" in blocks)
+        self.assertTrue("('R2', Match(a=0, b=0, size=1))" in blocks)
+
+    def test_12(self): # >1bp deletion on both refs
+        read = "ABCDEFGH1234567"
+        ref1 = "1237"
+        ref2 = "ABCDEH"
+        
+        matchingBlocks = self.translocatedBlockMatcher.findTranslocatedMatchingBlocks(read, ref1, ref2)
+        #self.assertEqual(len(matchingBlocks), 4)
+        blocks = []
+        for match in matchingBlocks:
+            blocks.append(str(match))
+        
+        self.assertTrue("('R2', Match(a=0, b=0, size=5))" in blocks)
+        self.assertTrue("('R1', Match(a=8, b=0, size=3))" in blocks)
+        self.assertTrue("('R1', Match(a=14, b=3, size=1))" in blocks)
+        self.assertTrue("('R2', Match(a=7, b=5, size=1))" in blocks)
+
+    def test_13(self): # Multiple deletions of varying lengths on both refs
+        read = "ABCDEFGH1234567"
+        ref1 = "12347"
+        ref2 = "ABDE"
+        
+        matchingBlocks = self.translocatedBlockMatcher.findTranslocatedMatchingBlocks(read, ref1, ref2)
+        #self.assertEqual(len(matchingBlocks), 4)
+        blocks = []
+        for match in matchingBlocks:
+            blocks.append(str(match))
+        
+        self.assertTrue("('R1', Match(a=8, b=0, size=4))" in blocks)
+        self.assertTrue("('R2', Match(a=0, b=0, size=2))" in blocks)
+        self.assertTrue("('R2', Match(a=3, b=2, size=2))" in blocks)
+        self.assertTrue("('R1', Match(a=14, b=4, size=1))" in blocks)
+
+    def test_14(self): # >1bp deletions on ends
+        read = "ABCDEFGH1234567"
+        ref1 = "1234"
+        ref2 = "CDEFGH"
+        
+        matchingBlocks = self.translocatedBlockMatcher.findTranslocatedMatchingBlocks(read, ref1, ref2)
+        self.assertEqual(len(matchingBlocks), 2)
+        blocks = []
+        for match in matchingBlocks:
+            blocks.append(str(match))
+        
+        self.assertTrue("('R2', Match(a=2, b=0, size=6))" in blocks)
+        self.assertTrue("('R1', Match(a=8, b=0, size=4))" in blocks)
+
+    def test_15(self): # Same as test_14, but with deletions flipped to opposite ends
+        read = "ABCDEFGH1234567"
+        ref1 = "4567"
+        ref2 = "ABCDEF"
+        
+        matchingBlocks = self.translocatedBlockMatcher.findTranslocatedMatchingBlocks(read, ref1, ref2)
+        self.assertEqual(len(matchingBlocks), 2)
+        blocks = []
+        for match in matchingBlocks:
+            blocks.append(str(match))
+        
+        self.assertTrue("('R2', Match(a=0, b=0, size=6))" in blocks)
+        self.assertTrue("('R1', Match(a=11, b=0, size=4))" in blocks)
         
     def test_simple(self):
         read = "ABCZDEFGH1234567809"
