@@ -59,6 +59,11 @@ def readFilenames(filenames):
     return fq1, fq2, paired, skip
     
 def pairToJ3X(fq1, fq2, paired, inDir, outDir):
+    # Stats from read pairer
+    totalReads = 0
+    failedToPairReads = 0
+    failedToMatchReads = 0
+    failedToPairMatchReads = 0
     
     readCompressor = ReadCompressor(readPairer.getReferenceCount())
     if not os.path.exists(outDir):
@@ -82,12 +87,18 @@ def pairToJ3X(fq1, fq2, paired, inDir, outDir):
                 for i, data in tqdm(enumerate(result)):
                     failedToPair = data[0][0]
                     matchType = data[0][1]
+                    totalReads += 1
+                    failedToPairReads += failedToPair
+                    failedToMatchReads += 1 if matchType == 'nah' else 0
+                    if failedToPair == 1 and matchType == 'nah':
+                        failedToPairMatchReads += 1
+                        
                     readCompressor.putPairedRead(data[1])
                     # outFile.write(data)
                     # outFile.write("\n\n")
                     pbar.update()
             pbar.close()
-            
+        
             readCompressor.prepareForCompression()
             print("\nCompressing\n")
             
@@ -129,12 +140,23 @@ def pairToJ3X(fq1, fq2, paired, inDir, outDir):
             prcntMerged = perc(mergedCount , numOriginal)
             prcntMergedUnsure = perc(mergedUnsureCount , numOriginal)
             prcntDiscarded = perc(numDiscarded , numOriginal)
+            prcntFailedPair = perc(failedToPairReads, numOriginal)
+            prcntFailedMatch = perc(failedToMatchReads, numOriginal)
+            prcntFailedPairMatch = perc(failedToPairMatchReads, numOriginal)
             
             with open(outfile + ".stats", "w+", newline = "") as statsFile:
                 statsFile.write("Overall File Stats\n")
                 pwrite(statsFile, "Specimen:        , {0}\t".format(paired))
                 pwrite(statsFile, "TimeTaken / Time:, {0}s\t, {1}\t".format(niceRound(time.time() - start), time.strftime('%X %d %b %Y')))
                 pwrite(statsFile, "Original Reads:  , {0}\t".format(numOriginal))
+                
+                pwrite(statsFile, "Pair pass:       , {0}\t, {1}%\t".format(numOriginal - failedToPairReads, 100 - prcntFailedPair))
+                pwrite(statsFile, "Pair fail:       , {0}\t, {1}%\t".format(failedToPairReads, prcntFailedPair))
+                pwrite(statsFile, "Match pass:      , {0}\t, {1}%\t".format(numOriginal - failedToMatchReads, 100 - prcntFailedMatch))
+                pwrite(statsFile, "Match fail:      , {0}\t, {1}%\t".format(failedToMatchReads, prcntFailedMatch))
+                pwrite(statsFile, "Pair/Match pass: , {0}\t, {1}%\t".format(numOriginal - failedToPairMatchReads, 100 - prcntFailedPairMatch))
+                pwrite(statsFile, "Pair/Match fail: , {0}\t, {1}%\t".format(failedToPairMatchReads, prcntFailedPairMatch))
+                
                 pwrite(statsFile, "Compressed Seq:  , {0}\t".format(numSeqs))
                 pwrite(statsFile, "Compression:     , {0}%\t".format(prcntCompression))
                 pwrite(statsFile, "Templates:       , {0}\t".format(templateCount))
