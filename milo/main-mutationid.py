@@ -138,7 +138,7 @@ def mutationID(pairedFile, mutationFile, inDir, outDir, minMutationCount, minTra
             outFile.write('Reference Amplicon Stats\n')
             referenceAmplicons = mutationFinder.getReferenceAmpliconArray()
             outFile.write('Count: ' + str(mutationFinder.referenceCount) + '\n')
-            outFile.write('ampID, Reads, Mutations, Translocations, Sequence')
+            outFile.write('ampID, Reads, Mutations, Translocations, Sequence\n')
             
             total = 0
             for i, refAmp in enumerate(referenceAmplicons):
