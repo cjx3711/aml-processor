@@ -15,6 +15,8 @@ filenameEnd = "_MUTATIONS.j4x"
 mutationHumanDictionary = {}
 translocationHumanDictionary = {}
 
+# To find average reference amplicon stats across files
+totalReferenceAmpliconStats = []
 
 # Stats from the stats file of the reference amplicon
 # Format:
@@ -27,11 +29,12 @@ referenceAmpliconStats = []
 totalFiles = 0
 minFileOccurences = 1
 significanceThreshold = 0.2
-    
+
 def run():
     global totalFiles
     global minFileOccurences
     global significanceThreshold
+    global totalReferenceAmpliconStats
     
     with open('config.json') as config_file:
         config_data = json.load(config_file)
@@ -53,6 +56,26 @@ def run():
     processDictData(mutationHumanDictionary, 'mutationStats.txt')
     processDictData(translocationHumanDictionary, 'translocationStats.txt')
 
+    outFile = open(os.path.join(outDir, 'referenceStats.txt'), "w+", newline = "")
+    outFile.write('ampID, Amplicon Count, Discard Count, Discard Rate\n')
+    for refStats in totalReferenceAmpliconStats:
+        ampCount = median(refStats[1])
+        discardCount = median(refStats[3])
+        outFile.write(str(refStats[0]))
+        outFile.write(', ')
+        outFile.write(str(ampCount))
+        outFile.write(', ')
+        outFile.write(str(discardCount))
+        outFile.write(', ')
+        if ( ampCount == 0 ):
+            outFile.write('-')
+        else:
+            outFile.write(str(int(discardCount * 1000 / ampCount) / 10))
+        outFile.write('%\n')
+        
+        median(refStats[2])
+        median(refStats[3])
+        
 def processDictData(humanDictionary, outputFile):
     global totalFiles
     global minFileOccurences
@@ -100,6 +123,7 @@ def processDictData(humanDictionary, outputFile):
         
 def processSingleHuman(filepath, statsfilepath, personName):
     global referenceAmpliconStats
+    global totalReferenceAmpliconStats
     referenceAmpliconStats = [] 
     with open(statsfilepath) as statsFile:
         reading = False
@@ -114,7 +138,15 @@ def processSingleHuman(filepath, statsfilepath, personName):
                     ampCount = int(parts[1])
                     templateCount = int(parts[2])
                     discardCount = int(parts[3])
+                    referenceSequence = parts[4]
                     
+                    if (len(totalReferenceAmpliconStats) <= ampID ):
+                        totalReferenceAmpliconStats.append((ampID, [ampCount], [templateCount], [discardCount], referenceSequence))
+                    else:
+                        totalReferenceAmpliconStats[ampID][1].append(ampCount)
+                        totalReferenceAmpliconStats[ampID][2].append(templateCount)
+                        totalReferenceAmpliconStats[ampID][3].append(discardCount)
+                        
                     referenceAmpliconStats.append((ampID, ampCount, templateCount, discardCount))
 
     with open(filepath) as mutationFile:
