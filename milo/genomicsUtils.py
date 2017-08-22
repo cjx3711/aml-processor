@@ -85,3 +85,8 @@ def simpleDistance(a, b):
         cursorB += 1
     
     return differences
+
+def pwrite(file, message, shouldPrint = True):
+    if shouldPrint:
+        print(message)
+    file.write(message + "\n")

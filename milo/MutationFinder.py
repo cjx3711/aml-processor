@@ -65,12 +65,14 @@ class MutationFinder:
         if ( ampID1 == 0 or ampID2 == 0 ):
             return
         
-        self.getReferenceAmplicon(ampID2)[2] += readCount
-        self.getReferenceAmplicon(ampID1)[2] += readCount
+        # Add to total count
+        # self.getReferenceAmplicon(ampID1)[2] += readCount
+        # self.getReferenceAmplicon(ampID2)[2] += readCount
         
         if ( len(matchingBlocks) == 0 ):
             return
-            
+        
+        # Add to translocation count
         self.getReferenceAmplicon(ampID1)[4] += readCount
         self.getReferenceAmplicon(ampID2)[4] += readCount
         matchingBlockString = str(matchingBlocks)

@@ -37,7 +37,7 @@ def run():
     print("Number of Threads: {0}".format(numThreads))
     print()
     
-    with open('files.json') as file_list_file:    
+    with open('files.json') as file_list_file:  
         filenameArray = json.load(file_list_file)
         
         for filenames in filenameArray:

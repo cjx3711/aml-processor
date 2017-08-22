@@ -194,7 +194,5 @@ def niceRound(num):
     return int(num * 100)/100
 def perc(numerator, denominator):
     return int(numerator * 1000 / denominator) / 10
-def pwrite(file, message):
-    print(message)
-    file.write(message + "\n")
+
 if __name__ ==  "__main__": run()
