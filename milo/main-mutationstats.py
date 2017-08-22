@@ -13,6 +13,7 @@ outDir = os.path.join("data", "4-mutationstats")
 
 filenameEnd = "_MUTATIONS.j4x"
 mutationHumanDictionary = {}
+translocationHumanDictionary = {}
 
 
 # Stats from the stats file of the reference amplicon
@@ -23,10 +24,15 @@ mutationHumanDictionary = {}
 # ]
 referenceAmpliconStats = [] 
 
+totalFiles = 0
+minFileOccurences = 1
+significanceThreshold = 0.2
+    
 def run():
-    totalFiles = 0
-    minFileOccurences = 1
-    significanceThreshold = 0.2
+    global totalFiles
+    global minFileOccurences
+    global significanceThreshold
+    
     with open('config.json') as config_file:
         config_data = json.load(config_file)
         if ( 'j4xstats_minFileOccurences' in config_data ):
@@ -44,7 +50,15 @@ def run():
             processSingleHuman(filepath, statsFile, personName)
             totalFiles += 1
     
-    mutationTupleList = list(mutationHumanDictionary.items())
+    processDictData(mutationHumanDictionary, 'mutationStats.txt')
+    processDictData(translocationHumanDictionary, 'translocationStats.txt')
+
+def processDictData(humanDictionary, outputFile):
+    global totalFiles
+    global minFileOccurences
+    global significanceThreshold
+        
+    mutationTupleList = list(humanDictionary.items())
     filteredTupleList = [x for x in mutationTupleList if x[1]['fileOccurrences'] >= minFileOccurences]
     
     # Stably sort the list by file occurrences,
@@ -65,7 +79,7 @@ def run():
     # pprint(significantTupleList)
     if not os.path.exists(outDir):
         os.makedirs(outDir)
-    outFile = open(os.path.join(outDir,'allstats.txt'), "w+", newline = "")
+    outFile = open(os.path.join(outDir, outputFile), "w+", newline = "")
     
     
     for x in significantTupleList:
@@ -79,11 +93,11 @@ def run():
         x[1]['VAFrequencyStats'][1] = min(x[1]['VAFrequency'])
         x[1]['VAFrequencyStats'][2] = max(x[1]['VAFrequency'])
         
-        pwrite(outFile,'{0} files: {1} ({2}%)'.format(x[0], x[1]['fileOccurrences'], x[1]['fileOccurencePerc']), False)
+        pwrite(outFile,'{0}\nfiles: {1} ({2}%)'.format(x[0], x[1]['fileOccurrences'], x[1]['fileOccurencePerc']), False)
         pwrite(outFile,'Reads (med, min, max): {0} {1} {2}'.format(x[1]['occurrenceStats'][0], x[1]['occurrenceStats'][1], x[1]['occurrenceStats'][2]), False)
         pwrite(outFile,'VAF   (med, min, max): {0} {1} {2}'.format(x[1]['VAFrequencyStats'][0], x[1]['VAFrequencyStats'][1], x[1]['VAFrequencyStats'][2]), False)
         pwrite(outFile, '', False)
-    
+        
 def processSingleHuman(filepath, statsfilepath, personName):
     global referenceAmpliconStats
     referenceAmpliconStats = [] 
@@ -151,7 +165,30 @@ def processMutationLine(line, personName):
     mutationHumanDictionary[mutationHash]['humans'].append(personName)
 
 def processTranslocationLine(line, personName):
-    pass
+    parts = line.split(", ")
+    translocationDescriptor = ', '.join(parts[1:])
+    ampID = int(translocationDescriptor.strip()[:translocationDescriptor.find(' ')])
+    totalOccurrences = referenceAmpliconStats[ampID][1]
+    occurrences = int(parts[0])
+    vaFrequency = round(occurrences / totalOccurrences, 2)
+    
+    if ( translocationDescriptor not in translocationHumanDictionary ):
+        translocationHumanDictionary[translocationDescriptor] = {
+            'totalOccurrences' : 0,
+            'fileOccurencePerc': 0,
+            'fileOccurrences': 0,
+            'occurrences': [],
+            'occurrenceStats': [0,0,0], # Median, min, max
+            'VAFrequency': [],
+            'VAFrequencyStats': [0,0,0], # Median, min, max
+            'humans': []
+        }
+    
+    translocationHumanDictionary[translocationDescriptor]['totalOccurrences'] += occurrences
+    translocationHumanDictionary[translocationDescriptor]['fileOccurrences'] += 1
+    translocationHumanDictionary[translocationDescriptor]['occurrences'].append(occurrences)
+    translocationHumanDictionary[translocationDescriptor]['VAFrequency'].append(vaFrequency)
+    translocationHumanDictionary[translocationDescriptor]['humans'].append(personName)
     
 def processReferenceLine(line):
     if line.startswith("Count") or line.startswith("ampID"):
