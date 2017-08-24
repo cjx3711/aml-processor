@@ -1,3 +1,7 @@
+"""
+Reads through the j3x and processes mutations and translocations
+"""
+
 from manifestExtraction import grouper
 from MutationFinder import *
 import json

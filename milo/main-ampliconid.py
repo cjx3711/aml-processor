@@ -1,3 +1,9 @@
+"""
+Pairs the FASTQ files and compresses it into a j3x file and j3x.stats file
+j3x file output includes translocations and the mutations
+j3x stats file is a summary of what is included in the j3x
+"""
+
 from manifestExtraction import grouper
 from unpairedFastqProc import *
 from ReadPairer import *
