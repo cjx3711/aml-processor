@@ -91,15 +91,15 @@ def pairToJ3X(fq1, fq2, paired, inDir, outDir):
             with tqdm(total=estimatedReads) as pbar:
                 result = processManager.map(readPairer.alignAndMerge, fq1Iter, fq2Iter, chunksize = chunksize)
                 for i, data in tqdm(enumerate(result)):
-                    failedToPair = data[0][0]
-                    matchType = data[0][1]
+                    failedToPair = data.failedToPair
+                    matchType = data.matchType
                     totalReads += 1
                     failedToPairReads += failedToPair
                     failedToMatchReads += 1 if matchType == 'nah' else 0
                     if failedToPair == 1 and matchType == 'nah':
                         failedToPairMatchReads += 1
                         
-                    readCompressor.putPairedRead(data[1])
+                    readCompressor.putPairedRead(data)
                     # outFile.write(data)
                     # outFile.write("\n\n")
                     pbar.update()

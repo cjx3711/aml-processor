@@ -22,12 +22,12 @@ class ReadCompressor:
         
     def putPairedRead(self, data):
         self.totalReads += 1
-        seqInfoLine = data[0]
-        seq = data[1]
-        quality = data[2]
+        sequenceInfo = data.sequenceInfo
+        seq = data.sequenceData
+        quality = data.qualityData
         if ( seq not in self.ampliconCountDict ):
-            # [Total Count, count from merges, sequence data, quality hash]
-            self.ampliconCountDict[seq] = [0, 0, seqInfoLine, quality]
+            # [Total Count, count from merges, sequence info, quality hash]
+            self.ampliconCountDict[seq] = [0, 0, sequenceInfo, quality]
         self.ampliconCountDict[seq][0] += 1
     
     def prepareForCompression(self):

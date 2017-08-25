@@ -1,7 +1,6 @@
 from difflib import SequenceMatcher
-from collections import namedtuple
+from DataTypes import *
 
-EmptyMatch = namedtuple("EmptyMatch", ["a", "b", "size"])
 class TranslocatedBlockMatcher:
 	def __init__(self):
 		pass

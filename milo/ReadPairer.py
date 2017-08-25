@@ -1,6 +1,7 @@
 from j3xUtils import *
 from manifestExtraction import *
 from concurrent.futures import *
+from DataTypes import *
 from itertools import *
 from AmpliconMatcherHashSweep import *
 import json
@@ -122,11 +123,18 @@ class ReadPairer:
         sequenceID = left[0][coordIndices[0]: coordIndices[1] - 2]
         # Checks which amplicon a read belongs to
         ampID, ampID2, matchType = self.ampliconMatcher.findAmplicon(bases)
-        otherStats = (failedToPair, matchType)
+        
+        
+        # Joins amplicon number, collision number, and coordinate as new ID, and appends bases and quality
+        IDPart = ''
         if ampID2 != None:
-            # Joins amplicon number, collision number, and coordinate as new ID, and appends bases and quality
-            return (otherStats, ["".join(("TL:", ampID + '/' + ampID2, ", C:", collisions, ", ", sequenceID)), bases, quality])            
+            IDPart = 'TL:{0}/{1}'.format(ampID, ampID2)
         else:
-            # Joins amplicon number, collision number, and coordinate as new ID, and appends bases and quality
-            return (otherStats, ["".join(("ID:", ampID, ", C:", collisions, ", ", sequenceID)), bases, quality])
+            IDPart = 'ID:{0}'.format(ampID)
+            
+        readData = ", ".join((IDPart, 'C:'+collisions, sequenceID))
+        return AlignedAndMerged(failedToPair, matchType, readData, bases, quality)
+
+        # otherStats = (failedToPair, matchType)
+        # return (otherStats, ["".join(("ID:", ampID, ", C:", collisions, ", ", sequenceID)), bases, quality])
             
