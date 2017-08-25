@@ -1,5 +1,9 @@
 {
   "j4x_readThresholdForOutput": 100,
+  "j4x_readThresholdForMutationOutput": 100,
+  "j4x_readThresholdForTranslocationOutput": 30,
+  "j4xstats_minFileOccurences": 5,
+  "j4xstats_significanceThreshold": 0.2,
   "chunksize": 500,
   "j3x_minVAFForTemplate": 0.05,
   "j3x_maxReadsForMerge": 10,

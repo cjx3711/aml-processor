@@ -1,6 +1,7 @@
 from j3xUtils import *
 from manifestExtraction import *
 from concurrent.futures import *
+from DataTypes import *
 from itertools import *
 from AmpliconMatcherHashSweep import *
 import json
@@ -114,10 +115,26 @@ class ReadPairer:
 
     def alignAndMerge(self, left, right):
         bases, quality, collisions = self.mergeUnpaired(left[1][:-1], reverseComplement(right[1][:-1]), left[3][:-1], right[3][:-1][::-1], self.alignByMaxima)
+        
+        failedToPair = 1 if collisions == '?' else 0
+        
         # Retrieves the coordinates from the existing FASTQ read ID
         coordIndices = nthAndKthLetter(left[0], ":", 5, 7)
         sequenceID = left[0][coordIndices[0]: coordIndices[1] - 2]
         # Checks which amplicon a read belongs to
-        ampID = self.ampliconMatcher.findAmplicon(bases)
+        ampID, ampID2, matchType = self.ampliconMatcher.findAmplicon(bases)
+        
+        
         # Joins amplicon number, collision number, and coordinate as new ID, and appends bases and quality
-        return ["".join(("ID:", ampID, ", C:", collisions, ", ", sequenceID)), bases, quality]
+        IDPart = ''
+        if ampID2 != None:
+            IDPart = 'TL:{0}/{1}'.format(ampID, ampID2)
+        else:
+            IDPart = 'ID:{0}'.format(ampID)
+            
+        readData = ", ".join((IDPart, 'C:'+collisions, sequenceID))
+        return AlignedAndMerged(failedToPair, matchType, readData, bases, quality)
+
+        # otherStats = (failedToPair, matchType)
+        # return (otherStats, ["".join(("ID:", ampID, ", C:", collisions, ", ", sequenceID)), bases, quality])
+            
