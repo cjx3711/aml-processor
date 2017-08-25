@@ -1,7 +1,7 @@
 from fastcomp import compare
 import json
 from tqdm import tqdm
-
+from j3xUtils import *
 
 class ReadCompressor:
     def __init__(self, referenceCount):
@@ -49,25 +49,28 @@ class ReadCompressor:
         self.failedMergeAndDiscarded = 0 # Count the number of items that were discarded after failing to merge 
         
         readTupleList = list(self.ampliconCountDict.items())
+        
         # Computes the total read count for each amplicon to calculate VAF
         for seq in readTupleList:
-            ampID = int(seq[1][2].split(',')[0].strip()[3:6]) # Extracts the ampID from the info line
+            ampID1, ampID2 = extractAmpID(seq[1][2])
             seqReadCount = seq[1][0]
-            self.ampliconCountList[ampID] += seqReadCount
+            self.ampliconCountList[ampID1] += seqReadCount
+            self.ampliconCountList[ampID2] += seqReadCount if ampID2 != 0 else 0
+                
         # Classify sequences into one of 3 groups, or discard them
         for seq in readTupleList:
-            ampID = int(seq[1][2].split(',')[0].strip()[3:6])
+            ampID1, ampID2 = extractAmpID(seq[1][2])
             seqReadCount = seq[1][0]
             if seqReadCount > self.j3x_maxReadsForMerge: # If number of reads is too high for merging into template, check if
-                if seqReadCount / int(self.ampliconCountList[ampID]) >= self.j3x_minVAFForTemplate: # It qualifies for a template by having a high VA
-                    self.templateNestedList[ampID].append(seq)
+                if seqReadCount / int(self.ampliconCountList[ampID1]) >= self.j3x_minVAFForTemplate: # It qualifies for a template by having a high VA
+                    self.templateNestedList[ampID1].append(seq)
                     self.templateFlatList.append(seq)
                 else:
                     if seqReadCount > self.j3x_readDeletorThreshold: # Otherwise, check to make sure the read count isn't high before discarding sequence
                         self.leftoverList.append(seq)
                     else:
                         self.discardedList.append(seq)
-                        self.discardCountList[ampID] += 1 # Discard
+                        self.discardCountList[ampID1] += 1 # Discard
             else:  # Otherwise, add it to the to-be-merged list
                 self.tbmergedList.append(seq)
 
@@ -93,10 +96,11 @@ class ReadCompressor:
             mergeCandidatesD1 = [] # List containing templates that each sequence might be merged with distance of 1,
             mergeCandidatesD2 = [] # and distance of 2
             seqReadCount = seq[1][0]
-            ampID = int(seq[1][2].split(',')[0][3:6])
+            ampID1, ampID2 = extractAmpID(seq[1][2])
+
             self.numMergeAttempts += seqReadCount
 
-            for template in self.templateNestedList[ampID]: # Get edit distance between sequence and every applicable template
+            for template in self.templateNestedList[ampID1]: # Get edit distance between sequence and every applicable template
                 dist = compare(seq[0], template[0])
                 if dist != -1: # If distance is not more than 2, put template in consideration for merge
                     if dist == 1:
@@ -128,7 +132,7 @@ class ReadCompressor:
                     self.leftoverList.append(seq)
                 else:
                     self.discardedList.append(seq)
-                    self.discardCountList[ampID] += 1 # Discard
+                    self.discardCountList[ampID1] += 1 # Discard
                     self.failedMergeAndDiscarded += 1
         # Combine the newly reinforced templates with the leftovers for inckusion in j3x
         j3xSeqs = self.templateFlatList + self.leftoverList

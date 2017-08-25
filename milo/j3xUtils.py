@@ -29,3 +29,11 @@ def fastqToJ3X(sequenceData):
     qualityScores = "".join(simplifyQuality(qualityDict[x]) for x in sequenceData[3][:-1])
     baseSeq = "".join("_" if x == "N" else x for x in sequenceData[1][:-1])
     return sequenceIdentifier + "\n" + baseSeq + "\n" + qualityScores + "\n" + "\n"
+    
+def extractAmpID(dataString):
+    # Data string format:
+    # ID:423, C:0, ...
+    ampIDPart = dataString.split(',')[0].strip() # Format 'ID:423' or 'TL:123/456'
+    ampID1 = int(ampIDPart[3:6])
+    ampID2 = int(ampIDPart[7:10]) if ampIDPart.startswith('TL') else 0
+    return ampID1, ampID2

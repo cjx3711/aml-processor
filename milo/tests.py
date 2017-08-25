@@ -2,6 +2,7 @@ import unittest
 
 from genomicsUtils import *
 from j4xUtils import *
+from j3xUtils import *
 from AmpliconMatcherProbabilistic import *
 from AmpliconMatcherHashSweep import *
 from ReadPairer import *
@@ -129,6 +130,36 @@ class AmpliconMatcherHashSweepTests(unittest.TestCase):
         self.assertEqual([4, 1], largest1)
         self.assertEqual([2, 2], largest2)
         
+class miscj3xUtils(unittest.TestCase):
+    def extract_0_id(self):
+        ampID1, ampID2 = extractAmpID('ID:000')
+        self.assertEqual(ampID1, 0)
+        self.assertEqual(ampID2, 0)
+        
+    def extract_001_id(self):
+        ampID1, ampID2 = extractAmpID('ID:001')
+        self.assertEqual(ampID1, 1)
+        self.assertEqual(ampID2, 0)
+        
+    def extract_014_id(self):
+        ampID1, ampID2 = extractAmpID('ID:014')
+        self.assertEqual(ampID1, 14)
+        self.assertEqual(ampID2, 0)
+    
+    def extract_241_id(self):
+        ampID1, ampID2 = extractAmpID('ID:241')
+        self.assertEqual(ampID1, 241)
+        self.assertEqual(ampID2, 0)
+        
+    def extract_241_111_tl(self):
+        ampID1, ampID2 = extractAmpID('TL:241/111')
+        self.assertEqual(ampID1, 241)
+        self.assertEqual(ampID2, 111)
+        
+    def extract_121_001_tl(self):
+        ampID1, ampID2 = extractAmpID('TL:121/001')
+        self.assertEqual(ampID1, 121)
+        self.assertEqual(ampID2, 1)
         
 class miscj4xUtils(unittest.TestCase):
     def weirdly_specific_function_1(self):
