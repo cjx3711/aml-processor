@@ -6,17 +6,33 @@ from statistics import median
 import json
 from genomicsUtils import pwrite
 from itertools import groupby
+from collections import defaultdict
 
-class MutationStats:
+class MainMutationStats:
     def __init__(self):
         self.statsDir = os.path.join("data", "2-paired")
         self.inDir = os.path.join("data", "3-mutations")
         self.outDir = os.path.join("data", "4-mutationstats")
-
+        self.defaultDictValues = lambda: {
+                                            'totalReadsExclDiscards' : 0,
+                                            'fileOccurrencePerc': 0,
+                                            'fileOccurrences': 0,
+                                            'numReads': [],
+                                            'numReadsStats': [0,0,0], # Median, min, max
+                                            'VAFrequency': [],
+                                            'VAFStats': [0,0,0], # Median, min, max
+                                            'samples': []
+                                         }
+        self.defaultSigDictValues = lambda: {
+                                                'fileOccurrences': 0,
+                                                'numReads': [],
+                                                'VAFrequency': [],
+                                                'mutations': defaultdict(list)
+                                             }
         self.filenameEnd = "_MUTATIONS.j4x"
-        self.mutationHumanDict = {}
-        self.translocationHumanDict = {}
-        self.significantAmpIDDict = {}
+        self.mutationHumanDict = defaultdict(self.defaultDictValues)
+        self.translocationHumanDict = defaultdict(self.defaultDictValues)
+        self.significantAmpIDDict = defaultdict(self.defaultSigDictValues)
 
         # To find average reference amplicon stats across files
         self.totalReferenceAmpliconStats = []
@@ -57,6 +73,9 @@ class MutationStats:
         # After processSample populates our dictionaries, process and write them to file
         self.processDictData(self.mutationHumanDict, 'mutationStats.txt')
         self.processDictData(self.translocationHumanDict, 'translocationStats.txt')
+
+        sigAmpIDTupleList = [x for x in list(self.significantAmpIDDict.items()) if x[1]['fileOccurrences'] > 5]
+        pprint(sigAmpIDTupleList)
 
         # Prints summary statistics for amplicons across samples. e.g. discards per amplicon
         outFile = open(os.path.join(self.outDir, 'referenceStats.txt'), "w+", newline = "")
@@ -115,61 +134,50 @@ class MutationStats:
                     self.processTranslocationLine(line, personName)
                     
     def processMutationLine(self, line, personName):
-        parts = line.split(", ")
-        mutationHash = parts[1]
-        ampID = int(mutationHash.strip()[:mutationHash.find(' ')])
-        totalReadsAcrossSamples = self.referenceAmpliconStats[ampID][1]
-        numReadsplitPt = parts[0].find("/")
-        numReads = int(parts[0][:numReadsplitPt])
-        vaFrequency = round(numReads / totalReadsAcrossSamples, 2)
+        # Format: "123 / 456", "78 S:91:A-C", "101112" 
+        VAFFraction, IDAndMutations, mutationCoords = line.split(", ")
+        ampID, mutations = IDAndMutations.split(" ", 1)
+        ampID = int(ampID)
+        totalReadsInclDiscards = self.referenceAmpliconStats[ampID][1]
+        numReads, totalReadsExclDiscards = [int(x.strip()) for x in VAFFraction.split("/")]
+        VAFrequency = round(numReads / totalReadsInclDiscards, 2)
         
-        if ( mutationHash not in self.mutationHumanDict ):
-            self.mutationHumanDict[mutationHash] = {
-                'totalReadsAcrossSamples' : 0,
-                'fileOccurrencePerc': 0,
-                'fileOccurrences': 0,
-                'numReads': [],
-                'numReadsStats': [0,0,0], # Median, min, max
-                'VAFrequency': [],
-                'VAFStats': [0,0,0], # Median, min, max
-                'samples': []
-            }
-        
-        self.mutationHumanDict[mutationHash]['totalReadsAcrossSamples'] += numReads
-        self.mutationHumanDict[mutationHash]['fileOccurrences'] += 1
-        self.mutationHumanDict[mutationHash]['numReads'].append(numReads)
-        self.mutationHumanDict[mutationHash]['VAFrequency'].append(vaFrequency)
-        self.mutationHumanDict[mutationHash]['samples'].append(personName)
+        self.mutationHumanDict[IDAndMutations]['totalReadsExclDiscards'] += numReads
+        self.mutationHumanDict[IDAndMutations]['fileOccurrences'] += 1
+        self.mutationHumanDict[IDAndMutations]['numReads'].append(numReads)
+        self.mutationHumanDict[IDAndMutations]['VAFrequency'].append(VAFrequency)
+        self.mutationHumanDict[IDAndMutations]['samples'].append(personName)
+
+        if self.mutationIsLarge(mutations) or self.mutationIsComplex(mutations):
+            self.significantAmpIDDict[ampID]['fileOccurrences'] += 1
+            self.significantAmpIDDict[ampID]['numReads'].append(numReads)
+            self.significantAmpIDDict[ampID]['VAFrequency'].append(VAFrequency)
+            self.significantAmpIDDict[ampID]['mutations'][mutations].append(personName)
+
+    def mutationIsLarge(self, mutations):
+        return any([len(mutation.split(":")[-1]) > 5 for mutation in mutations.split(" ")])
+
+    def mutationIsComplex(self, mutations):
+        return len(mutations.split(" ")) > 2
 
     def processTranslocationLine(self, line, personName):
         parts = line.split(", ")
         translocationDescriptor = ', '.join(parts[1:])
         ampID = int(translocationDescriptor.strip()[:translocationDescriptor.find(' ')])
-        totalReadsAcrossSamples = self.referenceAmpliconStats[ampID][1]
+        totalReadsInclDiscards = self.referenceAmpliconStats[ampID][1]
         numReads = int(parts[0])
-        vaFrequency = round(numReads / totalReadsAcrossSamples, 2)
+        vaFrequency = round(numReads / totalReadsInclDiscards, 2)
         
-        if ( translocationDescriptor not in self.translocationHumanDict ):
-            self.translocationHumanDict[translocationDescriptor] = {
-                'totalReadsAcrossSamples' : 0,
-                'fileOccurrencePerc': 0,
-                'fileOccurrences': 0,
-                'numReads': [],
-                'numReadsStats': [0,0,0], # Median, min, max
-                'VAFrequency': [],
-                'VAFStats': [0,0,0], # Median, min, max
-                'samples': []
-            }
-        
-        self.translocationHumanDict[translocationDescriptor]['totalReadsAcrossSamples'] += numReads
+        self.translocationHumanDict[translocationDescriptor]['totalReadsExclDiscards'] += numReads
         self.translocationHumanDict[translocationDescriptor]['fileOccurrences'] += 1
         self.translocationHumanDict[translocationDescriptor]['numReads'].append(numReads)
         self.translocationHumanDict[translocationDescriptor]['VAFrequency'].append(vaFrequency)
         self.translocationHumanDict[translocationDescriptor]['samples'].append(personName)
 
-    def processDictData(self, humanDict, outputFile):                
+    def processDictData(self, humanDict, outputFile):
+
+        # Format: (ampID + mutation, {VAFrequency, VAFStats, fileOccurrencePerc, fileOccurrences, samples, numReads, numReadsStats, totalReadsInclDiscards})
         mutationTupleList = list(humanDict.items())
-        # Format: (ampID + mutation, {VAFrequency, VAFStats, fileOccurrencePerc, fileOccurrences, samples, numReads, numReadsStats, totalReadsAcrossSamples})
         filteredTupleList = [x for x in mutationTupleList if x[1]['fileOccurrences'] >= self.minSamples]
         
         # Stably sort the list by file occurrences,
@@ -214,5 +222,5 @@ class MutationStats:
             pwrite(outFile, '', False)
 
 if __name__ ==  "__main__":
-    mutationStats = MutationStats()
+    mutationStats = MainMutationStats()
     mutationStats.run()
