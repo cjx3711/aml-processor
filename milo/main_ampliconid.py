@@ -28,13 +28,13 @@ class MainAmpliconID:
         self.readPairer = ReadPairer()
         self.bytesPerRead = 350 # Estimated
 
-    def test(inDir, outDir, configFile, referenceFile, filenameArray):
+    def test(self, inDir, outDir, configFile, referenceFile, filenameArray):
         self.inDir = inDir
         self.outDir = outDir
         self.readPairer = ReadPairer(configFile, referenceFile)
         
         self.processFiles(filenameArray)
-            
+
     def run(self):
         print("MILo Amplicon Pairer")
         print("Chunksize (Process Pool): {0}".format(self.chunksize))
@@ -194,13 +194,15 @@ class MainAmpliconID:
                             discardPercent = self.niceRound(discardRates[i])
                         statsFile.write("{0}, {1}, {2}, {3}, {4}\n".format(i, ampliconCountList[i], templateCountList[i], discardCountList[i], discardPercent))
                     
+                    # statsFile.close()
+                    
     def writeSeqToFile(self, oFile, seq):
         sequence = seq[0]
         numReads = seq[1][0]
         numReadsMerged = seq[1][1]
         infoLine = seq[1][2]
         quality = seq[1][3]
-        oFile.write("{0}, R:{1}, M:{2}".format(infoLine, numReads, numReadsMerged))
+        oFile.write("{0}, R:{1}, M:{2}".format(infoLine, int(numReads), int(numReadsMerged)))
         oFile.write('\n')
         oFile.write(sequence)
         oFile.write('\n')
@@ -210,6 +212,7 @@ class MainAmpliconID:
     def niceRound(self, num):
         return int(num * 100)/100
     def perc(self, numerator, denominator):
+        if denominator == 0: return 0
         return int(numerator * 1000 / denominator) / 10
 
 if __name__ ==  "__main__":

@@ -49,7 +49,6 @@ class ReadCompressor:
         self.failedMergeAndDiscarded = 0 # Count the number of items that were discarded after failing to merge 
         
         readTupleList = list(self.ampliconCountDict.items())
-        
         # Computes the total read count for each amplicon to calculate VAF
         for seq in readTupleList:
             ampID1, ampID2 = extractAmpID(seq[1][2])
@@ -110,10 +109,9 @@ class ReadCompressor:
 
             numCandidates = len(mergeCandidatesD1) + len(mergeCandidatesD2)
             if numCandidates > 0:
+                self.mergedCount += seqReadCount
                 if numCandidates > 1:
                     self.mergedUnsureCount += seqReadCount
-                self.mergedCount += seqReadCount
-
                 if mergeCandidatesD1: # Prioritize templates that are a distance of 1, rather than 2, from the current sequence
                     splitValue = seqReadCount / len(mergeCandidatesD1) # Allocate read count equally among templates equally similar to sequence
                     self.mergedD1Count += seqReadCount
