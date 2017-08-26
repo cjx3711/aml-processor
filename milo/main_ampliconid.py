@@ -23,8 +23,10 @@ class MainAmpliconID:
         self.numThreads = cpu_count()
         self.chunksize = 250
         self.bytesPerRead = 350 # Estimated
+        self.configFile = 'config.json'
 
     def test(self, inDir, outDir, configFile, referenceFile, filenameArray):
+        self.configFile = configFile
         self.inDir = inDir
         self.outDir = outDir
         self.readPairer = ReadPairer(configFile, referenceFile)
@@ -83,7 +85,7 @@ class MainAmpliconID:
         failedToMatchReads = 0
         failedToPairMatchReads = 0
         
-        readCompressor = ReadCompressor(self.readPairer.getReferenceCount())
+        readCompressor = ReadCompressor(self.readPairer.getReferenceCount(), self.configFile)
         if not os.path.exists(self.outDir):
             os.makedirs(self.outDir)
         with open(self.inDir + fq1) as fq1File, open(self.inDir + fq2) as fq2File:

@@ -4,14 +4,14 @@ from tqdm import tqdm
 from j3xUtils import *
 
 class ReadCompressor:
-    def __init__(self, referenceCount):
+    def __init__(self, referenceCount, configFile = 'config.json'):
         self.ampliconCountDict = {}
         self.totalReads = 0
         self.referenceCount = referenceCount
         self.j3x_minVAFForTemplate = 0.05
         self.j3x_maxReadsForMerge = 10
         self.j3x_readDeletorThreshold = 5
-        with open('config.json') as config_file: 
+        with open(configFile) as config_file: 
             config_data = json.load(config_file)
             if ( 'j3x_minVAFForTemplate' in config_data ):
                 self.j3x_minVAFForTemplate = config_data['j3x_minVAFForTemplate']
