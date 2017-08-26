@@ -1,3 +1,2 @@
-biopython
-pygtrie
-python-Levenshtein
+fastcomp
+tqdm

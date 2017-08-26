@@ -6,6 +6,18 @@ import shutil
 
 from main_ampliconid import *
 
+out = None
+# Disable printing
+def blockPrint():
+    global out
+    sys.stdout = out = open(os.devnull, 'w')
+
+# Restore
+def enablePrint():
+    global out
+    if ( out != None ): out.close()
+    sys.stdout = sys.__stdout__
+    
 def compare_files(self, outfile_path, testFile_path, ignore_lines = []):
     with open(outfile_path) as outFile, open(testFile_path) as testFile:
         zipped = zip(outFile.readlines(), testFile.readlines())
@@ -15,12 +27,38 @@ def compare_files(self, outfile_path, testFile_path, ignore_lines = []):
             try:
                 self.assertEqual(pair[1][0].strip(), pair[1][1].strip())
             except AssertionError as e:
+                enablePrint()
                 print('Line: ' + str(pair[0]))
                 raise
-
+                
         outFile.close()
         testFile.close()
+            
+        return True
         
+def test_j3x_generic(self, filename):
+    blockPrint()
+    ampliconID = MainAmpliconID()
+    outDir = 'test/j3x/'
+    inDir = 'test/j3x/'
+    configFile = 'test/config.json'
+    referenceFile = 'test/simple-manifest.csv'
+    filenameArray = {
+        "fastq1": filename + '_R1_001.fastq',
+        "fastq2": filename + '_R2_001.fastq',
+        "paired": filename + '.j3x'
+      },
+    ampliconID.test(inDir, outDir, configFile, referenceFile, filenameArray)
+    
+    skip = [2]
+    result = compare_files(self, 'test/j3x/' + filename + '.j3x', 'test/j3x/' + filename + '_EXPECTED.j3x')
+    if result: os.remove('test/j3x/' + filename + '.j3x')
+    result = compare_files(self, 'test/j3x/' + filename + '.j3x.stats', 'test/j3x/' + filename + '_EXPECTED.j3x.stats', skip)
+    if result: os.remove('test/j3x/' + filename + '.j3x.stats')
+    shutil.rmtree('test/j3x/discarded/')
+        
+    enablePrint()
+
 # Used to test if the file testing works.
 def write_lamb(outfile_path):
     with open(outfile_path, 'w') as outfile:
@@ -36,27 +74,15 @@ class LambTests(unittest.TestCase):
         
 class j3xTests(unittest.TestCase):
     def test_simple(self):
-        ampliconID = MainAmpliconID()
-        outDir = 'test/j3x/'
-        inDir = 'test/j3x/'
-        configFile = 'test/config.json'
-        referenceFile = 'test/simple-manifest.csv'
-        filenameArray = {
-            "fastq1": "SIMPLE_R1_001.fastq",
-            "fastq2": "SIMPLE_R2_001.fastq",
-            "paired": "SIMPLE.j3x"
-          },
-        ampliconID.test(inDir, outDir, configFile, referenceFile, filenameArray)
+        test_j3x_generic(self, 'SIMPLE')
         
-        skip = [2]
-        compare_files(self, 'test/j3x/SIMPLE.j3x', 'test/j3x/SIMPLE_EXPECTED.j3x')
-        compare_files(self, 'test/j3x/SIMPLE.j3x.stats', 'test/j3x/SIMPLE_EXPECTED.j3x.stats', skip)
-        os.remove('test/j3x/SIMPLE.j3x')
-        os.remove('test/j3x/SIMPLE.j3x.stats')
-        shutil.rmtree('test/j3x/discarded/')
+    def test_multi(self):
+        test_j3x_generic(self, 'MULTI')
 
 def main():
+    global out
     unittest.main()
+    if ( out != None ): out.close()
 
 if __name__ == '__main__':
     main()
