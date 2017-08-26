@@ -20,12 +20,8 @@ import time
 
 class MainAmpliconID:
     def __init__(self):
-        self.inDir = "data/1-raw/"
-        self.outDir = "data/2-paired/"
-
         self.numThreads = cpu_count()
         self.chunksize = 250
-        self.readPairer = ReadPairer()
         self.bytesPerRead = 350 # Estimated
 
     def test(self, inDir, outDir, configFile, referenceFile, filenameArray):
@@ -36,6 +32,11 @@ class MainAmpliconID:
         self.processFiles(filenameArray)
 
     def run(self):
+        self.inDir = "data/1-raw/"
+        self.outDir = "data/2-paired/"
+
+        self.readPairer = ReadPairer()
+        
         print("MILo Amplicon Pairer")
         print("Chunksize (Process Pool): {0}".format(self.chunksize))
         print("Number of Threads: {0}".format(self.numThreads))
