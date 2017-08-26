@@ -1,0 +1,31 @@
+Overall File Stats
+Specimen:        , SIMPLE.j3x	
+TimeTaken / Time:, x	, xxx
+Original Reads:  , 4	
+Pair pass:       , 4	, 100.0%	
+Pair fail:       , 0	, 0.0%	
+Match pass:      , 4	, 100.0%	
+Match fail:      , 0	, 0.0%	
+Pair/Match pass: , 4	, 100.0%	
+Pair/Match fail: , 0	, 0.0%	
+Compressed Seq:  , 1	
+Compression:     , 75.0%	
+Templates:       , 1	
+Usable Data:     , 4	, 100.0%	
+Merged Data:     , 0	, 0.0%	, Data that was similar to templates
+Merged >1 Data:  , 0	, 0.0%	, Merges with more than one possible template candidate
+Merges D1:       , 0	, 0%	, Merges that had distance 1
+Merges D2:       , 0	, 0%	, Merges that had distance 2
+Discarded Data:  , 0	, 0.0%	
+!Merge & Discard , 0	, , Discarded due to failed merge
+Avg Discard Rate:, 0.0%	, , Average discard rate per amplicon
+
+Reference Amplicon Stats
+Ref ampID, Amplicon Count, Template Count, Discard Count, Discard Rate
+0, 0, 0, 0, -
+1, 0, 0, 0, -
+2, 4, 1, 0, 0.0
+3, 0, 0, 0, -
+4, 0, 0, 0, -
+5, 0, 0, 0, -
+6, 0, 0, 0, -

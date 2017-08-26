@@ -1,0 +1,31 @@
+Overall File Stats
+Specimen:        , MULTI.j3x	
+TimeTaken / Time:, 0.04s	, 21:38:21 26 Aug 2017	
+Original Reads:  , 14	
+Pair pass:       , 14	, 100.0%	
+Pair fail:       , 0	, 0.0%	
+Match pass:      , 14	, 100.0%	
+Match fail:      , 0	, 0.0%	
+Pair/Match pass: , 14	, 100.0%	
+Pair/Match fail: , 0	, 0.0%	
+Compressed Seq:  , 5	
+Compression:     , 64.3%	
+Templates:       , 5	
+Usable Data:     , 13	, 92.8%	
+Merged Data:     , 0	, 0.0%	, Data that was similar to templates
+Merged >1 Data:  , 0	, 0.0%	, Merges with more than one possible template candidate
+Merges D1:       , 0	, 0%	, Merges that had distance 1
+Merges D2:       , 0	, 0%	, Merges that had distance 2
+Discarded Data:  , 1	, 7.1%	
+!Merge & Discard , 1	, , Discarded due to failed merge
+Avg Discard Rate:, 0.0%	, , Average discard rate per amplicon
+
+Reference Amplicon Stats
+Ref ampID, Amplicon Count, Template Count, Discard Count, Discard Rate
+0, 0, 0, 0, -
+1, 4, 1, 0, 0.0
+2, 2, 1, 0, 0.0
+3, 3, 1, 0, 0.0
+4, 2, 1, 0, 0.0
+5, 2, 1, 0, 0.0
+6, 1, 0, 1, 1.0

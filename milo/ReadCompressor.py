@@ -4,14 +4,14 @@ from tqdm import tqdm
 from j3xUtils import *
 
 class ReadCompressor:
-    def __init__(self, referenceCount):
+    def __init__(self, referenceCount, configFile = 'config.json'):
         self.ampliconCountDict = {}
         self.totalReads = 0
         self.referenceCount = referenceCount
         self.j3x_minVAFForTemplate = 0.05
         self.j3x_maxReadsForMerge = 10
         self.j3x_readDeletorThreshold = 5
-        with open('config.json') as config_file: 
+        with open(configFile) as config_file: 
             config_data = json.load(config_file)
             if ( 'j3x_minVAFForTemplate' in config_data ):
                 self.j3x_minVAFForTemplate = config_data['j3x_minVAFForTemplate']
@@ -49,7 +49,6 @@ class ReadCompressor:
         self.failedMergeAndDiscarded = 0 # Count the number of items that were discarded after failing to merge 
         
         readTupleList = list(self.ampliconCountDict.items())
-        
         # Computes the total read count for each amplicon to calculate VAF
         for seq in readTupleList:
             ampID1, ampID2 = extractAmpID(seq[1][2])
@@ -110,10 +109,9 @@ class ReadCompressor:
 
             numCandidates = len(mergeCandidatesD1) + len(mergeCandidatesD2)
             if numCandidates > 0:
+                self.mergedCount += seqReadCount
                 if numCandidates > 1:
                     self.mergedUnsureCount += seqReadCount
-                self.mergedCount += seqReadCount
-
                 if mergeCandidatesD1: # Prioritize templates that are a distance of 1, rather than 2, from the current sequence
                     splitValue = seqReadCount / len(mergeCandidatesD1) # Allocate read count equally among templates equally similar to sequence
                     self.mergedD1Count += seqReadCount
