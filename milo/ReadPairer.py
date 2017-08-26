@@ -7,25 +7,24 @@ from AmpliconMatcherHashSweep import *
 import json
 
 class ReadPairer:
-    def __init__(self, useConfig = True):
+    def __init__(self, configFile = 'config.json', referenceFile = 'references/Manifest.csv'):
         self.alignByMaxima = False # Whether or not to robustly align by detecting global maxima for overlap scores
         self.matchScore = 1
         self.mismatchPenalty = 5
-        if useConfig:
-            with open('config.json') as config_file: 
-                config_data = json.load(config_file)
-                if ( 'readPairer_alignByMaxima' in config_data ):
-                    self.alignByMaxima = config_data['readPairer_alignByMaxima']
-                if ( 'readPairer_matchScore' in config_data ):
-                    self.matchScore = abs(config_data['readPairer_matchScore'])
-                if ( 'readPairer_mismatchPenalty' in config_data ):
-                    self.mismatchPenalty = abs(config_data['readPairer_mismatchPenalty'])
+        with open(configFile) as config_file: 
+            config_data = json.load(config_file)
+            if ( 'readPairer_alignByMaxima' in config_data ):
+                self.alignByMaxima = config_data['readPairer_alignByMaxima']
+            if ( 'readPairer_matchScore' in config_data ):
+                self.matchScore = abs(config_data['readPairer_matchScore'])
+            if ( 'readPairer_mismatchPenalty' in config_data ):
+                self.mismatchPenalty = abs(config_data['readPairer_mismatchPenalty'])
         
         self.readLength = 151
         self.scoreThreshold = 10
         self.rangeEnd = self.readLength - self.scoreThreshold
         self.rangeStart = -self.rangeEnd
-        self.ampliconMatcher = AmpliconMatcherHashSweep("references/Manifest.csv")
+        self.ampliconMatcher = AmpliconMatcherHashSweep(referenceFile)
 
     def getReferenceCount(self):
         return self.ampliconMatcher.getReferenceCount()
