@@ -5,6 +5,9 @@ import os
 import shutil
 
 from main_ampliconid import *
+from genomicsUtils import *
+
+
 
 out = None
 # Disable printing
@@ -17,6 +20,33 @@ def enablePrint():
     global out
     if ( out != None ): out.close()
     sys.stdout = sys.__stdout__
+
+def compare_files_unordered(self, outfile_path, testFile_path, group):
+    enablePrint()
+    outFile = open(outfile_path)
+    testFile = open(testFile_path)
+    outIter = grouper(outFile, group)
+    testIter = grouper(testFile, group)
+    testList = []
+    for testBatch in testIter:
+        string = ""
+        for line in testBatch:
+            string += line.strip() + '\n'
+        testList.append(string)
+    
+    for outBatch in outIter:
+        string = ""
+        for line in testBatch:
+            string += line.strip() + '\n'
+        try:
+            self.assertTrue(string in testList)    
+        except AssertionError as e:
+            raise
+        
+    outFile.close()
+    testFile.close()
+    return True
+            
     
 def compare_files(self, outfile_path, testFile_path, ignore_lines = []):
     with open(outfile_path) as outFile, open(testFile_path) as testFile:
@@ -51,7 +81,7 @@ def test_j3x_generic(self, filename):
     ampliconID.test(inDir, outDir, configFile, referenceFile, filenameArray)
     
     skip = [2]
-    result = compare_files(self, 'test/j3x/' + filename + '.j3x', 'test/j3x/' + filename + '_EXPECTED.j3x')
+    result = compare_files_unordered(self, 'test/j3x/' + filename + '.j3x', 'test/j3x/' + filename + '_EXPECTED.j3x', 4)
     if result: os.remove('test/j3x/' + filename + '.j3x')
     result = compare_files(self, 'test/j3x/' + filename + '.j3x.stats', 'test/j3x/' + filename + '_EXPECTED.j3x.stats', skip)
     if result: os.remove('test/j3x/' + filename + '.j3x.stats')
