@@ -163,11 +163,11 @@ def processSingleHuman(filepath, statsfilepath, personName):
                 state = 2
                 break
             if state == 0:
-                processMutationLine(line[:-1], personName) # Remove the \n
+                processMutationLine(line.rstrip(), personName) # Remove the \n
             elif state == 1:
-                processTranslocationLine(line[:-1], personName)
+                processTranslocationLine(line.rstrip(), personName)
             else:
-                processReferenceLine(line[:-1])
+                processReferenceLine(line.rstrip())
                 
 def processMutationLine(line, personName):
     parts = line.split(", ")

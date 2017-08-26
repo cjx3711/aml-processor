@@ -7,25 +7,24 @@ from AmpliconMatcherHashSweep import *
 import json
 
 class ReadPairer:
-    def __init__(self, useConfig = True):
+    def __init__(self, configFile = 'config.json', referenceFile = 'references/Manifest.csv'):
         self.alignByMaxima = False # Whether or not to robustly align by detecting global maxima for overlap scores
         self.matchScore = 1
         self.mismatchPenalty = 5
-        if useConfig:
-            with open('config.json') as config_file: 
-                config_data = json.load(config_file)
-                if ( 'readPairer_alignByMaxima' in config_data ):
-                    self.alignByMaxima = config_data['readPairer_alignByMaxima']
-                if ( 'readPairer_matchScore' in config_data ):
-                    self.matchScore = abs(config_data['readPairer_matchScore'])
-                if ( 'readPairer_mismatchPenalty' in config_data ):
-                    self.mismatchPenalty = abs(config_data['readPairer_mismatchPenalty'])
+        with open(configFile) as config_file: 
+            config_data = json.load(config_file)
+            if ( 'readPairer_alignByMaxima' in config_data ):
+                self.alignByMaxima = config_data['readPairer_alignByMaxima']
+            if ( 'readPairer_matchScore' in config_data ):
+                self.matchScore = abs(config_data['readPairer_matchScore'])
+            if ( 'readPairer_mismatchPenalty' in config_data ):
+                self.mismatchPenalty = abs(config_data['readPairer_mismatchPenalty'])
         
         self.readLength = 151
         self.scoreThreshold = 10
         self.rangeEnd = self.readLength - self.scoreThreshold
         self.rangeStart = -self.rangeEnd
-        self.ampliconMatcher = AmpliconMatcherHashSweep("references/Manifest.csv")
+        self.ampliconMatcher = AmpliconMatcherHashSweep(referenceFile)
 
     def getReferenceCount(self):
         return self.ampliconMatcher.getReferenceCount()
@@ -114,13 +113,13 @@ class ReadPairer:
         return tuple("".join(y) for y in zip(*(pickBetter(*x) for x in zip(overlapPairs, overlapQuality)))), collisions[0]
 
     def alignAndMerge(self, left, right):
-        bases, quality, collisions = self.mergeUnpaired(left[1][:-1], reverseComplement(right[1][:-1]), left[3][:-1], right[3][:-1][::-1], self.alignByMaxima)
+        bases, quality, collisions = self.mergeUnpaired(left[1].rstrip(), reverseComplement(right[1].rstrip()), left[3].rstrip(), right[3].rstrip()[::-1], self.alignByMaxima)
         
         failedToPair = 1 if collisions == '?' else 0
         
-        # Retrieves the coordinates from the existing FASTQ read ID
-        coordIndices = nthAndKthLetter(left[0], ":", 5, 7)
-        sequenceID = left[0][coordIndices[0]: coordIndices[1] - 2]
+        # # Retrieves the coordinates from the existing FASTQ read ID
+        # coordIndices = nthAndKthLetter(left[0], ":", 5, 7)
+        # sequenceID = left[0][coordIndices[0]: coordIndices[1] - 2]
         # Checks which amplicon a read belongs to
         ampID, ampID2, matchType = self.ampliconMatcher.findAmplicon(bases)
         
@@ -132,7 +131,7 @@ class ReadPairer:
         else:
             IDPart = 'ID:{0}'.format(ampID)
             
-        readData = ", ".join((IDPart, 'C:'+collisions, sequenceID))
+        readData = ", ".join((IDPart, 'C:'+collisions))
         return AlignedAndMerged(failedToPair, matchType, readData, bases, quality)
 
         # otherStats = (failedToPair, matchType)
