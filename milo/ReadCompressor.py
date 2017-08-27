@@ -19,7 +19,7 @@ class ReadCompressor:
                 self.j3x_maxReadsForMerge = config_data['j3x_maxReadsForMerge']
             if ( 'j3x_readDeletorThreshold' in config_data ):
                 self.j3x_readDeletorThreshold = config_data['j3x_readDeletorThreshold']
-        
+
     def putPairedRead(self, data):
         self.totalReads += 1
         sequenceInfo = data.sequenceInfo

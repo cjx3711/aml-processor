@@ -2,13 +2,10 @@
   "readPairer_alignByMaxima": false,
   "readPairer_matchScore": 1,
   "readPairer_mismatchPenalty": 5,
-  "j3x_minVAFForTemplate": 0.01,
-  "j3x_maxReadsForMerge": 2,
+  "j3x_minVAFForTemplate": 0.1,
+  "j3x_maxReadsForMerge": 3,
   "j3x_readDeletorThreshold": 1,
   "minMutationCount": 3,
   "chunksize": 500,
-  "j4x_readThresholdForOutput": 4,
-  "j3x_minReadsForTemplate": 7,
-  "j3x_maxReadsForMerge": 1,
-  "j3x_readDeletorThreshold": 5
+  "j4x_readThresholdForOutput": 4
 }

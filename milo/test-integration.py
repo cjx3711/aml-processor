@@ -108,6 +108,9 @@ class j3xTests(unittest.TestCase):
         
     def test_multi(self):
         test_j3x_generic(self, 'MULTI')
+        
+    def test_multi(self):
+        test_j3x_generic(self, 'SIMPLE_MUT')
 
 def main():
     global out
