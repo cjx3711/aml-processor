@@ -2,7 +2,8 @@ from j4xUtils import *
 from TranslocatedBlockMatcher import *
 
 class MutationFinder:
-    def __init__(self):
+    def __init__(self, references = 'references/Manifest.csv'):
+        self.references = references
         self.translocatedBlockMatcher = TranslocatedBlockMatcher()
         pass
         
@@ -18,7 +19,7 @@ class MutationFinder:
         
         self.referenceCount = 0
         self.ampliconRefs = []
-        with open('references/Manifest.csv') as references:
+        with open(self.references) as references:
             lineno = -1
             
             for line in references:
