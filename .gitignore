@@ -5,6 +5,8 @@ How to git.txt
 __pycache__
 *.pyc
 
+annovar
+
 milo/data
 milo/__pycache__
 milo/config.json

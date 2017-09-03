@@ -14,7 +14,6 @@ from tqdm import tqdm
 
 class MainMutationID:
     def __init__(self):
-
         self.numThreads = cpu_count()
         self.bytesPerRead = 500 # Estimated
 
@@ -22,7 +21,7 @@ class MainMutationID:
         self.chunksize = 250
         self.minMutationCount = 3
         self.minTranslocationCount = 3
-        with open('config.json') as config_file: 
+        with open(configFile) as config_file:
             config_data = json.load(config_file)
             if ( 'j4x_readThresholdForOutput' in config_data ):
                 self.minMutationCount = config_data['j4x_readThresholdForOutput']
@@ -33,8 +32,13 @@ class MainMutationID:
                 self.minTranslocationCount = config_data['j4x_readThresholdForTranslocationOutput']
             if ( 'chunksize' in config_data ):
                 self.chunksize = config_data['chunksize']
+    
     def test(self, inDir, outDir, configFile, referenceFile, filenameArray):
-        pass
+        self.readConfig(configFile)
+        self.inDir = inDir
+        self.outDir = outDir
+        self.mutationFinder = MutationFinder(referenceFile)
+        self.processFiles(filenameArray)
     
     def run(self):
         self.inDir = "data/2-paired/"

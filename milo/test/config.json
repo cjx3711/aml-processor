@@ -7,5 +7,5 @@
   "j3x_readDeletorThreshold": 1,
   "minMutationCount": 3,
   "chunksize": 500,
-  "j4x_readThresholdForOutput": 4
+  "j4x_readThresholdForOutput": 1
 }
