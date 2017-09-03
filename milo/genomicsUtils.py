@@ -86,6 +86,13 @@ def simpleDistance(a, b):
     
     return differences
 
+def extractChromosomeNumber(ampliconName):
+    nameParts = ampliconName.split('.')
+    for namePart in nameParts:
+        if namePart.startswith('chr'):
+            return namePart[3:]
+    return ''
+
 def pwrite(file, message, shouldPrint = True):
     if shouldPrint:
         print(message)
