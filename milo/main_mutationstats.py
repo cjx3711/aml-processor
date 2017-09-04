@@ -4,11 +4,12 @@ from j4xUtils import *
 from pprint import pprint
 from statistics import median
 import json
-from genomicsUtils import pwrite
+from genomicsUtils import *
 from itertools import groupby
 
 class MutationStats:
-    def __init__(self):
+    def __init__(self, references = 'references/Manifest.csv'):
+        self.references = references
         self.statsDir = os.path.join("data", "2-paired")
         self.inDir = os.path.join("data", "3-mutations")
         self.outDir = os.path.join("data", "4-mutationstats")
@@ -33,6 +34,15 @@ class MutationStats:
         self.minSamples = 1
         self.VAFThreshold = 0.2
         self.VAFThresholdSubordinate = 0.05
+        
+        self.ampliconRefs = []
+        with open(self.references) as refFile:
+            for line in refFile:
+                csvCells = line.split(',')
+                name = csvCells[1]
+                chromosome = extractChromosomeNumber(name)
+                shortName = name[:name.find('.')]
+                self.ampliconRefs.append((shortName, chromosome))
 
     def run(self):
         # Reads config file            
@@ -57,6 +67,7 @@ class MutationStats:
         # After processSample populates our dictionaries, process and write them to file
         self.processDictData(self.mutationHumanDict, 'mutationStats.txt')
         self.processDictData(self.translocationHumanDict, 'translocationStats.txt')
+        self.processDictDataAnnovar(self.mutationHumanDict, 'annovarStats.txt')
 
         # Prints summary statistics for amplicons across samples. e.g. discards per amplicon
         outFile = open(os.path.join(self.outDir, 'referenceStats.txt'), "w+", newline = "")
@@ -117,6 +128,7 @@ class MutationStats:
     def processMutationLine(self, line, personName):
         parts = line.split(", ")
         mutationHash = parts[1]
+        coordinates = parts[2]
         ampID = int(mutationHash.strip()[:mutationHash.find(' ')])
         totalReadsAcrossSamples = self.referenceAmpliconStats[ampID][1]
         numReadsplitPt = parts[0].find("/")
@@ -125,6 +137,7 @@ class MutationStats:
         
         if ( mutationHash not in self.mutationHumanDict ):
             self.mutationHumanDict[mutationHash] = {
+                'coordinates' : coordinates,
                 'totalReadsAcrossSamples' : 0,
                 'fileOccurrencePerc': 0,
                 'fileOccurrences': 0,
@@ -166,8 +179,8 @@ class MutationStats:
         self.translocationHumanDict[translocationDescriptor]['numReads'].append(numReads)
         self.translocationHumanDict[translocationDescriptor]['VAFrequency'].append(vaFrequency)
         self.translocationHumanDict[translocationDescriptor]['samples'].append(personName)
-
-    def processDictData(self, humanDict, outputFile):                
+    
+    def filterList(self, humanDict):
         mutationTupleList = list(humanDict.items())
         # Format: (ampID + mutation, {VAFrequency, VAFStats, fileOccurrencePerc, fileOccurrences, samples, numReads, numReadsStats, totalReadsAcrossSamples})
         filteredTupleList = [x for x in mutationTupleList if x[1]['fileOccurrences'] >= self.minSamples]
@@ -178,7 +191,7 @@ class MutationStats:
         filteredTupleList.sort(key = lambda tup: sum(tup[1]['VAFrequency']) / tup[1]['fileOccurrences'], reverse = True)
         # 
         filteredTupleList.sort(key = lambda tup: tup[0][:tup[0].find(" ")])
-
+        
         # If the mutant has a high VAF, or has the same amplicon as a mutant with high VAF and passes a lower VAF threshold
         significantTupleList = []
         for x in filteredTupleList:
@@ -190,12 +203,38 @@ class MutationStats:
                     )
                 ):
                 significantTupleList.append(x)
-                
-        #pprint(significantTupleList)
+        return significantTupleList
+        
+    def createOutFile(self, outputFile):
         if not os.path.exists(self.outDir):
             os.makedirs(self.outDir)
-        outFile = open(os.path.join(self.outDir, outputFile), "w+", newline = "")
+        return open(os.path.join(self.outDir, outputFile), "w+", newline = "")
         
+    def processDictDataAnnovar(self, humanDict, outputFile):
+        significantTupleList = self.filterList(humanDict)
+        outFile = self.createOutFile(outputFile)
+        
+        for i, x in enumerate(significantTupleList):
+            mutation = x[0]
+            coordinates = x[1]['coordinates']
+            
+            mutationParts = mutation.split(' ')
+            coordinateParts = coordinates.split(' ')
+            ampID = int(mutationParts[0])
+            mutations = hashToMutationArray(mutation)
+            if len(mutations) == 1 and len(coordinateParts) == 1:
+                chromosome = self.ampliconRefs[ampID][1]
+                startCoord = coordinateParts[0]
+                endCoord = coordinateParts[0]
+                original = mutations[0]['from'] if len(mutations[0]['from']) > 0 else '-'
+                mutated = mutations[0]['to'] if len(mutations[0]['to']) > 0 else '-'
+                comments = "comments: MID: {0} AID: {1} {2}".format(i, ampID, self.ampliconRefs[ampID][0])
+                
+                pwrite(outFile,'{0}   {1}   {2}   {3}   {4}   {5}'.format(chromosome, startCoord, endCoord, original, mutated, comments ))
+
+    def processDictData(self, humanDict, outputFile):           
+        significantTupleList = self.filterList(humanDict)
+        outFile = self.createOutFile(outputFile)
         
         for x in significantTupleList:
             # Calculate the stats of the stats
