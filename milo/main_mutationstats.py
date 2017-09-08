@@ -48,13 +48,13 @@ class MutationStats:
         # Reads config file            
         with open('config.json') as config_file:
             config_data = json.load(config_file)
-            if 'j4xstats_self.minSamples' in config_data:
-                self.minSamples = config_data['j4xstats_self.minSamples']
-            if 'j4xstats_self.VAFThreshold' in config_data:
-                self.VAFThreshold = config_data['j4xstats_self.VAFThreshold']
-            if 'j4xstats_self.VAFThresholdSubordinate' in config_data:
-                self.VAFThresholdSubordinate = config_data['j4xstats_self.VAFThresholdSubordinate']
-
+            if 'j4xstats_minSamples' in config_data:
+                self.minSamples = config_data['j4xstats_minSamples']
+            if 'j4xstats_VAFThreshold' in config_data:
+                self.VAFThreshold = config_data['j4xstats_VAFThreshold']
+            if 'j4xstats_VAFThresholdSubordinate' in config_data:
+                self.VAFThresholdSubordinate = config_data['j4xstats_VAFThresholdSubordinate']
+                
         # Reads j3xstats and j4 files
         for filepath in glob.glob(os.path.join(self.inDir, '*.j4x')):
             filename = filepath.split(os.sep)[-1]
@@ -67,7 +67,7 @@ class MutationStats:
         # After processSample populates our dictionaries, process and write them to file
         self.processDictData(self.mutationHumanDict, 'mutationStats.txt')
         self.processDictData(self.translocationHumanDict, 'translocationStats.txt')
-        self.processDictDataAnnovar(self.mutationHumanDict, 'annovarStats.txt')
+        self.processDictDataAnnovar(self.mutationHumanDict, 'annovarStats.csv')
 
         # Prints summary statistics for amplicons across samples. e.g. discards per amplicon
         outFile = open(os.path.join(self.outDir, 'referenceStats.txt'), "w+", newline = "")
@@ -228,7 +228,10 @@ class MutationStats:
                 endCoord = coordinateParts[0]
                 original = mutations[0]['from'] if len(mutations[0]['from']) > 0 else '-'
                 mutated = mutations[0]['to'] if len(mutations[0]['to']) > 0 else '-'
-                comments = "comments: MID: {0} AID: {1} {2}".format(i, ampID, self.ampliconRefs[ampID][0])
+                files = 'files:, {0}, {1}%'.format(x[1]['fileOccurrences'], x[1]['fileOccurrencePerc'])
+                numReads = 'numReads, {0}, {1}, {2}'.format(x[1]['numReadsStats'][0], x[1]['numReadsStats'][1], x[1]['numReadsStats'][2])
+                vaf = 'VAF, {0}, {1}, {2}'.format(x[1]['VAFStats'][0], x[1]['VAFStats'][1], x[1]['VAFStats'][2])
+                comments = "comments:, MID:, {0}, AID:, {1}, {2}, {3}, {4}, {5}".format(i, ampID, self.ampliconRefs[ampID][0], files, numReads, vaf)
                 
                 pwrite(outFile,'{0}   {1}   {2}   {3}   {4}   {5}'.format(chromosome, startCoord, endCoord, original, mutated, comments ))
 
