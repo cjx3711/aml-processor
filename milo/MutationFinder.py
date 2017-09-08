@@ -1,5 +1,7 @@
 from j4xUtils import *
+from genomicsUtils import reverseComplement
 from TranslocatedBlockMatcher import *
+import csv
 
 class MutationFinder:
     def __init__(self, references = 'references/Manifest.csv'):
@@ -19,22 +21,13 @@ class MutationFinder:
         
         self.referenceCount = 0
         self.ampliconRefs = []
-        with open(self.references) as references:
-            lineno = -1
-            
-            for line in references:
-                if lineno >= 0:
-                    self.referenceCount += 1
-                    csvCells = line.split(',')
-                    sequence = csvCells[3]
-                    coordinates = int(csvCells[4])
-                    
-                    # ampliconRefs format
-                    # [
-                    #    [ SEQUENCE, COORDINATES, READ_COUNT, MUTATION_COUNT, TRANSLOCATION_COUNT ]
-                    # ]
-                    self.ampliconRefs.append([sequence, coordinates, 0, 0, 0]);
-                lineno += 1
+        with open(self.references) as refFile:
+            # ampliconRefs format
+            # [
+            #    [ SEQUENCE, COORDINATES, READ_COUNT, MUTATION_COUNT, TRANSLOCATION_COUNT ]
+            # ]
+            self.ampliconRefs = [[reverseComplement(line[3]) if line[2] == "-" else line[3]] + 
+                                [line[4]] + [0, 0, 0] for line in csv.reader(refFile, delimiter=',')][1:]
     
     def getReferenceAmpliconArray(self):
         return self.ampliconRefs
