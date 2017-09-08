@@ -4,7 +4,7 @@ genomicsUtils | Methods for common routines in genome analysis
 from math import pow
 from csv import *
 
-complement = {"A" : "T", "C" : "G", "G" : "C", "T" : "A"}
+complement = {"A" : "T", "C" : "G", "G" : "C", "T" : "A", " " : " "}
 phredList = [
                 "K", "J", "I", "H", "G", "F", "E", 
                 "D", "C", "B", "A", "@", "?", ">", 

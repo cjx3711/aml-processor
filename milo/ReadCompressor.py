@@ -89,7 +89,8 @@ class ReadCompressor:
                  
     def getDiscardedList(self):
         return self.discardedList;
-    def getDataList(self):
+
+    def compress(self):
         # Merging to-be-merged list with template list
         for seq in tqdm(self.tbmergedList):
             mergeCandidatesD1 = [] # List containing templates that each sequence might be merged with distance of 1,
@@ -132,6 +133,6 @@ class ReadCompressor:
                     self.discardedList.append(seq)
                     self.discardCountList[ampID1] += 1 # Discard
                     self.failedMergeAndDiscarded += 1
-        # Combine the newly reinforced templates with the leftovers for inckusion in j3x
+        # Combine the newly reinforced templates with the leftovers for inclusion in j3x
         j3xSeqs = self.templateFlatList + self.leftoverList
         return j3xSeqs
