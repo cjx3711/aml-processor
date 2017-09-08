@@ -17,7 +17,23 @@ Fast distance check up to distance 2
 
 1. Run `python3 main-mutationid.py` to convert the J3X files to J4X files
 
-1. Run `python3 main-mutationstats.py` to gather the stats of the J4X files
+1. Run `python3 main-mutationstats.py` to gather the stats of the J4X files and create a file to be run by annovar
+
+# Check against annovar
+
+1. Install annovar into a directory called `annovar` next to `milo`
+1. Run annovar, which will output a file `myanno.hg19_multianno.csv`
+
+**Running from the `annovar` dir**
+```
+perl table_annovar.pl ../milo/4-mutationstats/annovarStats.csv humandb/ -buildver hg19 -out myanno -remove -protocol refGene,avsnp147,clinvar_20170130,cosmic70 -operation gx,f,f,f -nastring . -csvout -polish -xref example/gene_xref.txt
+```
+
+**Running from the `milo` dir**
+Next run the script to combine both files
+```
+python main_annovar.py data/4-mutationstats/annovarStats.csv ../annovar/myanno.hg19_multianno.csv
+```
 
 # File format documentation
 
