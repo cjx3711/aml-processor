@@ -68,16 +68,16 @@ class AmpliconMatcherProbabilisticTests(unittest.TestCase):
     def test_file_read(self):
         # Count the amplicons that were read
         ampMat = AmpliconMatcherProbabilistic("references/Manifest.csv")
-        self.assertEqual(len(ampMat.refSeqs), 571)
-        self.assertEqual(len(ampMat.ampDict1), 571)
-        self.assertEqual(len(ampMat.ampDict2), 1713)
-        self.assertEqual(len(ampMat.refSeqsTrunc), 571)
+        self.assertEqual(len(ampMat.refSeqs), 568)
+        self.assertEqual(len(ampMat.ampDict1), 568)
+        self.assertEqual(len(ampMat.ampDict2), 1704)
+        self.assertEqual(len(ampMat.refSeqsTrunc), 568)
 
 class AmpliconMatcherHashSweepTests(unittest.TestCase):
     def test_file_read(self):
         # Count the amplicons that were read
         ampMat = AmpliconMatcherHashSweep("references/Manifest.csv")
-        self.assertEqual(ampMat.referenceCount, 571)
+        self.assertEqual(ampMat.referenceCount, 568)
 
     def test_simple_data(self):
         sample_data = [
