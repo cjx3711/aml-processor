@@ -7,6 +7,7 @@ __pycache__
 
 annovar
 
+milo/myanno.*
 milo/data
 milo/__pycache__
 milo/config.json
