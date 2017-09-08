@@ -13,11 +13,13 @@ Fast distance check up to distance 2
   - `./data/Raw` should contain matching FASTQ files. 
   - `./references` should contain the matching 
   
-1. Run `python3 main-ampliconid.py` to convert FASTQ to J3X files
+1. Run `python3 main_ampliconid.py` to convert FASTQ to J3X files
 
-1. Run `python3 main-mutationid.py` to convert the J3X files to J4X files
+1. Run `python3 main_mutationid.py` to convert the J3X files to J4X files
 
-1. Run `python3 main-mutationstats.py` to gather the stats of the J4X files
+1. Run `python3 main_mutationstats.py` to gather the stats of the J4X files and create a file to be run by annovar
+
+1. Run `python3 main_annovar.py` to run against annovar to check for existing mutations
 
 # File format documentation
 
