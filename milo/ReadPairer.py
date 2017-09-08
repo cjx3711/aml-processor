@@ -21,7 +21,7 @@ class ReadPairer:
                 self.mismatchPenalty = abs(config_data['readPairer_mismatchPenalty'])
         
         self.readLength = 151
-        self.scoreThreshold = 10
+        self.scoreThreshold = 5
         self.rangeEnd = self.readLength - self.scoreThreshold
         self.rangeStart = -self.rangeEnd
         self.ampliconMatcher = AmpliconMatcherHashSweep(referenceFile)

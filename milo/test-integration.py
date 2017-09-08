@@ -5,6 +5,7 @@ import os
 import shutil
 
 from main_ampliconid import *
+from main_mutationid import *
 from genomicsUtils import *
 
 
@@ -73,11 +74,11 @@ def test_j3x_generic(self, filename):
     inDir = 'test/j3x/'
     configFile = 'test/config.json'
     referenceFile = 'test/simple-manifest.csv'
-    filenameArray = {
+    filenameArray = [{
         "fastq1": filename + '_R1_001.fastq',
         "fastq2": filename + '_R2_001.fastq',
         "paired": filename + '.j3x'
-      },
+    }]
     ampliconID.test(inDir, outDir, configFile, referenceFile, filenameArray)
     
     skip = [2]
@@ -88,6 +89,22 @@ def test_j3x_generic(self, filename):
     shutil.rmtree('test/j3x/discarded/')
         
     enablePrint()
+
+def test_j4x_generic(self, filename):
+    # blockPrint()
+    mutationID = MainMutationID()
+    outDir = 'test/j4x/'
+    inDir = 'test/j4x/'
+    configFile = 'test/config.json'
+    referenceFile = 'test/simple-manifest.csv'
+    filenameArray = [{
+        "paired": filename + '.j3x',
+        "mutation": filename + ".j4x"
+    }]
+    mutationID.test(inDir, outDir, configFile, referenceFile, filenameArray)
+    
+    # enablePrint()
+
 
 # Used to test if the file testing works.
 def write_lamb(outfile_path):
@@ -108,6 +125,14 @@ class j3xTests(unittest.TestCase):
         
     def test_multi(self):
         test_j3x_generic(self, 'MULTI')
+        
+    def test_multi(self):
+        test_j3x_generic(self, 'SIMPLE_MUT')
+        
+class j4xTests(unittest.TestCase):
+    def test_simple(self):
+        test_j4x_generic(self, 'SIMPLE')
+
 
 def main():
     global out

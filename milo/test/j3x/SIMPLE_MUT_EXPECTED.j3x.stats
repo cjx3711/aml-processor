@@ -1,0 +1,31 @@
+Overall File Stats
+Specimen:        , SIMPLE_MUT.j3x	
+TimeTaken / Time:, 0.03s	, 12:37:35 27 Aug 2017	
+Original Reads:  , 11	
+Pair pass:       , 11	, 100.0%	
+Pair fail:       , 0	, 0.0%	
+Match pass:      , 11	, 100.0%	
+Match fail:      , 0	, 0.0%	
+Pair/Match pass: , 11	, 100.0%	
+Pair/Match fail: , 0	, 0.0%	
+Compressed Seq:  , 1	
+Compression:     , 91.0%	
+Templates:       , 1	
+Usable Data:     , 11	, 100.0%	
+Merged Data:     , 6	, 54.5%	, Data that was similar to templates
+Merged >1 Data:  , 0	, 0.0%	, Merges with more than one possible template candidate
+Merges D1:       , 4	, 66.6%	, Merges that had distance 1
+Merges D2:       , 2	, 33.3%	, Merges that had distance 2
+Discarded Data:  , 0	, 0.0%	
+!Merge & Discard , 0	, , Discarded due to failed merge
+Avg Discard Rate:, 0.0%	, , Average discard rate per amplicon
+
+Reference Amplicon Stats
+Ref ampID, Amplicon Count, Template Count, Discard Count, Discard Rate
+0, 0, 0, 0, -
+1, 0, 0, 0, -
+2, 11, 1, 0, 0.0
+3, 0, 0, 0, -
+4, 0, 0, 0, -
+5, 0, 0, 0, -
+6, 0, 0, 0, -

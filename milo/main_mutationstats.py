@@ -25,8 +25,6 @@ class MainMutationStats:
                                          }
         self.defaultSigDictValues = lambda: {
                                                 'fileOccurrences': 0,
-                                                'numReads': [],
-                                                'VAFrequency': [],
                                                 'mutations': defaultdict(list)
                                              }
         self.filenameEnd = "_MUTATIONS.j4x"
@@ -73,8 +71,7 @@ class MainMutationStats:
         # After processSample populates our dictionaries, process and write them to file
         self.processDictData(self.mutationHumanDict, 'mutationStats.txt')
         self.processDictData(self.translocationHumanDict, 'translocationStats.txt')
-
-        sigAmpIDTupleList = [x for x in list(self.significantAmpIDDict.items()) if x[1]['fileOccurrences'] > 5]
+        sigAmpIDTupleList = [x for x in list(self.significantAmpIDDict.items()) if len([mutation for mutation, samples in x[1]['mutations'].items() if len(samples) < 5]) > 3 ]
         pprint(sigAmpIDTupleList)
 
         # Prints summary statistics for amplicons across samples. e.g. discards per amplicon
@@ -127,7 +124,7 @@ class MainMutationStats:
 
         with open(filepath) as mutationFile:
             # Divide j4x into 3 different parts
-            mutations, translocations, refStats = [[line.rstrip() for line in group] for delimiter, group in groupby(mutationFile, key = lambda x: x.rstrip() in ("Mutations", "Translocations", "Reference Amplicon Stats")) if not delimiter]
+            mutations, translocations, refStats = ([line.rstrip() for line in group] for delimiter, group in groupby(mutationFile, key = lambda x: x.rstrip() in ("Mutations", "Translocations", "Reference Amplicon Stats")) if not delimiter)
             for line in mutations:
                     self.processMutationLine(line, personName)
             for line in translocations:
@@ -149,10 +146,9 @@ class MainMutationStats:
         self.mutationHumanDict[IDAndMutations]['samples'].append(personName)
 
         if self.mutationIsLarge(mutations) or self.mutationIsComplex(mutations):
-            self.significantAmpIDDict[ampID]['fileOccurrences'] += 1
-            self.significantAmpIDDict[ampID]['numReads'].append(numReads)
-            self.significantAmpIDDict[ampID]['VAFrequency'].append(VAFrequency)
-            self.significantAmpIDDict[ampID]['mutations'][mutations].append(personName)
+            if VAFrequency > 0.03:
+                self.significantAmpIDDict[ampID]['fileOccurrences'] += 1
+                self.significantAmpIDDict[ampID]['mutations'][mutations].append((personName, VAFrequency, numReads))
 
     def mutationIsLarge(self, mutations):
         return any([len(mutation.split(":")[-1]) > 5 for mutation in mutations.split(" ")])
