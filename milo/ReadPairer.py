@@ -21,7 +21,7 @@ class ReadPairer:
                 self.mismatchPenalty = abs(config_data['readPairer_mismatchPenalty'])
         
         self.readLength = 151
-        self.scoreThreshold = 5
+        self.scoreThreshold = 10
         self.rangeEnd = self.readLength - self.scoreThreshold
         self.rangeStart = -self.rangeEnd
         self.ampliconMatcher = AmpliconMatcherHashSweep(referenceFile)
@@ -117,23 +117,16 @@ class ReadPairer:
         
         failedToPair = 1 if collisions == '?' else 0
         
-        # # Retrieves the coordinates from the existing FASTQ read ID
-        # coordIndices = nthAndKthLetter(left[0], ":", 5, 7)
-        # sequenceID = left[0][coordIndices[0]: coordIndices[1] - 2]
-        # Checks which amplicon a read belongs to
-        ampID, ampID2, matchType = self.ampliconMatcher.findAmplicon(bases)
+        # Checks which amplicon a read belongs to, and whether it is a translocation
+        ampID, ampIDTrans, matchType = self.ampliconMatcher.findAmplicon(bases)
         
         
         # Joins amplicon number, collision number, and coordinate as new ID, and appends bases and quality
-        IDPart = ''
-        if ampID2 != None:
-            IDPart = 'TL:{0}/{1}'.format(ampID, ampID2)
+        if ampIDTrans != None:
+            IDPart = 'TL:{0}/{1}'.format(ampID, ampIDTrans)
         else:
             IDPart = 'ID:{0}'.format(ampID)
             
         readData = ", ".join((IDPart, 'C:'+collisions))
-        return AlignedAndMerged(failedToPair, matchType, readData, bases, quality)
-
-        # otherStats = (failedToPair, matchType)
-        # return (otherStats, ["".join(("ID:", ampID, ", C:", collisions, ", ", sequenceID)), bases, quality])
+        return AlignedAndMerged(failedToPair, matchType, readData, bases, quality)\
             
