@@ -27,7 +27,7 @@ class MutationFinder:
             #    [ SEQUENCE, COORDINATES, READ_COUNT, MUTATION_COUNT, TRANSLOCATION_COUNT ]
             # ]
             self.ampliconRefs = [[reverseComplement(line[3]) if line[2] == "-" else line[3]] + 
-                                [int(line[4])] + [0, 0, 0] for line in csv.reader(refFile, delimiter=',')][1:]
+                                [int(line[4])] + [0, 0, 0] for line in list(csv.reader(refFile, delimiter=','))[1:]]
     
     def getReferenceAmpliconArray(self):
         return self.ampliconRefs
