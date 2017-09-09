@@ -5,12 +5,7 @@ annovarOutput is the output file from the annovar program itself.
 """
 import sys
 import os
-
-def removeFile(file):
-    try:
-        os.remove(file)
-    except OSError:
-        pass
+from genomicsUtils import *
 
 outDir = os.path.join("data", "4-mutationstats")
 

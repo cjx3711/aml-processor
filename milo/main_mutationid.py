@@ -155,7 +155,7 @@ class MainMutationID:
                 outFile.write('Reference Amplicon Stats\n')
                 referenceAmplicons = self.mutationFinder.getReferenceAmpliconArray()
                 outFile.write('Count: ' + str(self.mutationFinder.referenceCount) + '\n')
-                outFile.write('ampID, Reads, Mutations, Translocations, Sequence\n')
+                outFile.write('ampID, Reads, Mutations, Translocations\n')
                 
                 total = 0
                 for i, refAmp in enumerate(referenceAmplicons):
@@ -163,8 +163,8 @@ class MainMutationID:
                     outFile.write(str(i+1) + ', ')
                     outFile.write(str(refAmp[2]) + ', ')
                     outFile.write(str(refAmp[3]) + ', ')
-                    outFile.write(str(refAmp[4]) + ', ')
-                    outFile.write(refAmp[0] + '\n')
+                    outFile.write(str(refAmp[4]))
+                    outFile.write('\n')
                 outFile.write('Total: ' + str(total))
                 
                 

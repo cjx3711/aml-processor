@@ -2,7 +2,7 @@ from j4xUtils import *
 from genomicsUtils import reverseComplement
 from TranslocatedBlockMatcher import *
 import csv
-
+from pprint import pprint
 class MutationFinder:
     def __init__(self, references = 'references/Manifest.csv'):
         self.references = references
@@ -28,7 +28,7 @@ class MutationFinder:
             # ]
             self.ampliconRefs = [[reverseComplement(line[3]) if line[2] == "-" else line[3]] + 
                                 [int(line[4])] + [0, 0, 0] for line in list(csv.reader(refFile, delimiter=','))[1:]]
-    
+            self.referenceCount = len(self.ampliconRefs)
     def getReferenceAmpliconArray(self):
         return self.ampliconRefs
         
@@ -74,6 +74,7 @@ class MutationFinder:
         self.ampliconTranslocationList.append(('{0} {1} {2}'.format(ampID1, ampID2, matchingBlockString), readCount))
         
     def extractHighestOccuringMutations(self, minOccurences):
+        pprint(self.ampliconMutationHashList)
         filteredTupleList = [x for x in self.ampliconMutationHashList if x[1] >= minOccurences]
         filteredTupleList.sort(key=lambda tup: -tup[1])
         return filteredTupleList
@@ -91,7 +92,7 @@ class MutationFinder:
         if ampID1 == 0 or ampID2 == 0:
             return 'T', None, None, None, None
             
-        readCount = int(float(iddataParts[3].strip()[2:]))
+        readCount = int(float(iddataParts[2].strip()[2:]))
         sequenceData = data[1][:-1]
         
         refAmplicon1 = self.getReferenceAmplicon(ampID1)[0]
@@ -102,16 +103,19 @@ class MutationFinder:
         return 'T', ampID1, ampID2, matchingBlocks, readCount
         
     def identifyMutations(self, data):
+        # data[0] format:
+        # ID:003, C:0, R:5, M:0
+    
         # Handle translocations
         if ( data[0].startswith('TL:') ):
             return self.identifyTranslocations(data)
-            
+        
         iddataParts = data[0].split(', ')
-            
+        
         ampliconID = int(float(iddataParts[0][3:]))
         if ( ampliconID == 0 ):
             return 'M', None, None, None, None
-        readCount = int(float(iddataParts[3].strip()[2:]))
+        readCount = int(float(iddataParts[2].strip()[2:]))
         sequenceData = data[1][:-1]
         referenceAmplicon = self.getReferenceAmplicon(ampliconID)
         

@@ -1,5 +1,4 @@
 import glob
-import os
 from j4xUtils import *
 from pprint import pprint
 from statistics import median
@@ -9,6 +8,7 @@ from itertools import groupby
 from collections import defaultdict
 
 class MainMutationStats:
+                
     def __init__(self, references = 'references/Manifest.csv'):
         self.references = references
         self.statsDir = os.path.join("data", "2-paired")
@@ -58,8 +58,8 @@ class MainMutationStats:
                 chromosome = extractChromosomeNumber(name)
                 shortName = name[:name.find('.')]
                 self.ampliconRefs.append((shortName, chromosome))
-
-    def run(self):
+    
+    def readConfig(self, configFile):
         # Reads config file            
         with open('config.json') as config_file:
             config_data = json.load(config_file)
@@ -69,7 +69,19 @@ class MainMutationStats:
                 self.VAFThreshold = config_data['j4xstats_VAFThreshold']
             if 'j4xstats_VAFThresholdSubordinate' in config_data:
                 self.VAFThresholdSubordinate = config_data['j4xstats_VAFThresholdSubordinate']
-                
+
+    def run(self):
+        self.readConfig('config.json')
+        self.process()
+    
+    def test(self, configFile, statsDir, inDir, outDir):
+        self.statsDir = statsDir
+        self.inDir = inDir
+        self.outDir = outDir
+        self.readConfig(configFile)
+        self.process()
+        
+    def process(self):
         # Reads j3xstats and j4 files
         for filepath in glob.glob(os.path.join(self.inDir, '*.j4x')):
             filename = filepath.split(os.sep)[-1]
@@ -108,6 +120,8 @@ class MainMutationStats:
             
             median(refStats[2])
             median(refStats[3])
+            
+        outFile.close()
             
     def processSample(self, filepath, statsfilepath, personName):
         self.referenceAmpliconStats = []
@@ -161,16 +175,16 @@ class MainMutationStats:
         if ( self.mutationHumanDict[IDAndMutations]['coordinates'] == '' ):
             self.mutationHumanDict[IDAndMutations]['coordinates'] = mutationCoords
 
-        if self.mutationIsLarge(mutations) or self.mutationIsComplex(mutations):
-            if VAFrequency > 0.03:
-                self.significantAmpIDDict[ampID]['fileOccurrences'] += 1
-                self.significantAmpIDDict[ampID]['mutations'][mutations].append((personName, VAFrequency, numReads))
+        # if self.mutationIsLarge(mutations) or self.mutationIsComplex(mutations):
+        #     if VAFrequency > 0.03:
+        #         self.significantAmpIDDict[ampID]['fileOccurrences'] += 1
+        #         self.significantAmpIDDict[ampID]['mutations'][mutations].append((personName, VAFrequency, numReads))
 
-    def mutationIsLarge(self, mutations):
-        return any([len(mutation.split(":")[-1]) > 5 for mutation in mutations.split(" ")])
-
-    def mutationIsComplex(self, mutations):
-        return len(mutations.split(" ")) > 2
+    # def mutationIsLarge(self, mutations):
+    #     return any([len(mutation.split(":")[-1]) > 5 for mutation in mutations.split(" ")])
+    # 
+    # def mutationIsComplex(self, mutations):
+    #     return len(mutations.split(" ")) > 2
 
     def processTranslocationLine(self, line, personName):
         parts = line.split(", ")
@@ -217,7 +231,8 @@ class MainMutationStats:
                 vaf = 'VAF, {0}, {1}, {2}'.format(x[1]['VAFStats'][0], x[1]['VAFStats'][1], x[1]['VAFStats'][2])
                 comments = "comments:, MID:, {0}, AID:, {1}, {2}, {3}, {4}, {5}".format(mutID, ampID, self.ampliconRefs[ampID][0], files, numReads, vaf)
                 
-                pwrite(outFile,'{0}   {1}   {2}   {3}   {4}   {5}'.format(chromosome, startCoord, endCoord, original, mutated, comments ))
+                pwrite(outFile,'{0}   {1}   {2}   {3}   {4}   {5}'.format(chromosome, startCoord, endCoord, original, mutated, comments ), False)
+        outFile.close()
         
     def processDictData(self, humanDict, outputFile):           
         significantTupleList = self.filterList(humanDict)
@@ -238,6 +253,8 @@ class MainMutationStats:
             pwrite(outFile,'numReads (med, min, max): {0} {1} {2}'.format(x[1]['numReadsStats'][0], x[1]['numReadsStats'][1], x[1]['numReadsStats'][2]), False)
             pwrite(outFile,'VAF   (med, min, max): {0} {1} {2}'.format(x[1]['VAFStats'][0], x[1]['VAFStats'][1], x[1]['VAFStats'][2]), False)
             pwrite(outFile, '', False)
+            
+        outFile.close()
 
     def filterList(self, humanDict):
 

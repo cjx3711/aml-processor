@@ -1,0 +1,14 @@
+Mutations
+3 / 10	, 3 S:15:ACA-TTG, 198266447
+2 / 10	, 3 S:21:C-T S:45:T-AG, 198266453 198266477
+Translocations
+Reference Amplicon Stats
+Count: 6
+ampID, Reads, Mutations, Translocations
+1, 0, 0, 0
+2, 0, 0, 0
+3, 10, 5, 0
+4, 0, 0, 0
+5, 0, 0, 0
+6, 0, 0, 0
+Total: 10

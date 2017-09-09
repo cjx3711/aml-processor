@@ -3,6 +3,7 @@ genomicsUtils | Methods for common routines in genome analysis
 """
 from math import pow
 from csv import *
+import os
 
 complement = {"A" : "T", "C" : "G", "G" : "C", "T" : "A", " " : " "}
 phredList = [
@@ -97,3 +98,9 @@ def pwrite(file, message, shouldPrint = True):
     if shouldPrint:
         print(message)
     file.write(message + "\n")
+    
+def removeFile(file):
+    try:
+        os.remove(file)
+    except OSError:
+        pass
