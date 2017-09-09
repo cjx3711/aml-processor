@@ -27,7 +27,7 @@ class MainMutationStats:
         self.defaultSigDictValues = lambda: {
                                                 'fileOccurrences': 0,
                                                 'mutations': defaultdict(list)
-                                             }
+                                            }
         self.filenameEnd = "_MUTATIONS.j4x"
         self.mutationHumanDict = defaultdict(self.defaultDictValues)
         self.translocationHumanDict = defaultdict(self.defaultDictValues)
@@ -81,6 +81,7 @@ class MainMutationStats:
         # After processSample populates our dictionaries, process and write them to file
         self.processDictData(self.mutationHumanDict, 'mutationStats.txt')
         self.processDictData(self.translocationHumanDict, 'translocationStats.txt')
+        self.processDictDataAnnovar(self.mutationHumanDict, 'annovarStats.csv') 
         sigAmpIDTupleList = [x for x in list(self.significantAmpIDDict.items()) if len([mutation for mutation, samples in x[1]['mutations'].items() if len(samples) < 5]) > 3 ]
         pprint(sigAmpIDTupleList)
 
