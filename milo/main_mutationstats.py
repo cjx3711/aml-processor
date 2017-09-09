@@ -22,16 +22,17 @@ class MainMutationStats:
                                             'numReadsStats': [0,0,0], # Median, min, max
                                             'VAFrequency': [],
                                             'VAFStats': [0,0,0], # Median, min, max
-                                            'samples': []
+                                            'samples': [],
+                                            'coordinates': ''
                                          }
-        self.defaultSigDictValues = lambda: {
-                                                'fileOccurrences': 0,
-                                                'mutations': defaultdict(list)
-                                            }
+        # self.defaultSigDictValues = lambda: {
+        #                                         'fileOccurrences': 0,
+        #                                         'mutations': defaultdict(list)
+        #                                     }
         self.filenameEnd = "_MUTATIONS.j4x"
         self.mutationHumanDict = defaultdict(self.defaultDictValues)
         self.translocationHumanDict = defaultdict(self.defaultDictValues)
-        self.significantAmpIDDict = defaultdict(self.defaultSigDictValues)
+        # self.significantAmpIDDict = defaultdict(self.defaultSigDictValues)
 
         # To find average reference amplicon stats across files
         self.totalReferenceAmpliconStats = []
@@ -81,9 +82,11 @@ class MainMutationStats:
         # After processSample populates our dictionaries, process and write them to file
         self.processDictData(self.mutationHumanDict, 'mutationStats.txt')
         self.processDictData(self.translocationHumanDict, 'translocationStats.txt')
-        self.processDictDataAnnovar(self.mutationHumanDict, 'annovarStats.csv') 
-        sigAmpIDTupleList = [x for x in list(self.significantAmpIDDict.items()) if len([mutation for mutation, samples in x[1]['mutations'].items() if len(samples) < 5]) > 3 ]
-        pprint(sigAmpIDTupleList)
+        self.processDictDataAnnovar(self.mutationHumanDict, 'annovarStats.csv')
+        
+        # JJ's code to visualise some stuff
+        # sigAmpIDTupleList = [x for x in list(self.significantAmpIDDict.items()) if len([mutation for mutation, samples in x[1]['mutations'].items() if len(samples) < 5]) > 3 ]
+        # pprint(sigAmpIDTupleList)
 
         # Prints summary statistics for amplicons across samples. e.g. discards per amplicon
         outFile = open(os.path.join(self.outDir, 'referenceStats.txt'), "w+", newline = "")
@@ -155,6 +158,8 @@ class MainMutationStats:
         self.mutationHumanDict[IDAndMutations]['numReads'].append(numReads)
         self.mutationHumanDict[IDAndMutations]['VAFrequency'].append(VAFrequency)
         self.mutationHumanDict[IDAndMutations]['samples'].append(personName)
+        if ( self.mutationHumanDict[IDAndMutations]['coordinates'] == '' ):
+            self.mutationHumanDict[IDAndMutations]['coordinates'] = mutationCoords
 
         if self.mutationIsLarge(mutations) or self.mutationIsComplex(mutations):
             if VAFrequency > 0.03:
@@ -216,27 +221,30 @@ class MainMutationStats:
         significantTupleList = self.filterList(humanDict)
         outFile = self.createOutFile(outputFile)
         
-        for i, x in enumerate(significantTupleList):
+        for mutID, x in enumerate(significantTupleList):
             mutation = x[0]
             coordinates = x[1]['coordinates']
             
-            mutationParts = mutation.split(' ')
-            coordinateParts = coordinates.split(' ')
-            ampID = int(mutationParts[0])
+            ampID = int(mutation.split(' ')[0])
+            coordinates = coordinates.split(' ')
             mutations = hashToMutationArray(mutation)
-            if len(mutations) == 1 and len(coordinateParts) == 1:
+            
+            if len(mutations) != len(coordinates):
+                print('Error: Mutations and Coordinate parts not same length')
+            
+            for mutation, coordinate in zip(mutations, coordinates):
                 chromosome = self.ampliconRefs[ampID][1]
-                startCoord = coordinateParts[0]
-                endCoord = coordinateParts[0]
-                original = mutations[0]['from'] if len(mutations[0]['from']) > 0 else '-'
-                mutated = mutations[0]['to'] if len(mutations[0]['to']) > 0 else '-'
+                startCoord = coordinate
+                endCoord = coordinate
+                original = mutation['from'] if len(mutation['from']) > 0 else '-'
+                mutated = mutation['to'] if len(mutation['to']) > 0 else '-'
                 files = 'files:, {0}, {1}%'.format(x[1]['fileOccurrences'], x[1]['fileOccurrencePerc'])
                 numReads = 'numReads, {0}, {1}, {2}'.format(x[1]['numReadsStats'][0], x[1]['numReadsStats'][1], x[1]['numReadsStats'][2])
                 vaf = 'VAF, {0}, {1}, {2}'.format(x[1]['VAFStats'][0], x[1]['VAFStats'][1], x[1]['VAFStats'][2])
-                comments = "comments:, MID:, {0}, AID:, {1}, {2}, {3}, {4}, {5}".format(i, ampID, self.ampliconRefs[ampID][0], files, numReads, vaf)
+                comments = "comments:, MID:, {0}, AID:, {1}, {2}, {3}, {4}, {5}".format(mutID, ampID, self.ampliconRefs[ampID][0], files, numReads, vaf)
                 
                 pwrite(outFile,'{0}   {1}   {2}   {3}   {4}   {5}'.format(chromosome, startCoord, endCoord, original, mutated, comments ))
-
+        
     def processDictData(self, humanDict, outputFile):           
         significantTupleList = self.filterList(humanDict)
         outFile = self.createOutFile(outputFile)
@@ -257,6 +265,32 @@ class MainMutationStats:
             pwrite(outFile,'VAF   (med, min, max): {0} {1} {2}'.format(x[1]['VAFStats'][0], x[1]['VAFStats'][1], x[1]['VAFStats'][2]), False)
             pwrite(outFile, '', False)
 
+    def filterList(self, humanDict):
+
+        # Format: (ampID + mutation, {VAFrequency, VAFStats, fileOccurrencePerc, fileOccurrences, samples, numReads, numReadsStats, totalReadsInclDiscards})
+        mutationTupleList = list(humanDict.items())
+        filteredTupleList = [x for x in mutationTupleList if x[1]['fileOccurrences'] >= self.minSamples]
+        
+        # Stably sort the list by file occurrences,
+        filteredTupleList.sort(key = lambda tup: tup[1]['fileOccurrences'], reverse = True)
+        # Average VAFrequency
+        filteredTupleList.sort(key = lambda tup: sum(tup[1]['VAFrequency']) / tup[1]['fileOccurrences'], reverse = True)
+        # 
+        filteredTupleList.sort(key = lambda tup: tup[0][:tup[0].find(" ")])
+        
+        # If the mutant has a high VAF, or has the same amplicon as a mutant with high VAF and passes a lower VAF threshold
+        significantTupleList = []
+        for x in filteredTupleList:
+            if (
+                sum(x[1]['VAFrequency']) / x[1]['fileOccurrences'] > self.VAFThreshold or
+                    (
+                    len(significantTupleList) > 1 and x[0][:x[0].find(" ")] == significantTupleList[-1][0][:significantTupleList[-1][0].find(" ")] and
+                    sum(x[1]['VAFrequency']) / x[1]['fileOccurrences'] > self.VAFThresholdSubordinate
+                    )
+                ):
+                significantTupleList.append(x)
+        return significantTupleList
+        
 if __name__ ==  "__main__":
     mutationStats = MainMutationStats()
     mutationStats.run()
