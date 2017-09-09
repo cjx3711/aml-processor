@@ -185,32 +185,6 @@ class MainMutationStats:
         self.translocationHumanDict[translocationDescriptor]['numReads'].append(numReads)
         self.translocationHumanDict[translocationDescriptor]['VAFrequency'].append(vaFrequency)
         self.translocationHumanDict[translocationDescriptor]['samples'].append(personName)
-
-    def processDictData(self, humanDict, outputFile):
-
-        # Format: (ampID + mutation, {VAFrequency, VAFStats, fileOccurrencePerc, fileOccurrences, samples, numReads, numReadsStats, totalReadsInclDiscards})
-        mutationTupleList = list(humanDict.items())
-        filteredTupleList = [x for x in mutationTupleList if x[1]['fileOccurrences'] >= self.minSamples]
-        
-        # Stably sort the list by file occurrences,
-        filteredTupleList.sort(key = lambda tup: tup[1]['fileOccurrences'], reverse = True)
-        # Average VAFrequency
-        filteredTupleList.sort(key = lambda tup: sum(tup[1]['VAFrequency']) / tup[1]['fileOccurrences'], reverse = True)
-        # 
-        filteredTupleList.sort(key = lambda tup: tup[0][:tup[0].find(" ")])
-        
-        # If the mutant has a high VAF, or has the same amplicon as a mutant with high VAF and passes a lower VAF threshold
-        significantTupleList = []
-        for x in filteredTupleList:
-            if (
-                sum(x[1]['VAFrequency']) / x[1]['fileOccurrences'] > self.VAFThreshold or
-                    (
-                    len(significantTupleList) > 1 and x[0][:x[0].find(" ")] == significantTupleList[-1][0][:significantTupleList[-1][0].find(" ")] and
-                    sum(x[1]['VAFrequency']) / x[1]['fileOccurrences'] > self.VAFThresholdSubordinate
-                    )
-                ):
-                significantTupleList.append(x)
-        return significantTupleList
         
     def createOutFile(self, outputFile):
         if not os.path.exists(self.outDir):
