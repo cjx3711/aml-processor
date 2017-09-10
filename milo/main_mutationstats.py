@@ -226,9 +226,6 @@ class MainMutationStats:
                 
                 startCoord = int(coordinate)
                 endCoord = int(coordinate)
-                
-                if ( mutation['type'] == 'D' ):
-                    endCoord += len(mutation['from']) - 1
                     
                 original = mutation['from'] if len(mutation['from']) > 0 else '-'
                 mutated = mutation['to'] if len(mutation['to']) > 0 else '-'
@@ -239,13 +236,15 @@ class MainMutationStats:
                 sampleString = 'Samples, {0}'.format(';'.join(sampleList))
                 comments = "comments:, MID:, {0}, AID:, {1}, {2}, {3}, {4}, {5}, {6}".format(mutID, ampID, self.ampliconRefs[ampID][0], files, numReads, vaf, sampleString)
                                 
-                if len(original) != len(mutated): # If the length is not the same, split into two different mutations
+                if mutation['type'] == 'S' and len(original) != len(mutated): # If the length is not the same, split into two different mutations
                     # Addition
                     pwrite(outFile,'{0}   {1}   {2}   {3}   {4}   {5}'.format(chromosome, startCoord, endCoord, '-', mutated, comments ), False)
                     # Deletion
                     endCoord += len(mutation['from']) - 1
                     pwrite(outFile,'{0}   {1}   {2}   {3}   {4}   {5}'.format(chromosome, startCoord, endCoord, original, '-', comments ), False)
                 else:
+                    if ( mutation['type'] == 'D' ):
+                        endCoord += len(mutation['from']) - 1
                     pwrite(outFile,'{0}   {1}   {2}   {3}   {4}   {5}'.format(chromosome, startCoord, endCoord, original, mutated, comments ), False)
         outFile.close()
         
