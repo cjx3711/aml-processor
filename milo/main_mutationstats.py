@@ -232,19 +232,21 @@ class MainMutationStats:
                     
                 original = mutation['from'] if len(mutation['from']) > 0 else '-'
                 mutated = mutation['to'] if len(mutation['to']) > 0 else '-'
-                if ( original == '-' and mutated == '-' ):
-                    print(mutationHash)
-                    print(mutation)
-                    print(self.ampliconRefs[ampID][0])
-                    print(sampleList)
                 
                 files = 'files:, {0}, {1}%'.format(x[1]['fileOccurrences'], x[1]['fileOccurrencePerc'])
                 numReads = 'numReads, {0}, {1}, {2}'.format(x[1]['numReadsStats'][0], x[1]['numReadsStats'][1], x[1]['numReadsStats'][2])
                 vaf = 'VAF, {0}, {1}, {2}'.format(x[1]['VAFStats'][0], x[1]['VAFStats'][1], x[1]['VAFStats'][2])
                 sampleString = 'Samples, {0}'.format(';'.join(sampleList))
                 comments = "comments:, MID:, {0}, AID:, {1}, {2}, {3}, {4}, {5}, {6}".format(mutID, ampID, self.ampliconRefs[ampID][0], files, numReads, vaf, sampleString)
-                
-                pwrite(outFile,'{0}   {1}   {2}   {3}   {4}   {5}'.format(chromosome, startCoord, endCoord, original, mutated, comments ), False)
+                                
+                if len(original) != len(mutated): # If the length is not the same, split into two different mutations
+                    # Addition
+                    pwrite(outFile,'{0}   {1}   {2}   {3}   {4}   {5}'.format(chromosome, startCoord, endCoord, '-', mutated, comments ), False)
+                    # Deletion
+                    endCoord += len(mutation['from']) - 1
+                    pwrite(outFile,'{0}   {1}   {2}   {3}   {4}   {5}'.format(chromosome, startCoord, endCoord, original, '-', comments ), False)
+                else:
+                    pwrite(outFile,'{0}   {1}   {2}   {3}   {4}   {5}'.format(chromosome, startCoord, endCoord, original, mutated, comments ), False)
         outFile.close()
         
     def processDictData(self, humanDict, outputFile):           
