@@ -7,7 +7,6 @@ class MutationFinder:
     def __init__(self, references = 'references/Manifest.csv'):
         self.references = references
         self.translocatedBlockMatcher = TranslocatedBlockMatcher()
-        pass
         
     def reinit(self):
         # Format of ampliconMutationHashList
@@ -74,7 +73,6 @@ class MutationFinder:
         self.ampliconTranslocationList.append(('{0} {1} {2}'.format(ampID1, ampID2, matchingBlockString), readCount))
         
     def extractHighestOccuringMutations(self, minOccurences):
-        pprint(self.ampliconMutationHashList)
         filteredTupleList = [x for x in self.ampliconMutationHashList if x[1] >= minOccurences]
         filteredTupleList.sort(key=lambda tup: -tup[1])
         return filteredTupleList

@@ -37,14 +37,14 @@ combinedFile = open( os.path.join(outDir, 'annovarOut.csv'), "w+", newline = "")
 
 titleLine = next(outputFile).strip().split(',')
 titleLine = ','.join(filter(len, titleLine))
-titleLine += ',' + ','.join(['Mutation ID', 'AmpID', 'Name', 'Files', 'Files (%)', 'numReads (med)', 'numReads (min)', 'numReads (max)', 'VAF (med)', 'VAF (min)', 'VAF (max)'])
+titleLine += ',' + ','.join(['Mutation ID', 'AmpID', 'Name', 'Files', 'Files (%)', 'numReads (med)', 'numReads (min)', 'numReads (max)', 'VAF (med)', 'VAF (min)', 'VAF (max)', 'Samples'])
 combinedFile.write(titleLine)
 combinedFile.write('\n')
 for inputIter, outputIter in zip(inputFile, outputFile):
     
     inputParts = inputIter.strip().split(',')
     
-    inputCombined = ','.join([inputParts[2], inputParts[4], inputParts[5], inputParts[7], inputParts[8], inputParts[10], inputParts[11], inputParts[12], inputParts[14], inputParts[15], inputParts[16]])
+    inputCombined = ','.join([inputParts[2], inputParts[4], inputParts[5], inputParts[7], inputParts[8], inputParts[10], inputParts[11], inputParts[12], inputParts[14], inputParts[15], inputParts[16], inputParts[18]])
 
     combinedFile.write(outputIter.strip() + ', ' + inputCombined + '\n')
 

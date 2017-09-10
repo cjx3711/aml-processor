@@ -210,26 +210,39 @@ class MainMutationStats:
         outFile = self.createOutFile(outputFile)
         
         for mutID, x in enumerate(significantTupleList):
-            mutation = x[0]
+            mutationHash = x[0]
             coordinates = x[1]['coordinates']
+            sampleList = x[1]['samples']
             
-            ampID = int(mutation.split(' ')[0])
+            ampID = int(mutationHash.split(' ')[0])
             coordinates = coordinates.split(' ')
-            mutations = hashToMutationArray(mutation)
+            mutations = hashToMutationArray(mutationHash)
             
             if len(mutations) != len(coordinates):
                 print('Error: Mutations and Coordinate parts not same length')
             
             for mutation, coordinate in zip(mutations, coordinates):
                 chromosome = self.ampliconRefs[ampID][1]
-                startCoord = coordinate
-                endCoord = coordinate
+                
+                startCoord = int(coordinate)
+                endCoord = int(coordinate)
+                
+                if ( mutation['type'] == 'D' ):
+                    endCoord += len(mutation['from']) - 1
+                    
                 original = mutation['from'] if len(mutation['from']) > 0 else '-'
                 mutated = mutation['to'] if len(mutation['to']) > 0 else '-'
+                if ( original == '-' and mutated == '-' ):
+                    print(mutationHash)
+                    print(mutation)
+                    print(self.ampliconRefs[ampID][0])
+                    print(sampleList)
+                
                 files = 'files:, {0}, {1}%'.format(x[1]['fileOccurrences'], x[1]['fileOccurrencePerc'])
                 numReads = 'numReads, {0}, {1}, {2}'.format(x[1]['numReadsStats'][0], x[1]['numReadsStats'][1], x[1]['numReadsStats'][2])
                 vaf = 'VAF, {0}, {1}, {2}'.format(x[1]['VAFStats'][0], x[1]['VAFStats'][1], x[1]['VAFStats'][2])
-                comments = "comments:, MID:, {0}, AID:, {1}, {2}, {3}, {4}, {5}".format(mutID, ampID, self.ampliconRefs[ampID][0], files, numReads, vaf)
+                sampleString = 'Samples, {0}'.format(';'.join(sampleList))
+                comments = "comments:, MID:, {0}, AID:, {1}, {2}, {3}, {4}, {5}, {6}".format(mutID, ampID, self.ampliconRefs[ampID][0], files, numReads, vaf, sampleString)
                 
                 pwrite(outFile,'{0}   {1}   {2}   {3}   {4}   {5}'.format(chromosome, startCoord, endCoord, original, mutated, comments ), False)
         outFile.close()
