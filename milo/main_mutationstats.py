@@ -4,7 +4,7 @@ from pprint import pprint
 from statistics import median
 import json
 from genomicsUtils import *
-from itertools import groupby
+from itertools import groupby, dropwhile
 from collections import defaultdict
 
 class MainMutationStats:
@@ -65,10 +65,6 @@ class MainMutationStats:
             config_data = json.load(config_file)
             if 'j4xstats_minSamples' in config_data:
                 self.minSamples = config_data['j4xstats_minSamples']
-            if 'j4xstats_VAFThreshold' in config_data:
-                self.VAFThreshold = config_data['j4xstats_VAFThreshold']
-            if 'j4xstats_VAFThresholdSubordinate' in config_data:
-                self.VAFThresholdSubordinate = config_data['j4xstats_VAFThresholdSubordinate']
 
     def run(self):
         self.readConfig('config.json')
@@ -82,7 +78,7 @@ class MainMutationStats:
         self.process()
         
     def process(self):
-        # Reads j3xstats and j4 files
+        # Reads j3xstats and j4x files
         for filepath in glob.glob(os.path.join(self.inDir, '*.j4x')):
             filename = filepath.split(os.sep)[-1]
             if filename.endswith(self.filenameEnd): # Confirms if file in folder is the j4x mutations file
@@ -127,28 +123,20 @@ class MainMutationStats:
         self.referenceAmpliconStats = []
         # Calculates discard stats across multiple samples
         with open(statsfilepath) as statsFile:
-            reading = False
-            for line in statsFile:
-                if reading == False:
-                    if line.startswith("Reference Amplicon Stats"):
-                        reading = True
+            refStats = dropwhile(lambda x: x.startswith("Reference Amplicon Stats"), statsFile) # Skip merge and compression statisics
+            next(refStats) # Skip info line
+            for line in refStats:
+                ampID, ampCount, templateCount, discardCount, referenceSequence = line.split(',')
+                ampID, ampCount, templateCount, discardCount = (int(num) for num in [ampID, ampCount, templateCount, discardCount]) # Convert strings to int
+                
+                if len(self.totalReferenceAmpliconStats) <= ampID:
+                    self.totalReferenceAmpliconStats.append((ampID, [ampCount], [templateCount], [discardCount], referenceSequence))
                 else:
-                    if line.startswith("Ref") == False:
-                        parts = line.split(',')
-                        ampID = int(parts[0])
-                        ampCount = int(parts[1])
-                        templateCount = int(parts[2])
-                        discardCount = int(parts[3])
-                        referenceSequence = parts[4]
-                        
-                        if (len(self.totalReferenceAmpliconStats) <= ampID ):
-                            self.totalReferenceAmpliconStats.append((ampID, [ampCount], [templateCount], [discardCount], referenceSequence))
-                        else:
-                            self.totalReferenceAmpliconStats[ampID][1].append(ampCount)
-                            self.totalReferenceAmpliconStats[ampID][2].append(templateCount)
-                            self.totalReferenceAmpliconStats[ampID][3].append(discardCount)
-                            
-                        self.referenceAmpliconStats.append((ampID, ampCount, templateCount, discardCount))
+                    self.totalReferenceAmpliconStats[ampID][1].append(ampCount)
+                    self.totalReferenceAmpliconStats[ampID][2].append(templateCount)
+                    self.totalReferenceAmpliconStats[ampID][3].append(discardCount)
+                    
+                self.referenceAmpliconStats.append((ampID, ampCount, templateCount, discardCount))
 
         with open(filepath) as mutationFile:
             # Divide j4x into 3 different parts
@@ -283,18 +271,18 @@ class MainMutationStats:
         # 
         filteredTupleList.sort(key = lambda tup: tup[0][:tup[0].find(" ")])
         
-        # If the mutant has a high VAF, or has the same amplicon as a mutant with high VAF and passes a lower VAF threshold
-        significantTupleList = []
-        for x in filteredTupleList:
-            if (
-                sum(x[1]['VAFrequency']) / x[1]['fileOccurrences'] > self.VAFThreshold or
-                    (
-                    len(significantTupleList) > 1 and x[0][:x[0].find(" ")] == significantTupleList[-1][0][:significantTupleList[-1][0].find(" ")] and
-                    sum(x[1]['VAFrequency']) / x[1]['fileOccurrences'] > self.VAFThresholdSubordinate
-                    )
-                ):
-                significantTupleList.append(x)
-        return significantTupleList
+        """# If the mutant has a high VAF, or has the same amplicon as a mutant with high VAF and passes a lower VAF threshold
+                                significantTupleList = []
+                                for x in filteredTupleList:
+                                    if (
+                                        sum(x[1]['VAFrequency']) / x[1]['fileOccurrences'] > self.VAFThreshold or
+                                            (
+                                            len(significantTupleList) > 1 and x[0][:x[0].find(" ")] == significantTupleList[-1][0][:significantTupleList[-1][0].find(" ")] and
+                                            sum(x[1]['VAFrequency']) / x[1]['fileOccurrences'] > self.VAFThresholdSubordinate
+                                            )
+                                        ):
+                                        significantTupleList.append(x)"""
+        return filteredTupleList
         
 if __name__ ==  "__main__":
     mutationStats = MainMutationStats()
