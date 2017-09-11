@@ -123,8 +123,8 @@ class MainMutationStats:
         self.referenceAmpliconStats = []
         # Calculates discard stats across multiple samples
         with open(statsfilepath) as statsFile:
-            refStats = dropwhile(lambda x: x.startswith("Reference Amplicon Stats"), statsFile) # Skip merge and compression statisics
-            next(refStats) # Skip info line
+            refStats = dropwhile(lambda x: not x.startswith("Reference Amplicon Stats"), statsFile) # Skip merge and compression statisics
+            next(refStats); next(refStats) # Skip info line
             for line in refStats:
                 ampID, ampCount, templateCount, discardCount, referenceSequence = line.split(',')
                 ampID, ampCount, templateCount, discardCount = (int(num) for num in [ampID, ampCount, templateCount, discardCount]) # Convert strings to int
@@ -202,7 +202,8 @@ class MainMutationStats:
             coordinates = x[1]['coordinates']
             sampleList = x[1]['samples']
             
-            ampID = int(mutationHash.split(' ')[0])
+            ampID, mutationString = mutationHash.split(' ', 1)
+            ampID = int(ampID)
             coordinates = coordinates.split(' ')
             mutations = hashToMutationArray(mutationHash)
             
