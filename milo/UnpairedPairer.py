@@ -6,8 +6,8 @@ class UnpairedPairer:
         self.unpairedDict = defaultdict(list)
         self.mergedDict = {}
         # READ JSON WIH SCORE THRESHOLD HERE
-
-    # DECIDE HOW YOU WANT TO SETUP YOUR RUN() AND TEST() HERE. (Declare j3xFile, ReadPairer instance)
+        
+        # DECIDE HOW YOU WANT TO SETUP YOUR RUN() AND TEST() HERE. (Declare j3xFile, ReadPairer instance)
 
     def idSeqToVals(self, idSeq):
         """

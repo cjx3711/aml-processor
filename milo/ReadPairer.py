@@ -112,7 +112,7 @@ class ReadPairer:
             return bases[0], quality[0]
         return tuple("".join(y) for y in zip(*(pickBetter(*x) for x in zip(overlapPairs, overlapQuality)))), collisions[0]
 
-    def alignAndMerge(self, left, right):
+    def alignAndMerge(self, left, right): # TODO: Remove the file.
         bases, quality, collisions, score = self.mergeUnpaired(left[1].rstrip(), reverseComplement(right[1].rstrip()), left[3].rstrip(), right[3].rstrip()[::-1], self.alignByMaxima)
         
         failedToPair = 1 if collisions == '?' else 0
