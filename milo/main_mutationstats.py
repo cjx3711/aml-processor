@@ -210,8 +210,9 @@ class MainMutationStats:
             if len(mutations) != len(coordinates):
                 print('Error: Mutations and Coordinate parts not same length')
 
-            if any([mutation['from'] == " " or mutation['from'] == "_" or mutation['to'] == " " or mutation['to'] == "_" for mutation in mutations]):
-                print(mutations)
+            if any([mutation['from'] == " " or "_" in mutation['from'] or "N" in mutation['from']
+                    or mutation['to'] == " " or "_" in mutation['to'] or "N" in mutation['to']
+                    for mutation in mutations]):
                 continue
             
             for mutation, coordinate in zip(mutations, coordinates):

@@ -29,7 +29,7 @@ class ReadPairer:
     def getReferenceCount(self):
         return self.ampliconMatcher.getReferenceCount()
 
-    def mergeUnpaired(self, left, right, lQuality, rQuality, alignByMaxima):
+    def mergeUnpaired(self, left, right, lQuality, rQuality, alignByMaxima = self.alignByMaxima):
         newScore = 0 # Overlap score in current iteration
         maxScore = 0 # Local maxima for overlap similarity
         bestMatch = [] # Stores the overlap coordinates of local maxima of overlap score [lRange, rRange]
@@ -44,13 +44,13 @@ class ReadPairer:
                     maxScore = newScore
                     bestMatch = [lRange, rRange]
             elif newScore > self.scoreThreshold: # If we aren't checking for the maxima, then whenever we exceed the score threshold, merge and return
-                return self.alignCoordsToJ3x(left, right, lQuality, rQuality, lRange, rRange)
+                return *self.alignCoordsToJ3x(left, right, lQuality, rQuality, lRange, rRange), newScore
         
         if alignByMaxima and maxScore > 0: # If we are aligning by maxima, and there exists a global maxima better than not pairing at all
             lRange, rRange = bestMatch
-            return self.alignCoordsToJ3x(left, right, lQuality, rQuality, lRange, rRange)
+            return *self.alignCoordsToJ3x(left, right, lQuality, rQuality, lRange, rRange), maxScore
         else: # If we cannot pair properly, return both reads separated with a space
-            return " ".join((left, right)), " ".join((lQuality, rQuality)), "?"
+            return " ".join((left, right)), " ".join((lQuality, rQuality)), "?", 0
 
     def calcScore(self, overlapPairs, overlapLength, maxScore, alignByMaxima):
         """
@@ -113,7 +113,7 @@ class ReadPairer:
         return tuple("".join(y) for y in zip(*(pickBetter(*x) for x in zip(overlapPairs, overlapQuality)))), collisions[0]
 
     def alignAndMerge(self, left, right):
-        bases, quality, collisions = self.mergeUnpaired(left[1].rstrip(), reverseComplement(right[1].rstrip()), left[3].rstrip(), right[3].rstrip()[::-1], self.alignByMaxima)
+        bases, quality, collisions, score = self.mergeUnpaired(left[1].rstrip(), reverseComplement(right[1].rstrip()), left[3].rstrip(), right[3].rstrip()[::-1], self.alignByMaxima)
         
         failedToPair = 1 if collisions == '?' else 0
         
