@@ -51,9 +51,6 @@ class MutationFinder:
             
         self.getRefAmplicon(ampliconID)[3] += readCount
         self.ampliconMutationHashList.append((key, readCount))
-        # if ( key not in self.ampliconMutationHashDict ):
-        #     self.ampliconMutationHashDict[key] = 0
-        # self.ampliconMutationHashDict[key] += 1
     
     def putTranslocationHash(self, ampID1, ampID2, matchingBlocks, readCount):
         if ( ampID1 == 0 or ampID2 == 0 ):
@@ -83,7 +80,8 @@ class MutationFinder:
         for x in ampliconList:
             ampID = int(x[0][:x[0].find(' ')])
             templateReads = x[1]
-            totalReads = sampleAmpStats[ampID].totalReads
+            totalReads = self.getRefAmplicon(ampID)[2]
+            #totalReads = sampleAmpStats[ampID].totalReads
             if templateReads >= minReads and templateReads / totalReads >= minVAF:
                 filteredTupleList.append(x)
         # Sort mutants by read count
