@@ -2,15 +2,14 @@ from genomicsUtils import *
 
 def run():
     geneID = 1
-    with open('references/Manifest.csv') as references:
+    with open('references/Manifest.csv') as ampManifestFile:
         with open('references/GeneManifest.csv', "w+", newline = "") as outFile:
         
-            first = True
             geneAmpliconList = []
-            for line in references:
-                if (first):
-                    first = False
-                    continue
+            next(ampManifestFile)
+            
+            outFile.write("{0},{1},{2},{3},{4},{5},{6},{7},{8}\n".format('Gene ID', '# of amps', 'AmpIDs', 'Name', 'Sequence', 'First Coord', 'Last Coord', 'Start Coords', 'End Coords', 'Length'))
+            for line in ampManifestFile:
                 csvCells = line.split(',')
                 ampliconID = csvCells[0]
                 direction = csvCells[2]
@@ -72,7 +71,10 @@ def combineAmpliconsintoGene(geneAmpliconList):
     endCoords = " ".join(endCoordList)
     amplicon = geneAmpliconList[0]
     name = amplicon[1]
-    return "{0},{1},{2},{3},{4},{5},{6},{7}".format(count, ampIDs, name, currentCombined, firstCoord, lastCoord, startCoords, endCoords)
+    length = lastCoord - firstCoord + 1
+    if ( length != len(currentCombined) ):
+        print('Length of {0} differs by: {1}'.format(ampIDs, length - len(currentCombined)))
+    return "{0},{1},{2},{3},{4},{5},{6},{7}".format(count, ampIDs, name, currentCombined, firstCoord, lastCoord, startCoords, endCoords, length)
     
     
     
