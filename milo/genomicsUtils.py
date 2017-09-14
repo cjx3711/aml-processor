@@ -3,8 +3,9 @@ genomicsUtils | Methods for common routines in genome analysis
 """
 from math import pow
 from csv import *
+import os
 
-complement = {"A" : "T", "C" : "G", "G" : "C", "T" : "A"}
+complement = {"A" : "T", "C" : "G", "G" : "C", "T" : "A", " " : " "}
 phredList = [
                 "K", "J", "I", "H", "G", "F", "E", 
                 "D", "C", "B", "A", "@", "?", ">", 
@@ -86,7 +87,20 @@ def simpleDistance(a, b):
     
     return differences
 
+def extractChromosomeNumber(ampliconName):
+    nameParts = ampliconName.split('.')
+    for namePart in nameParts:
+        if namePart.startswith('chr'):
+            return namePart[3:]
+    return ''
+
 def pwrite(file, message, shouldPrint = True):
     if shouldPrint:
         print(message)
     file.write(message + "\n")
+    
+def removeFile(file):
+    try:
+        os.remove(file)
+    except OSError:
+        pass

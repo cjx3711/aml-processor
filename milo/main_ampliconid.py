@@ -10,13 +10,16 @@ from ReadPairer import *
 from ReadCompressor import *
 from tqdm import tqdm
 from multiprocessing import cpu_count
-from statistics import median
+from genomicsUtils import reverseComplement
 
 from pprint import pprint
 
 import os
 import json
 import time
+import csv
+from collections import defaultdict
+from statistics import median
 
 class MainAmpliconID:
     def __init__(self):
@@ -24,6 +27,10 @@ class MainAmpliconID:
         self.chunksize = 250
         self.bytesPerRead = 350 # Estimated
         self.configFile = 'config.json'
+        self.referenceFile = 'references/Manifest.csv'
+        with open(self.referenceFile) as refFile:
+             self.directionList = ["+"] + [line[2] for line in csv.reader(refFile, delimiter=',')][1:]
+        self.conflictingDirTrans = defaultdict(int)
 
     def test(self, inDir, outDir, configFile, referenceFile, filenameArray):
         self.configFile = configFile
@@ -103,6 +110,7 @@ class MainAmpliconID:
                 fq1Iter, fq2Iter = grouper(fq1File, 4), grouper(fq2File, 4)
                 processManager = ProcessPoolExecutor(self.numThreads)
                 with tqdm(total=estimatedReads) as pbar:
+                    # Align unpaired reads, merge them, and identify their amplicon
                     result = processManager.map(self.readPairer.alignAndMerge, fq1Iter, fq2Iter, chunksize = self.chunksize)
                     for i, data in tqdm(enumerate(result)):
                         failedToPair = data.failedToPair
@@ -112,17 +120,15 @@ class MainAmpliconID:
                         failedToMatchReads += 1 if matchType == 'nah' else 0
                         if failedToPair == 1 and matchType == 'nah':
                             failedToPairMatchReads += 1
-                            
+                        
+                        # Put all IDed and merged seqs into dictionary for later VAF calculation and compression decision
                         readCompressor.putPairedRead(data)
-                        # outFile.write(data)
-                        # outFile.write("\n\n")
                         pbar.update()
                 pbar.close()
             
                 readCompressor.prepareForCompression()
-                print("\nCompressing\n")
-                
-                j3xSeqs = readCompressor.getDataList()
+                print("\nCompressing\n")                
+                j3xSeqs = readCompressor.compress()
                 
                 # Print all the discarded stuff into another file
                 discardedList = readCompressor.getDiscardedList()
@@ -205,6 +211,7 @@ class MainAmpliconID:
         numReadsMerged = seq[1][1]
         infoLine = seq[1][2]
         quality = seq[1][3]
+        sequence = self.standardizeSeqDir(sequence, infoLine, numReads)
         oFile.write("{0}, R:{1}, M:{2}".format(infoLine, int(numReads), int(numReadsMerged)))
         oFile.write('\n')
         oFile.write(sequence)
@@ -214,9 +221,25 @@ class MainAmpliconID:
         
     def niceRound(self, num):
         return int(num * 100)/100
+
     def perc(self, numerator, denominator):
         if denominator == 0: return 0
         return int(numerator * 1000 / denominator) / 10
+
+    def standardizeSeqDir(self, sequence, infoLine, numReads):
+        """
+        WARNING: Quality not reversed. Rmb to reverse quality if we ever get around to using it.
+        """
+        if infoLine[:2] == "ID": # If this seq is not a translocation
+            if self.directionList[int(infoLine[3:6])] == "-": # If seq is running in the negative direction
+                return reverseComplement(sequence)
+        else:
+            ampID1, ampID2 = (int(ampID) for ampID in infoLine[3:10].split("/")) # Get both ampIDs for translocated seqs
+            if self.directionList[ampID1] != self.directionList[ampID2]: # Don't reverse complement if one side is +ve and the other -ve
+                self.conflictingDirTrans[(ampID1, ampID2)] += numReads
+            elif self.directionList[ampID1] == "-":
+                return reverseComplement(sequence)
+        return sequence
 
 if __name__ ==  "__main__":
     main = MainAmpliconID()

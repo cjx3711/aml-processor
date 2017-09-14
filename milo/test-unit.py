@@ -43,21 +43,41 @@ class GenomicsUtils(unittest.TestCase):
     def test_simple_difference_add(self):
         d = simpleDistance("CATATAT", "ATATAT")
         self.assertEqual(d, 2)
+    
+    def test_chromosome_number_1(self):
+        n = extractChromosomeNumber('NOTCH1.exon.34.line.210.chr9.139390523.139392010_tile_7')
+        self.assertEqual(n, '9')
+        
+    def test_chromosome_number_2(self):
+        n = extractChromosomeNumber('SMC3.p.1001.line.349.chr10.112361782.112361834_tile_1')
+        self.assertEqual(n, '10')
+        
+    def test_chromosome_number_3(self):
+        n = extractChromosomeNumber('HRAS.exon.3.line.10.chr11.533765.533944_tile_2')
+        self.assertEqual(n, '11')
 
+    def test_chromosome_number_4(self):
+        n = extractChromosomeNumber('RUNX1.CDS.2.line.89.chr21.36265221.36265260_tile_1')
+        self.assertEqual(n, '21')
+        
+    def test_chromosome_number_5(self):
+        n = extractChromosomeNumber('ZRSR2.CDS.11.line.224.chrX.15840853.15841365_tile_1')
+        self.assertEqual(n, 'X')
+        
 class AmpliconMatcherProbabilisticTests(unittest.TestCase):
     def test_file_read(self):
         # Count the amplicons that were read
         ampMat = AmpliconMatcherProbabilistic("references/Manifest.csv")
-        self.assertEqual(len(ampMat.refSeqs), 571)
-        self.assertEqual(len(ampMat.ampDict1), 571)
-        self.assertEqual(len(ampMat.ampDict2), 1713)
-        self.assertEqual(len(ampMat.refSeqsTrunc), 571)
+        self.assertEqual(len(ampMat.refSeqs), 568)
+        self.assertEqual(len(ampMat.ampDict1), 568)
+        self.assertEqual(len(ampMat.ampDict2), 1704)
+        self.assertEqual(len(ampMat.refSeqsTrunc), 568)
 
 class AmpliconMatcherHashSweepTests(unittest.TestCase):
     def test_file_read(self):
         # Count the amplicons that were read
         ampMat = AmpliconMatcherHashSweep("references/Manifest.csv")
-        self.assertEqual(ampMat.referenceCount, 571)
+        self.assertEqual(ampMat.referenceCount, 568)
 
     def test_simple_data(self):
         sample_data = [

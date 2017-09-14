@@ -2,7 +2,7 @@
   "j4x_readThresholdForOutput": 100,
   "j4x_readThresholdForMutationOutput": 100,
   "j4x_readThresholdForTranslocationOutput": 30,
-  "j4xstats_minSamples": 5,
+  "j4xstats_minSamples": 1,
   "j4xstats_VAFThreshold": 0.1,
   "j4xstats_VAFThresholdSubordinate": 0.05,
   "chunksize": 500,

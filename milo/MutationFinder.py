@@ -1,11 +1,12 @@
 from j4xUtils import *
+from genomicsUtils import reverseComplement
 from TranslocatedBlockMatcher import *
-
+import csv
+from pprint import pprint
 class MutationFinder:
     def __init__(self, references = 'references/Manifest.csv'):
         self.references = references
         self.translocatedBlockMatcher = TranslocatedBlockMatcher()
-        pass
         
     def reinit(self):
         # Format of ampliconMutationHashList
@@ -19,23 +20,14 @@ class MutationFinder:
         
         self.referenceCount = 0
         self.ampliconRefs = []
-        with open(self.references) as references:
-            lineno = -1
-            
-            for line in references:
-                if lineno >= 0:
-                    self.referenceCount += 1
-                    csvCells = line.split(',')
-                    sequence = csvCells[3]
-                    coordinates = int(csvCells[4])
-                    
-                    # ampliconRefs format
-                    # [
-                    #    [ SEQUENCE, COORDINATES, READ_COUNT, MUTATION_COUNT, TRANSLOCATION_COUNT ]
-                    # ]
-                    self.ampliconRefs.append([sequence, coordinates, 0, 0, 0]);
-                lineno += 1
-    
+        with open(self.references) as refFile:
+            # ampliconRefs format
+            # [
+            #    [ SEQUENCE, COORDINATES, READ_COUNT, MUTATION_COUNT, TRANSLOCATION_COUNT ]
+            # ]
+            self.ampliconRefs = [[reverseComplement(line[3]) if line[2] == "-" else line[3]] + 
+                                [int(line[4])] + [0, 0, 0] for line in list(csv.reader(refFile, delimiter=','))[1:]]
+            self.referenceCount = len(self.ampliconRefs)
     def getReferenceAmpliconArray(self):
         return self.ampliconRefs
         
@@ -98,7 +90,7 @@ class MutationFinder:
         if ampID1 == 0 or ampID2 == 0:
             return 'T', None, None, None, None
             
-        readCount = int(float(iddataParts[3].strip()[2:]))
+        readCount = int(float(iddataParts[2].strip()[2:]))
         sequenceData = data[1][:-1]
         
         refAmplicon1 = self.getReferenceAmplicon(ampID1)[0]
@@ -109,16 +101,19 @@ class MutationFinder:
         return 'T', ampID1, ampID2, matchingBlocks, readCount
         
     def identifyMutations(self, data):
+        # data[0] format:
+        # ID:003, C:0, R:5, M:0
+    
         # Handle translocations
         if ( data[0].startswith('TL:') ):
             return self.identifyTranslocations(data)
-            
+        
         iddataParts = data[0].split(', ')
-            
+        
         ampliconID = int(float(iddataParts[0][3:]))
         if ( ampliconID == 0 ):
             return 'M', None, None, None, None
-        readCount = int(float(iddataParts[3].strip()[2:]))
+        readCount = int(float(iddataParts[2].strip()[2:]))
         sequenceData = data[1][:-1]
         referenceAmplicon = self.getReferenceAmplicon(ampliconID)
         

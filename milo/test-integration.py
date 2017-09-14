@@ -1,11 +1,11 @@
 import unittest
 import tempfile
 import sys
-import os
 import shutil
 
 from main_ampliconid import *
 from main_mutationid import *
+from main_mutationstats import *
 from genomicsUtils import *
 
 
@@ -103,7 +103,8 @@ def test_j4x_generic(self, filename):
     }]
     mutationID.test(inDir, outDir, configFile, referenceFile, filenameArray)
     
-    # enablePrint()
+    result = compare_files(self, inDir + filename + '.j4x', inDir + filename + '_EXPECTED.j4x')
+    if result: os.remove(inDir + filename + '.j4x')
 
 
 # Used to test if the file testing works.
@@ -131,8 +132,41 @@ class j3xTests(unittest.TestCase):
         
 class j4xTests(unittest.TestCase):
     def test_simple(self):
+        # Tests for a simple case. Only ampID 3 is present
         test_j4x_generic(self, 'SIMPLE')
+        
+    def test_multi(self):
+        # Tests for multiple ampIDs. All are forward facing.
+        test_j4x_generic(self, 'MULTI')
+        
+    def test_reverse(self):
+        # Tests if the reversed sequence is detected correctly
+        test_j4x_generic(self, 'REVERSE')
+        
+    def test_reverse_mut(self):
+        # Tests if the reversed sequence is detected correctly
+        # Checks for mutations as well.
+        # TODO: Check if coordinates are correct
+        test_j4x_generic(self, 'REVERSE_MUT')
 
+class mutationStatsTests(unittest.TestCase):
+    def setUp(self):
+        self.mutationStats = MainMutationStats('test/simple-manifest.csv')
+        statsTestDir = 'test/stats'
+        self.mutationStats.test('test/config.json', statsTestDir, statsTestDir, statsTestDir)
+    
+    def test_exist(self):
+        self.assertTrue(os.path.exists('test/stats/annovarStats.csv'))
+        self.assertTrue(os.path.exists('test/stats/mutationStats.txt'))
+        self.assertTrue(os.path.exists('test/stats/referenceStats.txt'))
+        self.assertTrue(os.path.exists('test/stats/translocationStats.txt'))
+        
+    def tearDown(self):
+        # pass
+        removeFile('test/stats/annovarStats.csv')
+        removeFile('test/stats/mutationStats.txt')
+        removeFile('test/stats/referenceStats.txt')
+        removeFile('test/stats/translocationStats.txt')
 
 def main():
     global out
