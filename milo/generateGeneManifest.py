@@ -43,12 +43,16 @@ def combineAmpliconsintoGene(geneAmpliconList):
         return None
     
     ampIDList = []
+    startCoordList = []
+    endCoordList = []
     firstCoord = 0
     lastCoord = 0
     startCoord = 0
     endCoord = 0
     currentCombined = ''
+    count = 0
     for amplicon in geneAmpliconList:
+        count += 1
         sequence = amplicon[2]
         newStartCoord = amplicon[3]
         newEndCoord = amplicon[4]
@@ -60,11 +64,15 @@ def combineAmpliconsintoGene(geneAmpliconList):
         startCoord = newStartCoord
         endCoord = lastCoord = newEndCoord
         ampIDList.append(amplicon[0])
+        startCoordList.append(str(startCoord))
+        endCoordList.append(str(endCoord))
     
     ampIDs = " ".join(ampIDList)
+    startCoords = " ".join(startCoordList)
+    endCoords = " ".join(endCoordList)
     amplicon = geneAmpliconList[0]
-    # print("{0} {1} {2}".format(len(geneAmpliconList), amplicon[0], amplicon[1]))
-    return "{0},{1},{2},{3},{4}".format(ampIDs, amplicon[1], currentCombined, firstCoord, lastCoord)
+    name = amplicon[1]
+    return "{0},{1},{2},{3},{4},{5},{6},{7}".format(count, ampIDs, name, currentCombined, firstCoord, lastCoord, startCoords, endCoords)
     
     
     
