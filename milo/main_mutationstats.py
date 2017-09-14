@@ -206,9 +206,13 @@ class MainMutationStats:
             ampID = int(ampID)
             coordinates = coordinates.split(' ')
             mutations = hashToMutationArray(mutationHash)
-            
+
             if len(mutations) != len(coordinates):
                 print('Error: Mutations and Coordinate parts not same length')
+
+            if any([mutation['from'] == " " or mutation['from'] == "_" or mutation['to'] == " " or mutation['to'] == "_" for mutation in mutations]):
+                print(mutations)
+                continue
             
             for mutation, coordinate in zip(mutations, coordinates):
                 chromosome = self.ampliconRefs[ampID][1]

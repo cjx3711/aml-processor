@@ -80,7 +80,7 @@ class MutationFinder:
         for x in ampliconList:
             ampID = int(x[0][:x[0].find(' ')])
             templateReads = x[1]
-            totalReads = self.getRefAmplicon(ampID)[2]
+            totalReads = self.getRefAmplicon(ampID)[4] if translocations else self.getRefAmplicon(ampID)[2]
             #totalReads = sampleAmpStats[ampID].totalReads
             if templateReads >= minReads and templateReads / totalReads >= minVAF:
                 filteredTupleList.append(x)
