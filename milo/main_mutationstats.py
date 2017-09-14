@@ -61,7 +61,7 @@ class MainMutationStats:
     
     def readConfig(self, configFile):
         # Reads config file            
-        with open('config.json') as config_file:
+        with open(configFile) as config_file:
             config_data = json.load(config_file)
             if 'j4xstats_minSamples' in config_data:
                 self.minSamples = config_data['j4xstats_minSamples']
