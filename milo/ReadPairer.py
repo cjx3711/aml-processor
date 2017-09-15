@@ -6,8 +6,15 @@ from itertools import *
 from AmpliconMatcherHashSweep import *
 import json
 
+"""
+Pairs two reads by sliding them across each other and scoring them.
+Once a threshold is hit, it will pair.
+There is also an option to do the pairing by global maxima.
+This takes longer but should give a more exact pair.
+"""
+
 class ReadPairer:
-    def __init__(self, configFile = 'config.json', referenceFile = 'references/Manifest.csv'):
+    def __init__(self, configFile = 'config.json'):
         self.alignByMaxima = False # Whether or not to robustly align by detecting global maxima for overlap scores
         self.matchScore = 1
         self.mismatchPenalty = 5
@@ -24,10 +31,6 @@ class ReadPairer:
         self.scoreThreshold = 10
         self.rangeEnd = self.readLength - self.scoreThreshold
         self.rangeStart = -self.rangeEnd
-        self.ampliconMatcher = AmpliconMatcherHashSweep(referenceFile)
-
-    def getReferenceCount(self):
-        return self.ampliconMatcher.getReferenceCount()
 
     def mergeUnpaired(self, left, right, lQuality, rQuality, alignByMaxima = self.alignByMaxima):
         newScore = 0 # Overlap score in current iteration
@@ -112,21 +115,21 @@ class ReadPairer:
             return bases[0], quality[0]
         return tuple("".join(y) for y in zip(*(pickBetter(*x) for x in zip(overlapPairs, overlapQuality)))), collisions[0]
 
-    def alignAndMerge(self, left, right): # TODO: Remove the file.
-        bases, quality, collisions, score = self.mergeUnpaired(left[1].rstrip(), reverseComplement(right[1].rstrip()), left[3].rstrip(), right[3].rstrip()[::-1], self.alignByMaxima)
-        
-        failedToPair = 1 if collisions == '?' else 0
-        
-        # Checks which amplicon a read belongs to, and whether it is a translocation
-        ampID, ampIDTrans, matchType = self.ampliconMatcher.findAmplicon(bases)
-        
-        
-        # Joins amplicon number, collision number, and coordinate as new ID, and appends bases and quality
-        if ampIDTrans != None:
-            IDPart = 'TL:{0}/{1}'.format(ampID, ampIDTrans)
-        else:
-            IDPart = 'ID:{0}'.format(ampID)
-            
-        readData = ", ".join((IDPart, 'C:'+collisions))
-        return AlignedAndMerged(failedToPair, matchType, readData, bases, quality)\
-            
+    # def alignAndMerge(self, left, right): # TODO: Remove the file.
+    #     bases, quality, collisions, score = self.mergeUnpaired(left[1].rstrip(), reverseComplement(right[1].rstrip()), left[3].rstrip(), right[3].rstrip()[::-1], self.alignByMaxima)
+    #     
+    #     failedToPair = 1 if collisions == '?' else 0
+    #     
+    #     # Checks which amplicon a read belongs to, and whether it is a translocation
+    #     ampID, ampIDTrans, matchType = self.ampliconMatcher.findAmplicon(bases)
+    #     
+    #     
+    #     # Joins amplicon number, collision number, and coordinate as new ID, and appends bases and quality
+    #     if ampIDTrans != None:
+    #         IDPart = 'TL:{0}/{1}'.format(ampID, ampIDTrans)
+    #     else:
+    #         IDPart = 'ID:{0}'.format(ampID)
+    #         
+    #     readData = ", ".join((IDPart, 'C:'+collisions))
+    #     return AlignedAndMerged(failedToPair, matchType, readData, bases, quality)\
+    #         

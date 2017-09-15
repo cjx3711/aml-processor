@@ -6,7 +6,7 @@ j3x stats file is a summary of what is included in the j3x
 
 from manifestExtraction import grouper
 from unpairedFastqProc import *
-from ReadPairer import *
+from ReadPairAndID import *
 from ReadCompressor import *
 from tqdm import tqdm
 from multiprocessing import cpu_count
@@ -36,7 +36,7 @@ class MainAmpliconID:
         self.configFile = configFile
         self.inDir = inDir
         self.outDir = outDir
-        self.readPairer = ReadPairer(configFile, referenceFile)
+        self.readPairer = ReadPairAndID(configFile, referenceFile)
         
         self.processFiles(filenameArray)
 
