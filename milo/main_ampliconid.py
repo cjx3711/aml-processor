@@ -44,7 +44,7 @@ class MainAmpliconID:
         self.inDir = "data/1-raw/"
         self.outDir = "data/2-paired/"
 
-        self.readPairer = ReadPairer()
+        self.readPairer = ReadPairAndID()
         
         print("MILo Amplicon Pairer")
         print("Chunksize (Process Pool): {0}".format(self.chunksize))

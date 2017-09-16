@@ -222,7 +222,7 @@ class PairedFASTQAligner(unittest.TestCase):
         lQuality = "K" * len(left)
         rQuality = "K" * len(right)
     
-        mergedSequence, qualityScores, noOfCol = self.readPairer.mergeUnpaired(left, right, lQuality, rQuality, False)
+        mergedSequence, qualityScores, noOfCol, newScore = self.readPairer.mergeUnpaired(left, right, lQuality, rQuality, False)
         expected = left + " " + right
     
         # No overlap because too small
@@ -237,7 +237,7 @@ class PairedFASTQAligner(unittest.TestCase):
         lQuality = "K" * len(left)
         rQuality = "K" * len(right)
     
-        mergedSequence, qualityScores, noOfCol = self.readPairer.mergeUnpaired(left, right, lQuality, rQuality, False)
+        mergedSequence, qualityScores, noOfCol, newScore = self.readPairer.mergeUnpaired(left, right, lQuality, rQuality, False)
     
         expected = left + " " + right
     
@@ -253,7 +253,7 @@ class PairedFASTQAligner(unittest.TestCase):
         lQuality = "K" * len(left)
         rQuality = "K" * len(right)
     
-        mergedSequence, qualityScores, noOfCol = self.readPairer.mergeUnpaired(left, right, lQuality, rQuality, False)
+        mergedSequence, qualityScores, noOfCol, newScore = self.readPairer.mergeUnpaired(left, right, lQuality, rQuality, False)
     
         expected = "A" * sides + "C" * overlap + "G" * sides
     
@@ -267,7 +267,7 @@ class PairedFASTQAligner(unittest.TestCase):
         lQuality = "K" * len(left)
         rQuality = "K" * len(right)
     
-        mergedSequence, qualityScores, noOfCol = self.readPairer.mergeUnpaired(left, right, lQuality, rQuality, False)
+        mergedSequence, qualityScores, noOfCol, newScore = self.readPairer.mergeUnpaired(left, right, lQuality, rQuality, False)
     
         expected = "A" * sides + "C" * overlap + "G" * sides
     
@@ -279,7 +279,7 @@ class PairedFASTQAligner(unittest.TestCase):
         right = reverseComplement("AGTCAGGATGTTAGCAGAGCCAGTCAAGACTTGCCGACAAAGGAAACTAGAAGCCAAGAAAGCTGCAGCTGAAAAGCTTTCCTCCCTGGAGAACAGCTCAAATAAAAATGAAAAGGAAAAGTCAGCCCCATCACGTACAAAACAAACTGAA")
         lQuality = "CCCCCGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGFGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG"
         rQuality = "CCCCCGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGFGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGDGGGGGGGGGGGGGGGGGGGGFGGGGGGGGGGGDFG"[::-1]
-        mergedSequence, qualityScores, noOfCol = self.readPairer.mergeUnpaired(left, right, lQuality, rQuality, False)
+        mergedSequence, qualityScores, noOfCol, newScore = self.readPairer.mergeUnpaired(left, right, lQuality, rQuality, False)
     
         expectedMerged = "CAAGTTGATGGGGGCAAAACCAAAATAATTTTCATTTTTAATATACCACACAACACATCTATCTACAAATGCTTTACATTAAATTTACCTGCCAACTGTTTAGCCTGGCTTGCGTTTTCAGTTTGTTTTGTACGTGATGGGGCTGACTTTTCCTTTTCATTTTTATTTGAGCTGTTCTCCAGGGAGGAAAGCTTTTCAGCTGCAGCTTTCTTGGCTTCTAGTTTCCTTTGTCGGCAAGTCTTGACTGGCTCTGCTAACATCCTGACT"
         expecedQuality = "." * len(expectedMerged)
@@ -294,7 +294,7 @@ class PairedFASTQAligner(unittest.TestCase):
         lQuality = "CCCCCGGGFCCEF;F9AGFGFDEGGGGGDFAAEFF<FG<CFFFFGFEG8F@C@C7<C:FC7FD8<FDCAC<FEGGC,CFGACFFGGG<F6C<C9<6C@@FF@CCFFGEGGGGGGGGFG8=?4EEFFFCCCFGGFFF<EGGGGCF8?==BC@"
         rQuality = "-8BC8B@FC<9E--6FFECEFGGG8CCFCGGG,CFFF,,,;EFFCCC,CFF6CFCA8,CC,C96C@EF9,C,,66,<,E<,@FB8DGGEFE@<@C@:>?,9,<?FFGCGGG?,<<E<,9F:<?@<AEG9A?CEF,AFGECF,@EEFEDF,A"[::-1]
     
-        mergedSequence, qualityScores, noOfCol = self.readPairer.mergeUnpaired(left, right, lQuality, rQuality, False)
+        mergedSequence, qualityScores, noOfCol, newScore = self.readPairer.mergeUnpaired(left, right, lQuality, rQuality, False)
     
         expectedMerged = "TCTTTCTGCCTCATGCTCTCTCCAACAGGCTTGCAGCCAATTTACTGGAGCAGGGATGACGTAGCCCAGTGGCTCATGTGGGCTGAAAATGAGTTTTCTTTAAGGCCAATTGACAGCAACACATTTGAAATGAATGGCAAAGCTCTCCTGCTGCTGACCAAAGAGGACTTTCGCTATCGATCTCCTCATTCAGGTGAGAGTCTGGACTCTTGGCATATGCCCAACTTGGAAAATCTCTTAGTTAGTGGTTGGTCTTTAACACCCC"
         expecedQuality = ".............,.,...................,..,.........,.....,,.,..,..,,.....,.....?..........,.,.,.,,,......................,,.?..............,.......,.,,...,?.........,?,?.,,...,.......,...?,.?,?,,??.?,....,,.?..?,....,...?......,???....?.......,.........,??.,,....,..,?"
@@ -309,7 +309,7 @@ class PairedFASTQAligner(unittest.TestCase):
         lQuality = "CCCCCGEEFGGGGGGGGEGCCEFGCEGGFCFGGGGDG@EFGFGGGAFGGGEGGGGCDEEGFGGEEEFEG@CFEDEEGCFGCEFE@FEGFGG=4+,EFF7D=FGG=CEFB??,CFGFGG<,?,,4B+:,,,8<5,,C,B:,,+5,:,:,@B,"
         rQuality = "CCCCCFGGGGGGFGGFGFFGGGGGG;CEDEGGGGGGFGGGGGDG<AEFG?EBFFGGG:@CEGCF>FECFFFGGE<BFF,BCE,EABFB:>>FDFF9FF,=3@F<>:C*3<*5<****8,<;<,@,8;:=E*1*1*++2,27,,,***4*2+"[::-1]
     
-        mergedSequence, qualityScores, noOfCol = self.readPairer.mergeUnpaired(left, right, lQuality, rQuality, False)
+        mergedSequence, qualityScores, noOfCol, newScore = self.readPairer.mergeUnpaired(left, right, lQuality, rQuality, False)
     
         expectedMerged = "TGCAGTCCCAGCCCACAGCCCCCCTCCTCCCTCAGACTCAGGAGTCCATA"
         expecedQuality = ".................................................."
