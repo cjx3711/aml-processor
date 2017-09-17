@@ -2,12 +2,12 @@ from collections import defaultdict
 from genomicUtils import grouper
 
 class UnpairedPairer:
-    def __init__(self):
+    def __init__(self, configFile = 'config.json'):
         self.unpairedDict = defaultdict(list)
         self.mergedDict = {}
         # READ JSON WIH SCORE THRESHOLD HERE
         
-        # DECIDE HOW YOU WANT TO SETUP YOUR RUN() AND TEST() HERE. (Declare j3xFile, ReadPairer instance)
+        self.readPairer = ReadPairer(configFile)
 
     def idSeqToVals(self, idSeq):
         """
@@ -55,7 +55,7 @@ class UnpairedPairer:
         """
         
         """
-        return pairer.mergeUnpaired(newLeft, newRight, lQuality, rQuality)
+        return readPairer.mergeUnpaired(newLeft, newRight, lQuality, rQuality)
 
     def pickAndMerge(self, seqsAndScores, ampIDNumeric, idSeq):
         for mergedSeq, mergedQuality, collisions, mergeScore, idSeq2 in seqsAndScores:
