@@ -96,20 +96,6 @@ def test_j4x_generic(self, filename):
     result = compare_files(self, inDir + filename + '.j4x', inDir + filename + '_EXPECTED.j4x')
     if result: os.remove(inDir + filename + '.j4x')
 
-
-# Used to test if the file testing works.
-def write_lamb(outfile_path):
-    with open(outfile_path, 'w') as outfile:
-        outfile.write("Mary had a little lamb.\nLittle Lamb")
-        outfile.close()
-
-class LambTests(unittest.TestCase):
-    def test_lamb_output(self):
-        outfile_path = tempfile.mkstemp()[1]
-        write_lamb(outfile_path)
-        compare_files(self, outfile_path, 'test/lamb.txt')
-        os.remove(outfile_path)
-        
 class j3xTests(unittest.TestCase):
     def test_simple(self):
         test_j3x_generic(self, 'SIMPLE')
