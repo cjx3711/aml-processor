@@ -11,6 +11,7 @@ import os
 from multiprocessing import Pool, cpu_count
 from tqdm import tqdm
 from itertools import dropwhile
+from generalUtils import *
 
 
 class MainMutationID:
@@ -57,56 +58,29 @@ class MainMutationID:
         print("Number of Threads: {0}".format(self.numThreads))
         print()
         
-        with open('files.json') as file_list_file:  
-            filenameArray = json.load(file_list_file)
-            self.processFiles(filenameArray)
+        filenameArray = getFileList('files.json')
+        for filenames in filenameArray:
+            self.mutationID(filenames.paired, filenames.pairedStats, filenames.mutation)
 
     def getJ3XStats(self, j3xFilePath):
         self.sampleAmpStats = []
         # Calculates discard stats across multiple samples
-        with open(j3xFilePath + '.stats') as statsFile:
+        with open(j3xFilePath) as statsFile:
             refStats = dropwhile(lambda x: not x.startswith("Reference Amplicon Stats"), statsFile) # Skip merge and compression statisics
             next(refStats); next(refStats) # Skip info line
             for line in refStats:
                 ampID, totalReads, numTemplates, numDiscards, discardRate = line.split(',') 
                 self.sampleAmpStats.append(J3xStats(*[int(num) for num in [ampID, totalReads, numTemplates, numDiscards]]))
-            
-    def processFiles(self, filenameArray):
-        for filenames in filenameArray:
-            pairedFile, mutationFile, skip = self.readFilenames(filenames)
-            if skip:
-                continue
-            if (pairedFile == '' or mutationFile == ''):
-                print('Please set the keys "paired" and "mutation" in the files.json file')
-                return
         
-        for filenames in filenameArray:
-            pairedFile, mutationFile, skip = self.readFilenames(filenames)
-            if skip:
-                continue
-            # Don't understand the __name__ thing, but it's required according to SO
-            self.mutationID(pairedFile, mutationFile)
         
-    def readFilenames(self, filenames):
-        pairedFile = mutationFile = ''
-        skip = False
-        
-        if ( 'paired' in filenames ):
-            pairedFile = filenames['paired']
-        if ( 'mutation' in filenames ):
-            mutationFile = filenames['mutation']
-        if ( 'skip' in filenames ):
-            skip = filenames['skip']
-        return pairedFile, mutationFile, skip
-        
-    def mutationID(self, pairedFile, mutationFile):
+    def mutationID(self, pairedFile, pairedStatsFile, mutationFile):
         if not os.path.exists(self.outDir):
             os.makedirs(self.outDir)
         with open(self.inDir + pairedFile) as inFile:
             filesize = os.path.getsize(self.inDir + pairedFile)
             estimatedReads = int(filesize / self.bytesPerRead)
 
-            self.getJ3XStats(self.inDir + pairedFile)
+            self.getJ3XStats(self.inDir + pairedStatsFile)
 
             with open(self.outDir + mutationFile, "w+", newline = "") as outFile:
                 print("{0} Crunching {1}".format(time.strftime('%X %d %b %Y'), pairedFile))

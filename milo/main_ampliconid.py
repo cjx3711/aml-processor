@@ -11,6 +11,7 @@ from ReadCompressor import *
 from tqdm import tqdm
 from multiprocessing import cpu_count
 from genomicsUtils import reverseComplement
+from generalUtils import *
 
 from pprint import pprint
 
@@ -51,11 +52,11 @@ class MainAmpliconID:
         print("Number of Threads: {0}".format(self.numThreads))
         print()
         
-        filenameArray = getFileList('config-files.json')
+        filenameArray = getFileList('files.json')
         for filenames in filenameArray:
-            self.pairToJ3X(filenames.fastq1, filenames.fastq2, filenames.paired) 
+            self.pairToJ3X(filenames.fastq1, filenames.fastq2, filenames.paired, filenames.pairedStats) 
 
-    def pairToJ3X(self, fq1, fq2, paired):
+    def pairToJ3X(self, fq1, fq2, paired, pairedStats):
         # Stats from read pairer
         totalReads = 0
         failedToPairReads = 0
@@ -140,7 +141,9 @@ class MainAmpliconID:
                 prcntFailedMatch = self.perc(failedToMatchReads, numOriginal)
                 prcntFailedPairMatch = self.perc(failedToPairMatchReads, numOriginal)
                 
-                with open(outfile + ".stats", "w+", newline = "") as statsFile:
+                outStatsFile = self.outDir + pairedStats
+                
+                with open(outStatsFile, "w+", newline = "") as statsFile:
                     statsFile.write("Overall File Stats\n")
                     pwrite(statsFile, "Specimen:        , {0}\t".format(paired))
                     pwrite(statsFile, "TimeTaken / Time:, {0}s\t, {1}\t".format(self.niceRound(time.time() - start), time.strftime('%X %d %b %Y')))

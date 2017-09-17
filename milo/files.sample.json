@@ -1,14 +1,12 @@
-[
-  {
-    "fastq1": "MICROTEST_AD01_S1_L001_R1_001.fastq",
-    "fastq2": "MICROTEST_AD01_S1_L001_R2_001.fastq",
-    "paired": "MICROTEST_AD01_S1_L001_PAIRED.j3x",
-    "mutation": "MICROTEST_AD01_S1_L001_MUTATIONS.j4x"
-  },
-  {
-    "fastq1": "MICROTEST_AD09_S2_L001_R1_001.fastq",
-    "fastq2": "MICROTEST_AD09_S2_L001_R2_001.fastq",
-    "paired": "MICROTEST_AD09_S2_L001_PAIRED.j3x",
-    "mutation": "MICROTEST_AD09_S2_L001_MUTATIONS.j4x"
-  }
-]
+{
+  "process": [
+    "SMALLTEST_AD01_S1_L001"
+  ],
+  "skip": [
+    "MICROTEST_AD722_S1_L001",
+    "MINITEST_AD01_S1_L001",
+    "AD01_S1_L001",
+    "AD499_S7_L001",
+    "AD500_S8_L001"
+  ]
+}

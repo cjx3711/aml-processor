@@ -29,6 +29,17 @@ def generateFilenames(baseName):
     return FileTypes(fastq1, fastq2, paired, pairedStats, tiled, mutation)
 
 
+def pwrite(file, message, shouldPrint = True):
+    if shouldPrint:
+        print(message)
+    file.write(message + "\n")
+    
+def removeFile(file):
+    try:
+        os.remove(file)
+    except OSError:
+        pass
+
 out = None
 # Disable printing
 def blockPrint():
