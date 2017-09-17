@@ -1,5 +1,9 @@
 from collections import namedtuple
 
+# Used for file reading
+FileTypes = namedtuple('FileTypes', ['fastq1', 'fastq2', 'paired', 'pairedStats', 'tiled', 'mutation'])
+
+
 # Used for TranslocatedBlockMatcher
 EmptyMatch = namedtuple('EmptyMatch', ['a', 'b', 'size'])
 

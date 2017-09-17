@@ -51,40 +51,10 @@ class MainAmpliconID:
         print("Number of Threads: {0}".format(self.numThreads))
         print()
         
-        with open('files.json') as file_list_file:    
-            filenameArray = json.load(file_list_file)
-            self.processFiles(filenameArray)
+        filenameArray = getFileList('config-files.json')
+        for filenames in filenameArray:
+            self.pairToJ3X(filenames.fastq1, filenames.fastq2, filenames.paired) 
 
-    def processFiles(self, filenameArray):
-        for filenames in filenameArray:
-            fq1, fq2, paired, skip = self.readFilenames(filenames)
-            if skip:
-                continue
-            if (fq1 == '' or fq2 == '' or paired == ''):
-                print('Please set the keys "fastq1", "fastq2" and "paired" in the files.json file')
-                return
-        
-        for filenames in filenameArray:
-            fq1, fq2, paired, skip = self.readFilenames(filenames)
-            if skip:
-                continue
-            self.pairToJ3X(fq1, fq2, paired) 
-        
-    def readFilenames(self, filenames):
-        fq1 = fq2 = paired = ''
-        skip = False
-        
-        if ( 'fastq1' in filenames ):
-            fq1 = filenames['fastq1']
-        if ( 'fastq2' in filenames ):
-            fq2 = filenames['fastq2']
-        if ( 'paired' in filenames ):
-            paired = filenames['paired']
-        if ( 'skip' in filenames ):
-            skip = filenames['skip']
-            
-        return fq1, fq2, paired, skip
-        
     def pairToJ3X(self, fq1, fq2, paired):
         # Stats from read pairer
         totalReads = 0

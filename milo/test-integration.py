@@ -7,20 +7,8 @@ from main_ampliconid import *
 from main_mutationid import *
 from main_mutationstats import *
 from genomicsUtils import *
-
-
-
-out = None
-# Disable printing
-def blockPrint():
-    global out
-    sys.stdout = out = open(os.devnull, 'w')
-
-# Restore
-def enablePrint():
-    global out
-    if ( out != None ): out.close()
-    sys.stdout = sys.__stdout__
+from generalUtils import *
+from DataTypes import *
 
 def compare_files_unordered(self, outfile_path, testFile_path, group):
     enablePrint()
@@ -74,11 +62,13 @@ def test_j3x_generic(self, filename):
     inDir = 'test/j3x/'
     configFile = 'test/config.json'
     referenceFile = 'test/simple-manifest.csv'
-    filenameArray = [{
-        "fastq1": filename + '_R1_001.fastq',
-        "fastq2": filename + '_R2_001.fastq',
-        "paired": filename + '.j3x'
-    }]
+    filenameArray = [FileTypes(
+        filename + '_R1_001.fastq',
+        filename + '_R2_001.fastq',
+        filename + '.j3x',
+        filename + '.j3x.stats',
+        '', ''
+    )]
     ampliconID.test(inDir, outDir, configFile, referenceFile, filenameArray)
     
     skip = [2]
@@ -97,10 +87,10 @@ def test_j4x_generic(self, filename):
     inDir = 'test/j4x/'
     configFile = 'test/config.json'
     referenceFile = 'test/simple-manifest.csv'
-    filenameArray = [{
-        "paired": filename + '.j3x',
-        "mutation": filename + ".j4x"
-    }]
+    filenameArray = [FileTypes(
+        '', '', '', '',
+        filename + '.j3x', filename + '.j4x'
+    )]
     mutationID.test(inDir, outDir, configFile, referenceFile, filenameArray)
     
     result = compare_files(self, inDir + filename + '.j4x', inDir + filename + '_EXPECTED.j4x')
