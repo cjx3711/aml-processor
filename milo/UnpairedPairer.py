@@ -1,5 +1,13 @@
 from collections import defaultdict
-from genomicUtils import grouper
+from genomicsUtils import grouper
+from ReadPairer import *
+
+"""
+Opens a j3x file and attempts to pair the unpaired reads.
+
+All existing reads will be output into another j3x file ending with _TILED.j3x.
+The unpaired reads will then be tiled with adjacent amplicons if any.
+"""
 
 class UnpairedPairer:
     def __init__(self, configFile = 'config.json'):
@@ -16,19 +24,29 @@ class UnpairedPairer:
         """
         return (''.join(list(filter(str.isdigit, chunk))) for chunk in idSeq.split(", "))
 
-    def populateUnpaired(self):
+    def populateUnpaired(self, j3xFilepath, tiledj3xFilepath):
         """
-        Extracts all unpaired templates from compressed j3x, and deletes exraced lines from said j3x.
+        Extracts all unpaired templates from compressed j3x, and deletes extracted lines from said j3x.
         Run this before pairUnpaired.
         """
-        for idSeq, bases, qualitySeq, _ in grouper(self.j3xFile, 4):
+        j3xInput = open(j3xFilepath)
+        j3xOutput = open(tiledj3xFilepath, "w+", newline = "")
+        
+        for idSeq, bases, qualitySeq, _ in grouper(j3xInput, 4):
 
             ampIDString, numCollisions, numReads, numMerges = self.idSeqToVals(idSeq)
             if ampIDString != "000" and numCollisions == "?": # Eliminate all with unknown ampIDs
                 left, right = bases.split(" ")
                 lQuality, rQuality = qualitySeq.split(" ")
                 self.unpairedDict[int(ampIDString)].append((left, right, lQuality, rQuality, idSeq))
-                # CODE TO DELETE ROWS FROM J3X HERE
+            else: # Output the rest of the j3x file to the outputFile
+                j3xOutput.write(idSeq)
+                j3xOutput.write(bases)
+                j3xOutput.write(qualitySeq)
+                j3xOutput.write(_)
+        
+        j3xInput.close()
+        j3xOutput.close()
 
 
     def pairUnpaired(self, refLength):
@@ -69,3 +87,17 @@ class UnpairedPairer:
         # Once again, reads dunno how to count
         # newIDSeq = "MT:{0}/{1}, C:{2}, ..."
         self.mergedDict.append((newIDSeq, mergedSeq, mergedQuality))
+        
+if __name__ ==  "__main__":
+    unpairedPairer = UnpairedPairer()
+    
+    inputFile = 'data/2-paired/SMALLTEST_AD01_S1_L001_PAIRED.j3x'
+    outputFile = 'data/2-paired/SMALLTEST_AD01_S1_L001_TILED.j3x'
+    unpairedPairer.populateUnpaired(inputFile, outputFile)
+    
+    
+    
+    
+    
+    
+    
