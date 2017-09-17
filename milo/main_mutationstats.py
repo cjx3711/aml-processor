@@ -7,9 +7,9 @@ from genomicsUtils import *
 from generalUtils import *
 from itertools import groupby, dropwhile
 from collections import defaultdict
+from GeneMap import *
 
 class MainMutationStats:
-                
     def __init__(self, references = 'references/Manifest.csv'):
         self.references = references
         self.statsDir = os.path.join("data", "2-paired")

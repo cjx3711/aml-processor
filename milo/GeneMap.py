@@ -39,19 +39,21 @@ class GeneMap:
                 for ampID in geneRef.ampIDs:
                     ampID = int(ampID)
                     self.ampToGene[ampID] = geneRef.geneID
-        
-    def fromSameGene(ampID1, ampID2):
+    # Gets the adjacentTiles of the ampID if any
+    def adjacentTiles(self, ampID):
+        if ( ampID == 0 ):
+            return None, None
+        ampID = int(ampID)
+        geneID = self.ampToGene[ampID]
+        leftGeneID = self.ampToGene[ampID - 1]
+        rightGeneID = self.ampToGene[ampID + 1]
+        leftAmpID = ampID - 1 if leftGeneID == geneID else None
+        rightAmpID = ampID + 1 if rightGeneID == geneID else None
+        return leftAmpID, rightAmpID
+    
+    def fromSameGene(self, ampID1, ampID2):
         ampID1, ampID2 = int(ampID1), int(ampID2)
         return self.ampToGene[ampID1] == self.ampToGene[ampID2]
-    
-    def nextToEachOther(ampID1, ampID2):
-        pass
-    
-    def getCoordinates(ampID1, ampID2):
-        pass
-    
-    def getSequence(ampID1, ampID2):
-        pass
 
 test = GeneMap()
                 
