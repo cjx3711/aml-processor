@@ -43,7 +43,7 @@ class UnpairedPairer:
             if len(ampIDString) == 3 and ampIDString != "000" and numCollisions == "?": # Eliminate all with unknown ampIDs
                 left, right = bases.split(" ")
                 lQuality, rQuality = qualitySeq.split(" ")
-                print("{0} {1}".format(ampIDString, numReads))
+                # print("{0} {1} {2}".format(ampIDString, numReads, bases))
                 self.unpairedDict[int(ampIDString)].append((left.strip(), right.strip(), lQuality.strip(), rQuality.strip(), idSeq))
             else: # Output the rest of the j3x file to the outputFile
                 j3xOutput.write(idSeq)
@@ -60,21 +60,29 @@ class UnpairedPairer:
         """
         ampIDs = sorted(list(self.unpairedDict.keys()))
         for ampID in ampIDs: # Don't iterate through unpairedDict directly otherwise idSeqs in mergedList might be wrong way round.
+            stillUnmergedList = []
             for left, right, lQuality, rQuality, idSeq in self.unpairedDict[ampID]:
                 # Find overlapping tiles on left and right of current amplicon. None type for either or both if no overlapping tile.
                 leftTileID, rightTileID = self.geneMap.adjacentTiles(ampID)
+                merged = False
                 if leftTileID:
                     seqsAndScores = [self.pair(left, leftTileRight, lQuality, leftTileRQ) + (leftTileIDSeq,) for 
                                      leftTileLeft, leftTileRight, leftTileLQ, leftTileRQ, leftTileIDSeq in self.unpairedDict[leftTileID]]
-                    if self.pickAndMerge(seqsAndScores, ampID, idSeq, False):
-                        self.unpairedDict[ampID].remove((left, right, lQuality, rQuality, idSeq))
-                        
+                    if self.pickAndMerge(seqsAndScores, ampID, idSeq):
+                        print("Merged left")
+                        merged = True 
+                    
                 if rightTileID:
                     seqsAndScores = [self.pair(rightTileLeft, right, rightTileLQ, rQuality) + (rightTileIDSeq,) for
                                      rightTileLeft, rightTileRight, rightTileLQ, rightTileRQ, rightTileIDSeq in self.unpairedDict[rightTileID]]
-                    if self.pickAndMerge(seqsAndScores, ampID, idSeq, True):
-                        self.unpairedDict[ampID].remove((left, right, lQuality, rQuality, idSeq))
-    
+                    if self.pickAndMerge(seqsAndScores, ampID, idSeq):
+                        merged = True 
+                
+                if not merged:
+                    stillUnmergedList.append((left, right, lQuality, rQuality, idSeq))
+                        
+            self.unpairedDict[ampID] = stillUnmergedList
+            
         pprint(len(self.mergedList))
         
         self.mergedList = self.compressMergedList()
@@ -86,29 +94,31 @@ class UnpairedPairer:
     def pair(self, newLeft, newRight, lQuality, rQuality):
         return self.readPairer.mergeUnpaired(newLeft, newRight, lQuality, rQuality, True)
 
-    def pickAndMerge(self, seqsAndScores, ampIDNumeric, idSeq, flip):
+    def pickAndMerge(self, seqsAndScores, ampIDNumeric, idSeq):
         merged = False
+        mergedCount = 0 # How many did we manage to merge with?
         for mergedSeq, mergedQuality, collisions, mergeScore, idSeq2 in seqsAndScores:
             if mergeScore > self.scoreThreshold:
-                print ("Merge score: {0}".format(mergeScore))
-                if flip:
-                    self.updateMerge(mergedSeq, mergedQuality, ampIDNumeric, idSeq, idSeq2, collisions)
-                else:
-                    self.updateMerge(mergedSeq, mergedQuality, ampIDNumeric, idSeq2, idSeq, collisions)
+                mergedCount += 1
+        for mergedSeq, mergedQuality, collisions, mergeScore, idSeq2 in seqsAndScores:
+            if mergeScore > self.scoreThreshold:
+                # print ("Merge score: {0}".format(mergeScore))
+                self.addToMergedList(mergedSeq, mergedQuality, ampIDNumeric, idSeq, idSeq2, collisions, mergedCount)
                 merged = True
         return merged
 
-    def updateMerge(self, mergedSeq, mergedQuality, ampIDNumeric, idSeq, idSeq2, collisions):
-        # self.unpairedDict[ampIDNumeric].remove((left, right, idSeq))
+    def addToMergedList(self, mergedSeq, mergedQuality, ampIDNumeric, idSeq1, idSeq2, collisions, mergedCount):
         # THINK OF NEW ID SEQ THAT MAKES SENSE
         # I recommend starting with MT (merged tiles): ampID1, ampID2. Then reusing our translocation finder to find mutants.
         # Once again, reads dunno how to count
-        ampIDString1, numCollisions1, numReads1, numMerges1 = self.idSeqToVals(idSeq)
+        ampIDString1, numCollisions1, numReads1, numMerges1 = self.idSeqToVals(idSeq1)
         ampIDString2, numCollisions2, numReads2, numMerges2 = self.idSeqToVals(idSeq2)
+        numReads1 = int(int(numReads1) / mergedCount)
         newIDSeq = "MT:{0}/{1}, C:{2}, R:{3}/{4}".format(ampIDString1, ampIDString2, collisions, numReads1, numReads2)
         self.mergedList.append((newIDSeq, mergedSeq, mergedQuality))
-        
-    def compressMergedList(self):
+    
+    
+    def compressMergedList(self): # Compresses the merged list based on the ID and sequence.
         mergedHash = {}
         for merged in self.mergedList:
             idSeq = merged[0]

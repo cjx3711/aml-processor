@@ -52,7 +52,7 @@ class ReadPairer:
                 j3xBases, j3xQuality, collisions = self.alignCoordsToJ3x(left, right, lQuality, rQuality, lRange, rRange)
                 return j3xBases, j3xQuality, collisions, newScore
         
-        if alignByMaxima and maxScore > 0: # If we are aligning by maxima, and there exists a global maxima better than not pairing at all
+        if alignByMaxima and maxScore > self.scoreThreshold: # If we are aligning by maxima, and there exists a global maxima better than not pairing at all
             lRange, rRange = bestMatch
             j3xBases, j3xQuality, collisions = self.alignCoordsToJ3x(left, right, lQuality, rQuality, lRange, rRange)
             return j3xBases, j3xQuality, collisions, maxScore
@@ -118,22 +118,3 @@ class ReadPairer:
                     collisions[0] += 1
             return bases[0], quality[0]
         return tuple("".join(y) for y in zip(*(pickBetter(*x) for x in zip(overlapPairs, overlapQuality)))), collisions[0]
-
-    # def alignAndMerge(self, left, right): # TODO: Remove the file.
-    #     bases, quality, collisions, score = self.mergeUnpaired(left[1].rstrip(), reverseComplement(right[1].rstrip()), left[3].rstrip(), right[3].rstrip()[::-1], self.alignByMaxima)
-    #     
-    #     failedToPair = 1 if collisions == '?' else 0
-    #     
-    #     # Checks which amplicon a read belongs to, and whether it is a translocation
-    #     ampID, ampIDTrans, matchType = self.ampliconMatcher.findAmplicon(bases)
-    #     
-    #     
-    #     # Joins amplicon number, collision number, and coordinate as new ID, and appends bases and quality
-    #     if ampIDTrans != None:
-    #         IDPart = 'TL:{0}/{1}'.format(ampID, ampIDTrans)
-    #     else:
-    #         IDPart = 'ID:{0}'.format(ampID)
-    #         
-    #     readData = ", ".join((IDPart, 'C:'+collisions))
-    #     return AlignedAndMerged(failedToPair, matchType, readData, bases, quality)\
-    #         
