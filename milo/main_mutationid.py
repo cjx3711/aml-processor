@@ -44,7 +44,9 @@ class MainMutationID:
         self.inDir = inDir
         self.outDir = outDir
         self.mutationFinder = MutationFinder(referenceFile)
-        self.processFiles(filenameArray)
+        filenameArray = getFileList('files.json')
+        for filenames in filenameArray:
+            self.mutationID(filenames.paired, filenames.pairedStats, filenames.mutation)
     
     def run(self):
         self.inDir = "data/2-paired/"

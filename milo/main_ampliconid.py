@@ -38,8 +38,11 @@ class MainAmpliconID:
         self.inDir = inDir
         self.outDir = outDir
         self.readPairer = ReadPairAndID(configFile, referenceFile)
-        
-        self.processFiles(filenameArray)
+    
+        for i, filenames in enumerate(filenameArray):
+            print("\n=================================================")
+            print("Processing {0}. {1}/{2}".format(filenames.fastq1, i, len(filenameArray)))
+            self.pairToJ3X(filenames.fastq1, filenames.fastq2, filenames.paired, filenames.pairedStats)
 
     def run(self):
         self.inDir = "data/1-raw/"

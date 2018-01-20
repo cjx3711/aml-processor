@@ -20,7 +20,7 @@ def getFileList(fileListJson):
 def generateFilenames(baseName):
     baseName = baseName.strip('_')
     fastq1 = baseName + '_R1_001.fastq'
-    fastq2 = baseName + '_R1_001.fastq'
+    fastq2 = baseName + '_R2_001.fastq'
     paired = baseName + '_PAIRED.j3x'
     pairedStats = baseName + '_PAIRED.j3x.stats'
     tiled = baseName + '_TILED.j3x'
