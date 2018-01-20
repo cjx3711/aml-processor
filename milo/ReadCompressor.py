@@ -65,7 +65,7 @@ class ReadCompressor:
                     self.templateNestedList[ampID1].append(seq)
                     self.templateFlatList.append(seq)
                 else:
-                    if seqReadCount > self.j3x_readDeletorThreshold: # Otherwise, check to make sure the read count isn't high before discarding sequence
+                    if seqReadCount >= self.j3x_readDeletorThreshold: # Otherwise, check to make sure the read count isn't high before discarding sequence
                         self.leftoverList.append(seq)
                     else:
                         self.discardedList.append(seq)

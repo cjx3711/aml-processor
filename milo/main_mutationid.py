@@ -10,27 +10,33 @@ import time
 import os
 from multiprocessing import Pool, cpu_count
 from tqdm import tqdm
+from itertools import dropwhile
+from generalUtils import *
 
 
 class MainMutationID:
     def __init__(self):
         self.numThreads = cpu_count()
         self.bytesPerRead = 500 # Estimated
+        self.sampleAmpStats = []
 
     def readConfig(self, configFile = 'config.json'):
         self.chunksize = 250
         self.minMutationCount = 3
         self.minTranslocationCount = 3
+        self.minVAF = 0.01
         with open(configFile) as config_file:
             config_data = json.load(config_file)
-            if ( 'j4x_readThresholdForOutput' in config_data ):
+            if 'j4x_readThresholdForOutput' in config_data:
                 self.minMutationCount = config_data['j4x_readThresholdForOutput']
                 self.minTranslocationCount = config_data['j4x_readThresholdForOutput']
-            if ( 'j4x_readThresholdForMutationOutput' in config_data ):
+            if 'j4x_readThresholdForMutationOutput' in config_data:
                 self.minMutationCount = config_data['j4x_readThresholdForMutationOutput']
-            if ( 'j4x_readThresholdForTranslocationOutput' in config_data ):
+            if 'j4x_readThresholdForTranslocationOutput' in config_data:
                 self.minTranslocationCount = config_data['j4x_readThresholdForTranslocationOutput']
-            if ( 'chunksize' in config_data ):
+            if 'j4x_VAFThreshold' in config_data:
+                self.minVAF = config_data['j4x_VAFThreshold']
+            if 'chunksize' in config_data:
                 self.chunksize = config_data['chunksize']
     
     def test(self, inDir, outDir, configFile, referenceFile, filenameArray):
@@ -52,46 +58,32 @@ class MainMutationID:
         print("Number of Threads: {0}".format(self.numThreads))
         print()
         
-        with open('files.json') as file_list_file:  
-            filenameArray = json.load(file_list_file)
-            self.processFiles(filenameArray)
-            
-    def processFiles(self, filenameArray):
+        filenameArray = getFileList('files.json')
         for filenames in filenameArray:
-            pairedFile, mutationFile, skip = self.readFilenames(filenames)
-            if skip:
-                continue
-            if (pairedFile == '' or mutationFile == ''):
-                print('Please set the keys "paired" and "mutation" in the files.json file')
-                return
+            self.mutationID(filenames.paired, filenames.pairedStats, filenames.mutation)
+
+    def getJ3XStats(self, j3xFilePath):
+        self.sampleAmpStats = []
+        # Calculates discard stats across multiple samples
+        with open(j3xFilePath) as statsFile:
+            refStats = dropwhile(lambda x: not x.startswith("Reference Amplicon Stats"), statsFile) # Skip merge and compression statisics
+            next(refStats); next(refStats) # Skip info line
+            for line in refStats:
+                ampID, totalReads, numTemplates, numDiscards, discardRate = line.split(',') 
+                self.sampleAmpStats.append(J3xStats(*[int(num) for num in [ampID, totalReads, numTemplates, numDiscards]]))
         
-        for filenames in filenameArray:
-            pairedFile, mutationFile, skip = self.readFilenames(filenames)
-            if skip:
-                continue
-            # Don't understand the __name__ thing, but it's required according to SO
-            self.mutationID(pairedFile, mutationFile)
         
-    def readFilenames(self, filenames):
-        pairedFile = mutationFile = ''
-        skip = False
-        
-        if ( 'paired' in filenames ):
-            pairedFile = filenames['paired']
-        if ( 'mutation' in filenames ):
-            mutationFile = filenames['mutation']
-        if ( 'skip' in filenames ):
-            skip = filenames['skip']
-        return pairedFile, mutationFile, skip
-        
-    def mutationID(self, pairedFile, mutationFile):
+    def mutationID(self, pairedFile, pairedStatsFile, mutationFile):
         if not os.path.exists(self.outDir):
             os.makedirs(self.outDir)
         with open(self.inDir + pairedFile) as inFile:
             filesize = os.path.getsize(self.inDir + pairedFile)
             estimatedReads = int(filesize / self.bytesPerRead)
+
+            self.getJ3XStats(self.inDir + pairedStatsFile)
+
             with open(self.outDir + mutationFile, "w+", newline = "") as outFile:
-                print("{0} Crunching {1}".format(time.strftime('%X %d %b %Y') ,pairedFile))
+                print("{0} Crunching {1}".format(time.strftime('%X %d %b %Y'), pairedFile))
                 start = time.time()
                 self.mutationFinder.reinit()
                 # Creates iterators which deliver the 4 lines of each FASTQ read as a zip (ID, Sequence, Blank, Quality)
@@ -121,15 +113,15 @@ class MainMutationID:
                 pool.join()
                 
                 print("{0} Dumping {1}".format(time.strftime('%X %d %b %Y'), mutationFile))
-                mutationList = self.mutationFinder.extractHighestOccuringMutations(self.minMutationCount)
-                translocationList = self.mutationFinder.extractHighestOccuringTranslocations(self.minTranslocationCount)
+                mutationList = self.mutationFinder.filterAndSortMutants(self.minMutationCount, self.minVAF, self.sampleAmpStats, False)
+                translocationList = self.mutationFinder.filterAndSortMutants(self.minTranslocationCount, self.minVAF, self.sampleAmpStats, True)
                 
                 outFile.write('Mutations\n')
                 for mutationOccurence in mutationList:
                     mutationCount = mutationOccurence[1]
                     mutationHash = mutationOccurence[0]
                     ampliconID = int(float(mutationHash[:mutationHash.find(' ')]))
-                    referenceAmplicon = self.mutationFinder.getReferenceAmplicon(ampliconID)
+                    referenceAmplicon = self.mutationFinder.getRefAmplicon(ampliconID)
                     mutationCoordinates = referenceAmplicon[1]
                     appearanceCount = referenceAmplicon[2]
                     outFile.write(str(mutationCount))
@@ -153,7 +145,7 @@ class MainMutationID:
                 
                     
                 outFile.write('Reference Amplicon Stats\n')
-                referenceAmplicons = self.mutationFinder.getReferenceAmpliconArray()
+                referenceAmplicons = self.mutationFinder.getRefAmpliconArray()
                 outFile.write('Count: ' + str(self.mutationFinder.referenceCount) + '\n')
                 outFile.write('ampID, Reads, Mutations, Translocations\n')
                 

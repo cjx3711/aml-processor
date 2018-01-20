@@ -1,0 +1,25 @@
+[
+  {
+    "skip": true,
+    "fastq1": "MICROTEST_AD722_S1_L001_R1_001.fastq",
+    "fastq2": "MICROTEST_AD722_S1_L001_R2_001.fastq",
+    "paired": "MICROTEST_AD722_S1_L001_PAIRED.j3x",
+    "mutation": "MICROTEST_AD722_S1_L001_MUTATIONS.j4x"
+  },
+  {
+    "skip": true,
+    "fastq1": "MICROTEST_AD499_S7_L001_R1_001.fastq",
+    "fastq2": "MICROTEST_AD499_S7_L001_R2_001.fastq",
+    "paired": "MICROTEST_AD499_S7_L001_PAIRED.j3x",
+    
+    "paired": "MICROTEST_AD499_S7_L001_TILED.j3x",
+    "mutation": "MICROTEST_AD499_S7_L001_MUTATIONS.j4x"
+  },
+  {
+    "skip": false,
+    "fastq1": "SMALLTEST_AD01_S1_L001_R1_001.fastq",
+    "fastq2": "SMALLTEST_AD01_S1_L001_R2_001.fastq",
+    "paired": "SMALLTEST_AD01_S1_L001_PAIRED.j3x",
+    "mutation": "SMALLTEST_AD01_S1_L001_MUTATIONS.j4x"
+  }
+]
