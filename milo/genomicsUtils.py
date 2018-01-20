@@ -98,6 +98,45 @@ def pwrite(file, message, shouldPrint = True):
     if shouldPrint:
         print(message)
     file.write(message + "\n")
+
+    
+# Phred Level        A C T G
+# 0-3    < 50 %      i n 1 ^
+# 4-9    < 90 %      e h 2 &
+# 10-19  < 99 %      o s 3 @
+# 20-29  < 99.9 %    a c t g
+# 30-42  < 99.99 %   A C T G
+
+phredProbBaseList = [
+            0, 0, 0, 0, 0, 0, 0, 
+            0, 0, 0, 0, 0, 0, 1, 
+            1, 1, 1, 1, 1, 1, 1, 
+            1, 1, 2, 2, 2, 2, 2, 
+            2, 2, 2, 2, 2, 3, 3, 
+            3, 3, 3, 3, 4, 4, 4, 4 ]
+
+phredProbMap = {
+    'A': ['A', 'a', 'o', 'e', 'i'],
+    'T': ['T', 't', '3', '2', '1'],
+    'C': ['C', 'c', 's', 'h', 'n'],
+    'G': ['G', 'g', '@', '&', '^']
+}
+
+def convertBasePhred2ProbBase(BaseSequence, PhredSequence):
+    if len(BasesSequence) != len(PhredSequence):
+        return None
+    
+    phredProbBaseMap = {x : y for x, y in zip(phredList, phredProbBaseList)} 
+    probBaseSequence = []
+    for i in range(len(BaseSequence)):
+        base = BaseSequence[i]
+        Phred = PhredSequence[i]
+        probBaseIndex = phredProbBaseMap[Phred]
+        if base not in ['A', 'T', 'C', 'G']:
+            probBaseSequence.append(base)
+        else:
+            probBaseSequence.append(phredProbMap[base][probBaseIndex])            
+    return "".join(probBaseSequence)
     
 def removeFile(file):
     try:
