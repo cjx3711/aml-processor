@@ -2,15 +2,14 @@ from genomicsUtils import *
 
 def run():
     geneID = 1
-    with open('references/Manifest.csv') as references:
+    with open('references/Manifest.csv') as ampManifestFile:
         with open('references/GeneManifest.csv', "w+", newline = "") as outFile:
         
-            first = True
             geneAmpliconList = []
-            for line in references:
-                if (first):
-                    first = False
-                    continue
+            next(ampManifestFile)
+            
+            outFile.write("{0},{1},{2},{3},{4},{5},{6},{7},{8}\n".format('Gene ID', '# of amps', 'AmpIDs', 'Name', 'Sequence', 'First Coord', 'Last Coord', 'Start Coords', 'End Coords', 'Length'))
+            for line in ampManifestFile:
                 csvCells = line.split(',')
                 ampliconID = csvCells[0]
                 direction = csvCells[2]
@@ -43,12 +42,16 @@ def combineAmpliconsintoGene(geneAmpliconList):
         return None
     
     ampIDList = []
+    startCoordList = []
+    endCoordList = []
     firstCoord = 0
     lastCoord = 0
     startCoord = 0
     endCoord = 0
     currentCombined = ''
+    count = 0
     for amplicon in geneAmpliconList:
+        count += 1
         sequence = amplicon[2]
         newStartCoord = amplicon[3]
         newEndCoord = amplicon[4]
@@ -60,11 +63,18 @@ def combineAmpliconsintoGene(geneAmpliconList):
         startCoord = newStartCoord
         endCoord = lastCoord = newEndCoord
         ampIDList.append(amplicon[0])
+        startCoordList.append(str(startCoord))
+        endCoordList.append(str(endCoord))
     
     ampIDs = " ".join(ampIDList)
+    startCoords = " ".join(startCoordList)
+    endCoords = " ".join(endCoordList)
     amplicon = geneAmpliconList[0]
-    # print("{0} {1} {2}".format(len(geneAmpliconList), amplicon[0], amplicon[1]))
-    return "{0},{1},{2},{3},{4}".format(ampIDs, amplicon[1], currentCombined, firstCoord, lastCoord)
+    name = amplicon[1]
+    length = lastCoord - firstCoord + 1
+    if ( length != len(currentCombined) ):
+        print('Length of {0} differs by: {1}'.format(ampIDs, length - len(currentCombined)))
+    return "{0},{1},{2},{3},{4},{5},{6},{7}".format(count, ampIDs, name, currentCombined, firstCoord, lastCoord, startCoords, endCoords, length)
     
     
     

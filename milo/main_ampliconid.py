@@ -6,11 +6,12 @@ j3x stats file is a summary of what is included in the j3x
 
 from manifestExtraction import grouper
 from unpairedFastqProc import *
-from ReadPairer import *
+from ReadPairAndID import *
 from ReadCompressor import *
 from tqdm import tqdm
 from multiprocessing import cpu_count
 from genomicsUtils import reverseComplement
+from generalUtils import *
 
 from pprint import pprint
 
@@ -36,7 +37,7 @@ class MainAmpliconID:
         self.configFile = configFile
         self.inDir = inDir
         self.outDir = outDir
-        self.readPairer = ReadPairer(configFile, referenceFile)
+        self.readPairer = ReadPairAndID(configFile, referenceFile)
         
         self.processFiles(filenameArray)
 
@@ -44,48 +45,21 @@ class MainAmpliconID:
         self.inDir = "data/1-raw/"
         self.outDir = "data/2-paired/"
 
-        self.readPairer = ReadPairer()
+        self.readPairer = ReadPairAndID()
         
+
         print("MILo Amplicon Pairer")
         print("Chunksize (Process Pool): {0}".format(self.chunksize))
         print("Number of Threads: {0}".format(self.numThreads))
         print()
         
-        with open('files.json') as file_list_file:    
-            filenameArray = json.load(file_list_file)
-            self.processFiles(filenameArray)
+        filenameArray = getFileList('files.json')
+        for i, filenames in enumerate(filenameArray):
+            print("\n=================================================")
+            print("Processing {0}. {1}/{2}".format(filenames.fastq1, i, len(filenameArray)))
+            self.pairToJ3X(filenames.fastq1, filenames.fastq2, filenames.paired, filenames.pairedStats) 
 
-    def processFiles(self, filenameArray):
-        for filenames in filenameArray:
-            fq1, fq2, paired, skip = self.readFilenames(filenames)
-            if skip:
-                continue
-            if (fq1 == '' or fq2 == '' or paired == ''):
-                print('Please set the keys "fastq1", "fastq2" and "paired" in the files.json file')
-                return
-        
-        for filenames in filenameArray:
-            fq1, fq2, paired, skip = self.readFilenames(filenames)
-            if skip:
-                continue
-            self.pairToJ3X(fq1, fq2, paired) 
-        
-    def readFilenames(self, filenames):
-        fq1 = fq2 = paired = ''
-        skip = False
-        
-        if ( 'fastq1' in filenames ):
-            fq1 = filenames['fastq1']
-        if ( 'fastq2' in filenames ):
-            fq2 = filenames['fastq2']
-        if ( 'paired' in filenames ):
-            paired = filenames['paired']
-        if ( 'skip' in filenames ):
-            skip = filenames['skip']
-            
-        return fq1, fq2, paired, skip
-        
-    def pairToJ3X(self, fq1, fq2, paired):
+    def pairToJ3X(self, fq1, fq2, paired, pairedStats):
         # Stats from read pairer
         totalReads = 0
         failedToPairReads = 0
@@ -170,7 +144,9 @@ class MainAmpliconID:
                 prcntFailedMatch = self.perc(failedToMatchReads, numOriginal)
                 prcntFailedPairMatch = self.perc(failedToPairMatchReads, numOriginal)
                 
-                with open(outfile + ".stats", "w+", newline = "") as statsFile:
+                outStatsFile = self.outDir + pairedStats
+                
+                with open(outStatsFile, "w+", newline = "") as statsFile:
                     statsFile.write("Overall File Stats\n")
                     pwrite(statsFile, "Specimen:        , {0}\t".format(paired))
                     pwrite(statsFile, "TimeTaken / Time:, {0}s\t, {1}\t".format(self.niceRound(time.time() - start), time.strftime('%X %d %b %Y')))

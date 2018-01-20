@@ -7,6 +7,7 @@ from AmpliconMatcherProbabilistic import *
 from AmpliconMatcherHashSweep import *
 from ReadPairer import *
 from TranslocatedBlockMatcher import *
+from generalUtils import *
 from pprint import pprint
 
 # Here's our "unit tests".
@@ -149,44 +150,67 @@ class AmpliconMatcherHashSweepTests(unittest.TestCase):
         largest1, largest2 = ampMat.calculateMatchScore(amplicon)
         self.assertEqual([4, 1], largest1)
         self.assertEqual([2, 2], largest2)
+
+class generalUtils(unittest.TestCase):
+    def test_wrong_file_list(self):
+        blockPrint()
+        emptyList = getFileList('test/config_tests/files.incorrect.json')
+        self.assertEqual(len(emptyList), 0)
+        enablePrint()
+        
+    
+    def test_correct_file_underscore(self):
+        fileList = getFileList('test/config_tests/files.correct.json')
+    
+        self.assertEqual(len(fileList), 1)
+        
+        self.assertEqual(str(fileList[0]), "FileTypes(fastq1='AD01_S1_L001_R1_001.fastq', fastq2='AD01_S1_L001_R1_001.fastq', paired='AD01_S1_L001_PAIRED.j3x', pairedStats='AD01_S1_L001_PAIRED.j3x.stats', tiled='AD01_S1_L001_TILED.j3x', mutation='AD01_S1_L001_MUTATIONS.j4x')")
+        
+    def test_correct_files(self):
+        fileList = getFileList('test/config_tests/files.correct.2.json')
+        self.assertEqual(len(fileList), 2)
+        
+        self.assertEqual(str(fileList[0]), "FileTypes(fastq1='AD01_S1_L001_R1_001.fastq', fastq2='AD01_S1_L001_R1_001.fastq', paired='AD01_S1_L001_PAIRED.j3x', pairedStats='AD01_S1_L001_PAIRED.j3x.stats', tiled='AD01_S1_L001_TILED.j3x', mutation='AD01_S1_L001_MUTATIONS.j4x')")
+        self.assertEqual(str(fileList[1]), "FileTypes(fastq1='AD01_S1_L002_R1_001.fastq', fastq2='AD01_S1_L002_R1_001.fastq', paired='AD01_S1_L002_PAIRED.j3x', pairedStats='AD01_S1_L002_PAIRED.j3x.stats', tiled='AD01_S1_L002_TILED.j3x', mutation='AD01_S1_L002_MUTATIONS.j4x')")
+        
         
 class miscj3xUtils(unittest.TestCase):
-    def extract_0_id(self):
+    def test_extract_0_id(self):
         ampID1, ampID2 = extractAmpID('ID:000')
         self.assertEqual(ampID1, 0)
         self.assertEqual(ampID2, 0)
         
-    def extract_001_id(self):
+    def test_extract_001_id(self):
         ampID1, ampID2 = extractAmpID('ID:001')
         self.assertEqual(ampID1, 1)
         self.assertEqual(ampID2, 0)
         
-    def extract_014_id(self):
+    def test_extract_014_id(self):
         ampID1, ampID2 = extractAmpID('ID:014')
         self.assertEqual(ampID1, 14)
         self.assertEqual(ampID2, 0)
     
-    def extract_241_id(self):
+    def test_extract_241_id(self):
         ampID1, ampID2 = extractAmpID('ID:241')
         self.assertEqual(ampID1, 241)
         self.assertEqual(ampID2, 0)
         
-    def extract_241_111_tl(self):
+    def test_extract_241_111_tl(self):
         ampID1, ampID2 = extractAmpID('TL:241/111')
         self.assertEqual(ampID1, 241)
         self.assertEqual(ampID2, 111)
         
-    def extract_121_001_tl(self):
+    def test_extract_121_001_tl(self):
         ampID1, ampID2 = extractAmpID('TL:121/001')
         self.assertEqual(ampID1, 121)
         self.assertEqual(ampID2, 1)
         
 class miscj4xUtils(unittest.TestCase):
-    def weirdly_specific_function_1(self):
+    def test_weirdly_specific_function_1(self):
         coords = convertHashPositionsToCoordinates('291 S:29:T-A S:102:T-G', 0)
         self.assertEqual(coords, '29 102')
         
-    def weirdly_specific_function_2(self):
+    def test_weirdly_specific_function_2(self):
         coords = convertHashPositionsToCoordinates('291 S:29:T-A S:102:T-G', 100)
         self.assertEqual(coords, '129 202')
         
@@ -222,7 +246,7 @@ class PairedFASTQAligner(unittest.TestCase):
         lQuality = "K" * len(left)
         rQuality = "K" * len(right)
     
-        mergedSequence, qualityScores, noOfCol = self.readPairer.mergeUnpaired(left, right, lQuality, rQuality, False)
+        mergedSequence, qualityScores, noOfCol, newScore = self.readPairer.mergeUnpaired(left, right, lQuality, rQuality, False)
         expected = left + " " + right
     
         # No overlap because too small
@@ -237,7 +261,7 @@ class PairedFASTQAligner(unittest.TestCase):
         lQuality = "K" * len(left)
         rQuality = "K" * len(right)
     
-        mergedSequence, qualityScores, noOfCol = self.readPairer.mergeUnpaired(left, right, lQuality, rQuality, False)
+        mergedSequence, qualityScores, noOfCol, newScore = self.readPairer.mergeUnpaired(left, right, lQuality, rQuality, False)
     
         expected = left + " " + right
     
@@ -253,7 +277,7 @@ class PairedFASTQAligner(unittest.TestCase):
         lQuality = "K" * len(left)
         rQuality = "K" * len(right)
     
-        mergedSequence, qualityScores, noOfCol = self.readPairer.mergeUnpaired(left, right, lQuality, rQuality, False)
+        mergedSequence, qualityScores, noOfCol, newScore = self.readPairer.mergeUnpaired(left, right, lQuality, rQuality, False)
     
         expected = "A" * sides + "C" * overlap + "G" * sides
     
@@ -267,7 +291,7 @@ class PairedFASTQAligner(unittest.TestCase):
         lQuality = "K" * len(left)
         rQuality = "K" * len(right)
     
-        mergedSequence, qualityScores, noOfCol = self.readPairer.mergeUnpaired(left, right, lQuality, rQuality, False)
+        mergedSequence, qualityScores, noOfCol, newScore = self.readPairer.mergeUnpaired(left, right, lQuality, rQuality, False)
     
         expected = "A" * sides + "C" * overlap + "G" * sides
     
@@ -279,7 +303,7 @@ class PairedFASTQAligner(unittest.TestCase):
         right = reverseComplement("AGTCAGGATGTTAGCAGAGCCAGTCAAGACTTGCCGACAAAGGAAACTAGAAGCCAAGAAAGCTGCAGCTGAAAAGCTTTCCTCCCTGGAGAACAGCTCAAATAAAAATGAAAAGGAAAAGTCAGCCCCATCACGTACAAAACAAACTGAA")
         lQuality = "CCCCCGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGFGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG"
         rQuality = "CCCCCGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGFGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGDGGGGGGGGGGGGGGGGGGGGFGGGGGGGGGGGDFG"[::-1]
-        mergedSequence, qualityScores, noOfCol = self.readPairer.mergeUnpaired(left, right, lQuality, rQuality, False)
+        mergedSequence, qualityScores, noOfCol, newScore = self.readPairer.mergeUnpaired(left, right, lQuality, rQuality, False)
     
         expectedMerged = "CAAGTTGATGGGGGCAAAACCAAAATAATTTTCATTTTTAATATACCACACAACACATCTATCTACAAATGCTTTACATTAAATTTACCTGCCAACTGTTTAGCCTGGCTTGCGTTTTCAGTTTGTTTTGTACGTGATGGGGCTGACTTTTCCTTTTCATTTTTATTTGAGCTGTTCTCCAGGGAGGAAAGCTTTTCAGCTGCAGCTTTCTTGGCTTCTAGTTTCCTTTGTCGGCAAGTCTTGACTGGCTCTGCTAACATCCTGACT"
         expecedQuality = "." * len(expectedMerged)
@@ -294,7 +318,7 @@ class PairedFASTQAligner(unittest.TestCase):
         lQuality = "CCCCCGGGFCCEF;F9AGFGFDEGGGGGDFAAEFF<FG<CFFFFGFEG8F@C@C7<C:FC7FD8<FDCAC<FEGGC,CFGACFFGGG<F6C<C9<6C@@FF@CCFFGEGGGGGGGGFG8=?4EEFFFCCCFGGFFF<EGGGGCF8?==BC@"
         rQuality = "-8BC8B@FC<9E--6FFECEFGGG8CCFCGGG,CFFF,,,;EFFCCC,CFF6CFCA8,CC,C96C@EF9,C,,66,<,E<,@FB8DGGEFE@<@C@:>?,9,<?FFGCGGG?,<<E<,9F:<?@<AEG9A?CEF,AFGECF,@EEFEDF,A"[::-1]
     
-        mergedSequence, qualityScores, noOfCol = self.readPairer.mergeUnpaired(left, right, lQuality, rQuality, False)
+        mergedSequence, qualityScores, noOfCol, newScore = self.readPairer.mergeUnpaired(left, right, lQuality, rQuality, False)
     
         expectedMerged = "TCTTTCTGCCTCATGCTCTCTCCAACAGGCTTGCAGCCAATTTACTGGAGCAGGGATGACGTAGCCCAGTGGCTCATGTGGGCTGAAAATGAGTTTTCTTTAAGGCCAATTGACAGCAACACATTTGAAATGAATGGCAAAGCTCTCCTGCTGCTGACCAAAGAGGACTTTCGCTATCGATCTCCTCATTCAGGTGAGAGTCTGGACTCTTGGCATATGCCCAACTTGGAAAATCTCTTAGTTAGTGGTTGGTCTTTAACACCCC"
         expecedQuality = ".............,.,...................,..,.........,.....,,.,..,..,,.....,.....?..........,.,.,.,,,......................,,.?..............,.......,.,,...,?.........,?,?.,,...,.......,...?,.?,?,,??.?,....,,.?..?,....,...?......,???....?.......,.........,??.,,....,..,?"
@@ -309,7 +333,7 @@ class PairedFASTQAligner(unittest.TestCase):
         lQuality = "CCCCCGEEFGGGGGGGGEGCCEFGCEGGFCFGGGGDG@EFGFGGGAFGGGEGGGGCDEEGFGGEEEFEG@CFEDEEGCFGCEFE@FEGFGG=4+,EFF7D=FGG=CEFB??,CFGFGG<,?,,4B+:,,,8<5,,C,B:,,+5,:,:,@B,"
         rQuality = "CCCCCFGGGGGGFGGFGFFGGGGGG;CEDEGGGGGGFGGGGGDG<AEFG?EBFFGGG:@CEGCF>FECFFFGGE<BFF,BCE,EABFB:>>FDFF9FF,=3@F<>:C*3<*5<****8,<;<,@,8;:=E*1*1*++2,27,,,***4*2+"[::-1]
     
-        mergedSequence, qualityScores, noOfCol = self.readPairer.mergeUnpaired(left, right, lQuality, rQuality, False)
+        mergedSequence, qualityScores, noOfCol, newScore = self.readPairer.mergeUnpaired(left, right, lQuality, rQuality, False)
     
         expectedMerged = "TGCAGTCCCAGCCCACAGCCCCCCTCCTCCCTCAGACTCAGGAGTCCATA"
         expecedQuality = ".................................................."

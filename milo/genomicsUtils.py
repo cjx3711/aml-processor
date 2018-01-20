@@ -93,14 +93,3 @@ def extractChromosomeNumber(ampliconName):
         if namePart.startswith('chr'):
             return namePart[3:]
     return ''
-
-def pwrite(file, message, shouldPrint = True):
-    if shouldPrint:
-        print(message)
-    file.write(message + "\n")
-    
-def removeFile(file):
-    try:
-        os.remove(file)
-    except OSError:
-        pass

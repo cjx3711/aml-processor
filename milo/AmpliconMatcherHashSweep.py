@@ -1,3 +1,7 @@
+"""
+Tries to figure out which amplicon a sequence belongs to.
+"""
+
 class AmpliconMatcherHashSweep:
 
     def __init__(self, reference, kgramLength = 15, spacing = 15):

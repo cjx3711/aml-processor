@@ -1,4 +1,5 @@
 from difflib import SequenceMatcher
+import re
 
 sequenceMatcher = SequenceMatcher(None, '', '', autojunk = False)
 ref = ''
@@ -75,13 +76,9 @@ def mutationToString(mutation):
     return mutation['type'] + ':' + str(mutation['pos']) + ':' + str(mutation['from']) + '-' + str(mutation['to'])
     
 def hashToMutationArray(mutationHash):
-    mutations = mutationHash.split(' ')
-    mutationArray = []
-    for mutation in mutations:
-        if (mutation.startswith(('S', 'I', 'D'))):
-            mutationArray.append(hashToMutation(mutation))
-    
-    return mutationArray
+    mutationList = re.split("([SID])", mutationHash)
+    mutationList = [mutantType + _ for mutantType, _ in zip(mutationList[1::2], mutationList[::2][1:])]
+    return [hashToMutation(x) for x in ([mutationList[i][:-1] for i in range(len(mutationList) - 1)] + [mutationList[-1]])]
     
 def hashToMutation(mutationHash):
     hashParts = mutationHash.split(':')
