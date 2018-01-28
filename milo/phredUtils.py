@@ -43,13 +43,13 @@ baseToProbaseDict = {
     'C': ['C', 'c', 's', 'h', 'n'],
     'G': ['G', 'g', '@', '&', '^']
 }
+phredToProbaseIndicesDict = {i: k for i, k in zip(phredSymbolList, phredProbaseList)} 
 
 def getProbaseFromBaseAndPhred(baseSeq, phredSeq):
     if len(baseSeq) != len(phredSeq):
         print("WARNING: Sequences of bases and their corresponding Phred scores differ in length.")
         return None
     
-    phredToProbaseIndicesDict = {i: k for i, k in zip(phredSymbolList, phredProbaseList)} 
     probaseSeq = []
     for base, phredSymbol in zip(baseSeq, phredSeq):
         probaseIndex = phredToProbaseIndicesDict[phredSymbol]
