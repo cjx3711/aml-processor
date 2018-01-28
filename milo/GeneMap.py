@@ -34,7 +34,7 @@ class GeneMap:
                 singleGeneRef = GeneReference(geneID, count, ampIDs, name, sequence, firstCoord, lastCoord, startCoords, endCoords)
                 self.geneManifest.append(singleGeneRef)
                 
-            self.ampToGene = [0] * (maxAmpID + 1)
+            self.ampToGene = [0] * (maxAmpID + 2)
             for geneRef in self.geneManifest:
                 for ampID in geneRef.ampIDs:
                     ampID = int(ampID)
