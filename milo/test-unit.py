@@ -1,6 +1,7 @@
 import unittest
 
 from genomicsUtils import *
+from phredUtils import *
 from j4xUtils import *
 from j3xUtils import *
 from AmpliconMatcherProbabilistic import *
@@ -64,7 +65,7 @@ class GenomicsUtils(unittest.TestCase):
     def test_chromosome_number_5(self):
         n = extractChromosomeNumber('ZRSR2.CDS.11.line.224.chrX.15840853.15841365_tile_1')
         self.assertEqual(n, 'X')
-        
+    
 class AmpliconMatcherProbabilisticTests(unittest.TestCase):
     def test_file_read(self):
         # Count the amplicons that were read
@@ -158,7 +159,6 @@ class generalUtils(unittest.TestCase):
         self.assertEqual(len(emptyList), 0)
         enablePrint()
         
-    
     def test_correct_file_underscore(self):
         fileList = getFileList('test/config_tests/files.correct.json')
     
@@ -213,6 +213,46 @@ class miscj4xUtils(unittest.TestCase):
     def test_weirdly_specific_function_2(self):
         coords = convertHashPositionsToCoordinates('291 S:29:T-A S:102:T-G', 100)
         self.assertEqual(coords, '129 202')
+
+# Testing the probase conversions
+class Probase(unittest.TestCase):
+    def setUp(self):
+        pass
+    
+    def test_probase_1(self):
+        baseSeq = "ATCGATCGATCGA"
+        phredSeq = "KJIHGFEDCBA@?"
+        probase = getProbaseFromBaseAndPhred(baseSeq, phredSeq)
+        expectedProbase = "ATCGATCGATCGA"
+        self.assertEqual(probase, expectedProbase)
+        
+    def test_probase_2(self):
+        baseSeq = "ATCGATCGAT"
+        phredSeq = ">=<;:98765"
+        probase = getProbaseFromBaseAndPhred(baseSeq, phredSeq)
+        expectedProbase = "atcgatcgat"
+        self.assertEqual(probase, expectedProbase)
+        
+    def test_probase_3(self):
+        baseSeq = "ATCGATCGAT"
+        phredSeq = "43210/.-,+"
+        probase = getProbaseFromBaseAndPhred(baseSeq, phredSeq)
+        expectedProbase = "o3s@o3s@o3"
+        self.assertEqual(probase, expectedProbase)
+        
+    def test_probase_4(self):
+        baseSeq = "ATCGAT"
+        phredSeq = "*()\'&%"
+        probase = getProbaseFromBaseAndPhred(baseSeq, phredSeq)
+        expectedProbase = "e2h&e2"
+        self.assertEqual(probase, expectedProbase)
+        
+    def test_probase_5(self):
+        baseSeq = "ATCG"
+        phredSeq = "$#\"!"
+        probase = getProbaseFromBaseAndPhred(baseSeq, phredSeq)
+        expectedProbase = "i1n^"
+        self.assertEqual(probase, expectedProbase)
         
 class PairedFASTQAligner(unittest.TestCase):
     

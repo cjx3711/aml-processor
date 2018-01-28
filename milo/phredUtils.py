@@ -12,14 +12,14 @@ def getPhredToAccuDict():
     Computes nucleotide sequencing accuracy of phred scores.
     0 to 1
     """
-    return {x : 1 - pow(10, -y/10) for x, y in enumerate(phredSymbolList)}
+    return {k : 1 - pow(10, -i/10) for i, k in enumerate(phredSymbolList)}
 
 def getPhredToErrorDict():
     """
     Computes nucleotide sequencing accuracy of phred scores.
     0 to 1
     """
-    return {x : pow(10, -y/10) for x, y in enumerate(phredSymbolList)}
+    return {k : pow(10, -i/10) for i, k in enumerate(phredSymbolList)}
 
 # Phred Level        A C T G
 # 0-3    < 50 %      i n 1 ^
@@ -29,12 +29,12 @@ def getPhredToErrorDict():
 # 30-42  < 99.99 %   A C T G
 
 phredProbaseList = [
-            0, 0, 0, 0, 0, 0, 0, 
-            0, 0, 0, 0, 0, 0, 1, 
-            1, 1, 1, 1, 1, 1, 1, 
-            1, 1, 2, 2, 2, 2, 2, 
-            2, 2, 2, 2, 2, 3, 3, 
-            3, 3, 3, 3, 4, 4, 4, 4 ]
+    4, 4, 4, 4, 3, 3, 3,
+    3, 3, 3, 2, 2, 2, 2,
+    2, 2, 2, 2, 2, 2, 1,
+    1, 1, 1, 1, 1, 1, 1,
+    1, 1, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0]
 
 baseToProbaseDict = {
     'A': ['A', 'a', 'o', 'e', 'i'],
@@ -48,7 +48,7 @@ def getProbaseFromBaseAndPhred(baseSeq, phredSeq):
         print("WARNING: Sequences of bases and their corresponding Phred scores differ in length.")
         return None
     
-    phredToProbaseIndicesDict = {x : y for x, y in zip(phredSymbolList, phredProbaseList)} 
+    phredToProbaseIndicesDict = {i: k for i, k in zip(phredSymbolList, phredProbaseList)} 
     probaseSeq = []
     for base, phredSymbol in zip(baseSeq, phredSeq):
         probaseIndex = phredToProbaseIndicesDict[phredSymbol]
