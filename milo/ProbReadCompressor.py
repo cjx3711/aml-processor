@@ -57,4 +57,18 @@ class ProbReadCompressor:
         # Go through the probaseDict and divide all the phredScores by the counts
         for key in self.probaseDict.keys():
             self.probaseDict[key][2] /= self.probaseDict[key][0]
+    
+    def compareScore(sequence1, sequence2):
+        return 0
+    
+    def prepareForCompression(self):
+        self.normalisePhredScoreTotal()
+        # ID the amplicons and put into an amplicon list.
+        
+        # For each amplicon,
+        #   For each compressedRead
+        #       If it can merge with anything in template list
+        #           Distrubute counts evenly
+        #       else
+        #           Add to template list
             

@@ -107,7 +107,7 @@ class MainAmpliconID:
                 print("")
                 print("Original reads: {0}".format(totalReads))
             
-                readCompressor.normalisePhredScoreTotal()
+                readCompressor.prepareForCompression()
                 
                 print("\nCompressing\n")
                 j3xSeqs = readCompressor.compress()
