@@ -1,7 +1,13 @@
+"""
+Replaces ReadPairer.
+Makes use of a more probabilistic method to determine the read pairing.
+JJ please expound on this.
+"""
+
 from collections import deque
 from phredUtils import *
 
-class ReadPairer:
+class PhredBasedReadPairer:
     def __init__(self, configFile = 'config.json'):
         self.MATCH_SCORE = 1
         self.MISMATCH_PENALTY = 5        
