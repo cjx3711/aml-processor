@@ -164,14 +164,14 @@ class generalUtils(unittest.TestCase):
     
         self.assertEqual(len(fileList), 1)
         
-        self.assertEqual(str(fileList[0]), "FileTypes(fastq1='AD01_S1_L001_R1_001.fastq', fastq2='AD01_S1_L001_R1_001.fastq', paired='AD01_S1_L001_PAIRED.j3x', pairedStats='AD01_S1_L001_PAIRED.j3x.stats', tiled='AD01_S1_L001_TILED.j3x', mutation='AD01_S1_L001_MUTATIONS.j4x')")
+        self.assertEqual(str(fileList[0]), "FileTypes(fastq1='AD01_S1_L001_R1_001.fastq', fastq2='AD01_S1_L001_R2_001.fastq', paired='AD01_S1_L001_PAIRED.j3x', pairedStats='AD01_S1_L001_PAIRED.j3x.stats', tiled='AD01_S1_L001_TILED.j3x', mutation='AD01_S1_L001_MUTATIONS.j4x')")
         
     def test_correct_files(self):
         fileList = getFileList('test/config_tests/files.correct.2.json')
         self.assertEqual(len(fileList), 2)
         
-        self.assertEqual(str(fileList[0]), "FileTypes(fastq1='AD01_S1_L001_R1_001.fastq', fastq2='AD01_S1_L001_R1_001.fastq', paired='AD01_S1_L001_PAIRED.j3x', pairedStats='AD01_S1_L001_PAIRED.j3x.stats', tiled='AD01_S1_L001_TILED.j3x', mutation='AD01_S1_L001_MUTATIONS.j4x')")
-        self.assertEqual(str(fileList[1]), "FileTypes(fastq1='AD01_S1_L002_R1_001.fastq', fastq2='AD01_S1_L002_R1_001.fastq', paired='AD01_S1_L002_PAIRED.j3x', pairedStats='AD01_S1_L002_PAIRED.j3x.stats', tiled='AD01_S1_L002_TILED.j3x', mutation='AD01_S1_L002_MUTATIONS.j4x')")
+        self.assertEqual(str(fileList[0]), "FileTypes(fastq1='AD01_S1_L001_R1_001.fastq', fastq2='AD01_S1_L001_R2_001.fastq', paired='AD01_S1_L001_PAIRED.j3x', pairedStats='AD01_S1_L001_PAIRED.j3x.stats', tiled='AD01_S1_L001_TILED.j3x', mutation='AD01_S1_L001_MUTATIONS.j4x')")
+        self.assertEqual(str(fileList[1]), "FileTypes(fastq1='AD01_S1_L002_R1_001.fastq', fastq2='AD01_S1_L002_R2_001.fastq', paired='AD01_S1_L002_PAIRED.j3x', pairedStats='AD01_S1_L002_PAIRED.j3x.stats', tiled='AD01_S1_L002_TILED.j3x', mutation='AD01_S1_L002_MUTATIONS.j4x')")
         
         
 class miscj3xUtils(unittest.TestCase):

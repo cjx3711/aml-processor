@@ -95,7 +95,7 @@ class ReadPairer:
         allQuality = chain(lQuality[0:lRange[0]], mergedSeq[1], rQuality[rRange[1]:self.readLength])
         # Convert to j3x format
         j3xBases = "".join("_" if x == "N" else x for x in allBases)
-        j3xQuality = "".join(simplifyQuality(qualityDict[x]) for x in allQuality)
+        j3xQuality = "".join(simplifyQuality(phredToAccuDict[x]) for x in allQuality)
         return j3xBases, j3xQuality, str(collisions)
 
     def mergeOverlap(self, overlapPairs, overlapQuality):
@@ -107,10 +107,10 @@ class ReadPairer:
             """
             if bases[0] != bases[1]:
                 # If the bases are different
-                if errorDict[quality[0]] > errorDict[quality[1]] * 5:
+                if phredToErrorDict[quality[0]] > phredToErrorDict[quality[1]] * 5:
                     # If the right read is at least five times less likely to have an error, return it and its quality
                     return bases[1], quality[1]
-                elif errorDict[quality[1]] > errorDict[quality[0]] * 5:
+                elif phredToErrorDict[quality[1]] > phredToErrorDict[quality[0]] * 5:
                     # Otherwise, just return the other read
                     pass
                 else:

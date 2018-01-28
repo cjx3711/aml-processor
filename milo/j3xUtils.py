@@ -3,6 +3,7 @@ All routines of the j3x file format.
 """
 
 from genomicsUtils import *
+from phredUtils import *
 
 def simplifyQuality(p):
     """
@@ -23,7 +24,7 @@ def fastqToJ3X(sequenceData):
     """
     coordIndices = nthAndKthLetter(sequenceData[0], ":", 5, 7)
     sequenceIdentifier = sequenceData[0][coordIndices[0]: coordIndices[1] - 2]
-    qualityScores = "".join(simplifyQuality(qualityDict[x]) for x in sequenceData[3][:-1])
+    qualityScores = "".join(simplifyQuality(phredToAccuDict[x]) for x in sequenceData[3][:-1])
     baseSeq = "".join("_" if x == "N" else x for x in sequenceData[1][:-1])
     return sequenceIdentifier + "\n" + baseSeq + "\n" + qualityScores + "\n" + "\n"
     
