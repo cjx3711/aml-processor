@@ -1,4 +1,4 @@
-from math import pow, log10, floor
+from math import pow, log10
 
 phredSymbolList = ['!', "\"", '#', '$', '%', '&', "\'",
                      ')', '(', '*', '+', ',', '-', '.',
@@ -64,7 +64,7 @@ def getAvgPhredScore(phredSymbol1, phredSymbol2):
     return getNearestPhredFromAccu( (phredToAccuDict[phredSymbol1] + phredToAccuDict[phredSymbol2]) / 2 )
 
 def getNearestPhredFromAccu(accuracyProb):
-    phredQNumber = min( 42, floor(-10 * log10(1 - accuracyProb)) )
+    phredQNumber = min( 42, round(-10 * log10(1 - accuracyProb)) )
     return phredSymbolList[phredQNumber]
 
 phredToAccuDict = getPhredToAccuDict();

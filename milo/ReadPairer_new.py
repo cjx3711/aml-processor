@@ -1,5 +1,5 @@
 from collections import deque
-from j3xUtils import *
+from phredUtils import *
 
 class ReadPairer:
     def __init__(self, configFile = 'config.json'):
@@ -8,8 +8,8 @@ class ReadPairer:
         self.SCORE_THRESHOLD = 10
 
         # WE SHOULD MOVE THIS OUT. Check the first line of FASTQ1 and FASTQ2, and assert if they are the same.
-        self.READ_LENGTH = 151
-        SUPERPOSITION_INDEX = READLENGTH - SCORE_THRESHOLD
+        self.READ_LENGTH = 30
+        self.SUPERPOSITION_INDEX = self.READ_LENGTH - self.SCORE_THRESHOLD
         
 
     def pairRead(self, leftSeq, leftPhred, rightSeq, rightPhred):
@@ -25,16 +25,19 @@ class ReadPairer:
         dequeLen = self.SCORE_THRESHOLD
 
         # Iteratively grow the overlapping region by sliding the left and right reads over each other
-        for i in range(0, SUPERPOSITION_INDEX):
+        for i in range(0, self.SUPERPOSITION_INDEX):
+            score = 0
             for j in range(dequeLen):
-                score += calcScore(leftSubstr[j], leftSubstrQual[j], rightSubstr[j], rightSubstrQual[j])
-                # If score meets threshold, merge the overlapping region, then append the non-overlapping ends and return
-                if score >= SCORE_THRESHOLD:
-                    mergedRead = mergeOverlap(leftSubstr, leftSubstrQual, rightSubstr, rightSubstrQual) # Should use namedtuple here
-                    return (leftSeq[:SUPERPOSITION_INDEX - i] + mergedRead[0] + rightSeq[SCORE_THRESHOLD + i:],
-                            leftPhred[:SUPERPOSITION_INDEX - i] + mergedRead[1] + rightPhred[SCORE_THRESHOLD + i:])
-                leftIndexToAdd = -self.SCORE_THRESHOLD - i - 1
-                rightIndexToAdd = self.SCORE_THRESHOLD + i
+                score += self.calcScore(leftSubstr[j], leftSubstrQual[j], rightSubstr[j], rightSubstrQual[j])
+            # If score meets threshold, merge the overlapping region, then append the non-overlapping ends and return
+            if score >= self.SCORE_THRESHOLD:
+                mergedRead = self.mergeOverlap(leftSubstr, leftSubstrQual, rightSubstr, rightSubstrQual) # Should use namedtuple here
+                print(score)
+                print(leftSeq[:self.SUPERPOSITION_INDEX - i], mergedRead[0], rightSeq[self.SCORE_THRESHOLD + i:])
+                return (leftSeq[:self.SUPERPOSITION_INDEX - i] + mergedRead[0] + rightSeq[self.SCORE_THRESHOLD + i:],
+                        leftPhred[:self.SUPERPOSITION_INDEX - i] + mergedRead[1] + rightPhred[self.SCORE_THRESHOLD + i:])
+            leftIndexToAdd = -self.SCORE_THRESHOLD - i - 1
+            rightIndexToAdd = self.SCORE_THRESHOLD + i
 
             leftSubstr.appendleft(leftSeq[leftIndexToAdd])
             leftSubstrQual.appendleft(leftPhred[leftIndexToAdd])
@@ -43,12 +46,12 @@ class ReadPairer:
             dequeLen += 1
 
         # When the sliding crosses the halfway (superposition) mark, we have to shrink the overlapping region instead
-        for _ in range(0, SUPERPOSITION_INDEX):
+        for _ in range(0, self.SUPERPOSITION_INDEX):
             for j in range(dequeLen):
-                score += calcScore(leftSubstr[j], leftSubstrQual[j], rightSubstr[j], rightSubstrQual[j])
-                if score >= SCORE_THRESHOLD:
-                    # Note that there are no overlapping ends to append in this case
-                    return mergeOverlap(leftSubstr, leftSubstrQual, rightSubstr, rightSubstrQual)
+                score += self.calcScore(leftSubstr[j], leftSubstrQual[j], rightSubstr[j], rightSubstrQual[j])
+            if score >= self.SCORE_THRESHOLD:
+                # Note that there are no overlapping ends to append in this case
+                return self.mergeOverlap(leftSubstr, leftSubstrQual, rightSubstr, rightSubstrQual)
             leftSubstr.pop()
             leftSubstrQual.pop()
             rightSubstr.popleft()
@@ -63,9 +66,9 @@ class ReadPairer:
         if base1 == base2:
             return self.MATCH_SCORE * scoreWeight
         else:
-            return self.MISMATCH_PENALTY * scoreWeight
+            return - self.MISMATCH_PENALTY * scoreWeight
 
-    def mergeOverlap(leftSubstr, leftSubstrPhred, rightSubstr, rightSubstrQual):
+    def mergeOverlap(self, leftSubstr, leftSubstrPhred, rightSubstr, rightSubstrQual):
         mergedBases = []
         mergedQual = []
         for i in range(len(leftSubstr)):
@@ -74,7 +77,7 @@ class ReadPairer:
                 mergedBases.append(leftSubstr[i])
                 mergedQual.append(getAvgPhredScore(leftSubstrPhred[i], rightSubstrQual[i]))
             # If both bases are different, but the left base is more accurate, pick it as the base but dilute the quality score
-            else if phredToErrorDict[leftSubstrPhred[i]] < phredToErrorDict[rightSubstrQual[i]]:
+            elif phredToErrorDict[leftSubstrPhred[i]] < phredToErrorDict[rightSubstrQual[i]]:
                 # A rough approximation of the quality of the better base, ignoring the weight of the inferior base on distribution of error
                 probBetterBaseIsCorrect = (phredToErrorDict[rightSubstrQual[i]] / 3 + phredToAccuDict[leftSubstrPhred[i]]) / 2
                 mergedQual.append(getNearestPhredFromAccu(probBetterBaseIsCorrect))
@@ -84,3 +87,4 @@ class ReadPairer:
                 probBetterBaseIsCorrect = (phredToErrorDict[leftSubstrPhred[i]] / 3 + phredToAccuDict[rightSubstrQual[i]]) / 2
                 mergedQual.append(getNearestPhredFromAccu(probBetterBaseIsCorrect))
                 mergedBases.append(rightSubstr[i])
+        return ''.join(mergedBases), ''.join(mergedQual)
