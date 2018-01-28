@@ -1,4 +1,5 @@
 from math import pow, log10
+import numpy as np
 
 phredSymbolList = ['!', "\"", '#', '$', '%', '&', "\'",
                      ')', '(', '*', '+', ',', '-', '.',
@@ -66,6 +67,9 @@ def getAvgPhredScore(phredSymbol1, phredSymbol2):
 def getNearestPhredFromAccu(accuracyProb):
     phredQNumber = min( 42, round(-10 * log10(1 - accuracyProb)) )
     return phredSymbolList[phredQNumber]
+
+def phredSeqToNpArray(phredSeq):
+    return np.fromiter((phredToAccuDict[sym] for sym in phredSeq), float)
 
 phredToAccuDict = getPhredToAccuDict();
 phredToErrorDict = getPhredToErrorDict();

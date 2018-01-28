@@ -8,6 +8,7 @@ from manifestExtraction import grouper
 from unpairedFastqProc import *
 from ReadPairAndID import *
 from ReadCompressor import *
+from ProbReadCompressor import *
 from tqdm import tqdm
 from multiprocessing import cpu_count
 from genomicsUtils import reverseComplement
@@ -69,7 +70,7 @@ class MainAmpliconID:
         failedToMatchReads = 0
         failedToPairMatchReads = 0
         
-        readCompressor = ReadCompressor(self.readPairer.getReferenceCount(), self.configFile)
+        readCompressor = ProbReadCompressor(self.readPairer.getReferenceCount(), self.configFile)
         if not os.path.exists(self.outDir):
             os.makedirs(self.outDir)
         with open(self.inDir + fq1) as fq1File, open(self.inDir + fq2) as fq2File:
@@ -89,22 +90,26 @@ class MainAmpliconID:
                 with tqdm(total=estimatedReads) as pbar:
                     # Align unpaired reads, merge them, and identify their amplicon
                     result = processManager.map(self.readPairer.alignAndMerge, fq1Iter, fq2Iter, chunksize = self.chunksize)
-                    for i, data in tqdm(enumerate(result)):
-                        failedToPair = data.failedToPair
-                        matchType = data.matchType
+                    for i, pairedRead in tqdm(enumerate(result)):
+                        # failedToPair = pairedRead.failedToPair
+                        # matchType = pairedRead.matchType
                         totalReads += 1
-                        failedToPairReads += failedToPair
-                        failedToMatchReads += 1 if matchType == 'nah' else 0
-                        if failedToPair == 1 and matchType == 'nah':
-                            failedToPairMatchReads += 1
+                        # failedToPairReads += failedToPair
+                        # failedToMatchReads += 1 if matchType == 'nah' else 0
+                        # if failedToPair == 1 and matchType == 'nah':
+                        #     failedToPairMatchReads += 1
                         
                         # Put all IDed and merged seqs into dictionary for later VAF calculation and compression decision
-                        readCompressor.putPairedRead(data)
+                        readCompressor.putPairedRead(pairedRead)
                         pbar.update()
                 pbar.close()
+                
+                print("")
+                print("Original reads: {0}".format(totalReads))
             
-                readCompressor.prepareForCompression()
-                print("\nCompressing\n")                
+                readCompressor.normalisePhredScoreTotal()
+                
+                print("\nCompressing\n")
                 j3xSeqs = readCompressor.compress()
                 
                 # Print all the discarded stuff into another file

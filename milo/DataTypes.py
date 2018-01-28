@@ -8,7 +8,11 @@ FileTypes = namedtuple('FileTypes', ['fastq1', 'fastq2', 'paired', 'pairedStats'
 EmptyMatch = namedtuple('EmptyMatch', ['a', 'b', 'size'])
 
 # Used for the return value of ReadPairer.alignAndMerge
+# DEPRECATED. Replaced by PairedRead
 AlignedAndMerged = namedtuple('AlignedAndMerged', ['failedToPair', 'matchType', 'sequenceInfo', 'sequenceData', 'qualityData'])
+
+# Used for return value of ReadPairAndID.alignAndMerge
+PairedRead = namedtuple('PairedRead', ['baseSeq', 'phredSeq', 'pairSuccess'])
 
 # Used to hold the j3x reference matrix
 J3xStats = namedtuple('J3xStats', ['ampID', 'totalReads', 'numTemplates', 'numDiscards'])

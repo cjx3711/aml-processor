@@ -6,6 +6,7 @@ JJ please expound on this.
 
 from collections import deque
 from phredUtils import *
+from DataTypes import *
 
 class PhredBasedReadPairer:
     def __init__(self, configFile = 'config.json'):
@@ -14,13 +15,14 @@ class PhredBasedReadPairer:
         self.SCORE_THRESHOLD = 10
 
         # WE SHOULD MOVE THIS OUT. Check the first line of FASTQ1 and FASTQ2, and assert if they are the same.
-        self.READ_LENGTH = 30
+        self.READ_LENGTH = 151
         self.SUPERPOSITION_INDEX = self.READ_LENGTH - self.SCORE_THRESHOLD
         
 
     def pairRead(self, leftSeq, leftPhred, rightSeq, rightPhred):
         '''
         Takes two sequences of bases in the same direction with their respective Phred quality scores and merges them into a paired read
+        Returns a PairedRead named tuple
         '''
         # Get the smallest overlapping substring of bases which can fulfil the score threshold, and their respective qualities
         leftSubstr = deque(leftSeq[-self.SCORE_THRESHOLD:])
@@ -38,18 +40,20 @@ class PhredBasedReadPairer:
             # If score meets threshold, merge the overlapping region, then append the non-overlapping ends and return
             if score >= self.SCORE_THRESHOLD:
                 mergedRead = self.mergeOverlap(leftSubstr, leftSubstrQual, rightSubstr, rightSubstrQual) # Should use namedtuple here
-                print(score)
-                print(leftSeq[:self.SUPERPOSITION_INDEX - i], mergedRead[0], rightSeq[self.SCORE_THRESHOLD + i:])
-                return (leftSeq[:self.SUPERPOSITION_INDEX - i] + mergedRead[0] + rightSeq[self.SCORE_THRESHOLD + i:],
-                        leftPhred[:self.SUPERPOSITION_INDEX - i] + mergedRead[1] + rightPhred[self.SCORE_THRESHOLD + i:])
-            leftIndexToAdd = -self.SCORE_THRESHOLD - i - 1
-            rightIndexToAdd = self.SCORE_THRESHOLD + i
+                # print(score)
+                # print(leftSeq[:self.SUPERPOSITION_INDEX - i], mergedRead[0], rightSeq[self.SCORE_THRESHOLD + i:])
+                return PairedRead(leftSeq[:self.SUPERPOSITION_INDEX - i] + mergedRead[0] + rightSeq[self.SCORE_THRESHOLD + i:],
+                        leftPhred[:self.SUPERPOSITION_INDEX - i] + mergedRead[1] + rightPhred[self.SCORE_THRESHOLD + i:],
+                        True)
+            else:
+                leftIndexToAdd = -self.SCORE_THRESHOLD - i - 1
+                rightIndexToAdd = self.SCORE_THRESHOLD + i
 
-            leftSubstr.appendleft(leftSeq[leftIndexToAdd])
-            leftSubstrQual.appendleft(leftPhred[leftIndexToAdd])
-            rightSubstr.append(rightSeq[rightIndexToAdd])
-            rightSubstrQual.append(rightPhred[rightIndexToAdd])
-            dequeLen += 1
+                leftSubstr.appendleft(leftSeq[leftIndexToAdd])
+                leftSubstrQual.appendleft(leftPhred[leftIndexToAdd])
+                rightSubstr.append(rightSeq[rightIndexToAdd])
+                rightSubstrQual.append(rightPhred[rightIndexToAdd])
+                dequeLen += 1
 
         # When the sliding crosses the halfway (superposition) mark, we have to shrink the overlapping region instead
         for _ in range(0, self.SUPERPOSITION_INDEX):
@@ -57,12 +61,16 @@ class PhredBasedReadPairer:
                 score += self.calcScore(leftSubstr[j], leftSubstrQual[j], rightSubstr[j], rightSubstrQual[j])
             if score >= self.SCORE_THRESHOLD:
                 # Note that there are no overlapping ends to append in this case
-                return self.mergeOverlap(leftSubstr, leftSubstrQual, rightSubstr, rightSubstrQual)
-            leftSubstr.pop()
-            leftSubstrQual.pop()
-            rightSubstr.popleft()
-            rightSubstrQual.popleft()
-            dequeLen -= 1
+                baseSeq, phredSeq = self.mergeOverlap(leftSubstr, leftSubstrQual, rightSubstr, rightSubstrQual)
+                return PairedRead(baseSeq, phredSeq, True) 
+            else:
+                leftSubstr.pop()
+                leftSubstrQual.pop()
+                rightSubstr.popleft()
+                rightSubstrQual.popleft()
+                dequeLen -= 1
+            
+        return PairedRead(leftSeq + '|' + rightSeq, leftPhred + '|' + rightPhred, False)
 
     def calcScore(self, base1, phred1, base2, phred2):
         '''
@@ -71,6 +79,8 @@ class PhredBasedReadPairer:
         scoreWeight = min(phredToAccuDict[phred1], phredToAccuDict[phred2]) ** 2
         if base1 == base2:
             return self.MATCH_SCORE * scoreWeight
+        elif base1 == 'N' or base2 == 'N':
+            return 0
         else:
             return - self.MISMATCH_PENALTY * scoreWeight
 
