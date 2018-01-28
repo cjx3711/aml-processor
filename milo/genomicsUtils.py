@@ -1,19 +1,10 @@
 """
 genomicsUtils | Methods for common routines in genome analysis
 """
-from math import pow
 from csv import *
 import os
 
 complement = {"A" : "T", "C" : "G", "G" : "C", "T" : "A", " " : " "}
-phredList = [
-                "K", "J", "I", "H", "G", "F", "E", 
-                "D", "C", "B", "A", "@", "?", ">", 
-                "=", "<", ";", ":", "9", "8", "7", 
-                "6", "5","4", "3", "2", "1", "0", 
-                "/", ".", "-", ",", "+", "*", "(", 
-                ")", "\'", "&", "%", "$", "#", "\"", "!"
-                ]
 
 def reverseComplement(bases):
     """
@@ -48,20 +39,6 @@ def nthAndKthLetter(targetString, targetLetter, n, k):
         if i == n: nIndex = lastIndex
         lastIndex = targetString.index(targetLetter, lastIndex) + 1
     return (nIndex, lastIndex - 1)
-
-def getPhredQualityDict():
-    """
-    Computes nucleotide sequencing accuracy of phred scores.
-    0 to 1
-    """
-    return {x : 1 - pow(10, -y/10) for x, y in zip(phredList, range(42, -1, -1))}
-
-def getPhredErrorDict():
-    """
-    Computes nucleotide sequencing accuracy of phred scores.
-    0 to 1
-    """
-    return {x : pow(10, -y/10) for x, y in zip(phredList, range(42, -1, -1))}
     
 def simpleDistance(a, b):
     """
@@ -98,45 +75,6 @@ def pwrite(file, message, shouldPrint = True):
     if shouldPrint:
         print(message)
     file.write(message + "\n")
-
-    
-# Phred Level        A C T G
-# 0-3    < 50 %      i n 1 ^
-# 4-9    < 90 %      e h 2 &
-# 10-19  < 99 %      o s 3 @
-# 20-29  < 99.9 %    a c t g
-# 30-42  < 99.99 %   A C T G
-
-phredProbBaseList = [
-            0, 0, 0, 0, 0, 0, 0, 
-            0, 0, 0, 0, 0, 0, 1, 
-            1, 1, 1, 1, 1, 1, 1, 
-            1, 1, 2, 2, 2, 2, 2, 
-            2, 2, 2, 2, 2, 3, 3, 
-            3, 3, 3, 3, 4, 4, 4, 4 ]
-
-phredProbMap = {
-    'A': ['A', 'a', 'o', 'e', 'i'],
-    'T': ['T', 't', '3', '2', '1'],
-    'C': ['C', 'c', 's', 'h', 'n'],
-    'G': ['G', 'g', '@', '&', '^']
-}
-
-def convertBasePhred2ProbBase(BaseSequence, PhredSequence):
-    if len(BasesSequence) != len(PhredSequence):
-        return None
-    
-    phredProbBaseMap = {x : y for x, y in zip(phredList, phredProbBaseList)} 
-    probBaseSequence = []
-    for i in range(len(BaseSequence)):
-        base = BaseSequence[i]
-        Phred = PhredSequence[i]
-        probBaseIndex = phredProbBaseMap[Phred]
-        if base not in ['A', 'T', 'C', 'G']:
-            probBaseSequence.append(base)
-        else:
-            probBaseSequence.append(phredProbMap[base][probBaseIndex])            
-    return "".join(probBaseSequence)
     
 def removeFile(file):
     try:
