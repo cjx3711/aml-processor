@@ -15,10 +15,11 @@ import json
 from tqdm import tqdm
 from j3xUtils import *
 from phredUtils import *
+from AmpliconMatcherHashSweep import *
 from pprint import pprint
 
 class ProbReadCompressor:
-    def __init__(self, referenceCount, configFile = 'config.json'):
+    def __init__(self, referenceCount, configFile = 'config.json', referenceFile = 'references/Manifest.csv'):
         # Format of probaseDict:
         # {
         #   probaseKey: [
@@ -28,6 +29,8 @@ class ProbReadCompressor:
         self.probaseDict = {}
         self.totalReads = 0
         self.referenceCount = referenceCount
+        
+        self.ampliconMatcher = AmpliconMatcherHashSweep(referenceFile)
 
     def putPairedRead(self, pairedRead):
         # pprint(pairedRead)
@@ -58,17 +61,61 @@ class ProbReadCompressor:
         for key in self.probaseDict.keys():
             self.probaseDict[key][2] /= self.probaseDict[key][0]
     
-    def compareScore(sequence1, sequence2):
-        return 0
+    """
+    Returns a score of the match
+    Returns 0 if the reads are not same length
+    """
+    def computeScore(compressedRead1, compressedRead2):
+        baseSeq1 = compressedRead1[1]
+        baseSeq2 = compressedRead2[1]
+        phrednp1 = compressedRead1[2]
+        phrednp2 = compressedRead2[2]
+        if len(baseSeq1) != len(baseSeq2):
+            return 0
+        
+        score = 0
+        for bp1, bp2, pnp1, pnp2 in baseSeq1, baseSeq2, phrednp1, phrednp2:
+            pass
+        
+        return score
     
+    """
+    Prepares the lists and hashes required for compression
+    Sorts the compressedReads into their respective amplicon bins
+    """
     def prepareForCompression(self):
         self.normalisePhredScoreTotal()
-        # ID the amplicons and put into an amplicon list.
         
+        # 1. Double-nested list containing 572 indices for the amplicons, with each inner list holding all templates for that amplicon
+        self.compressedReadsByAmpID = [ [] for x in range(self.referenceCount + 1)]
+        self.translocatedCompressedReads = []
+        
+        # ID the amplicons and put into an amplicon list.
+        for key in self.probaseDict.keys():
+            # compressedRead format [count, baseSeq, phrednp]
+            compressedRead = self.probaseDict[key]
+            ampID, ampIDTrans, matchType = self.ampliconMatcher.findAmplicon(compressedRead[1])
+            ampID = int(ampID)
+            if ampIDTrans != None:
+                self.translocatedCompressedReads.append(compressedRead)
+            else:
+                self.compressedReadsByAmpID[ampID].append(compressedRead)
+    
+    """
+    Match up reads that are close in edit distance to bring down filesize.
+    """
+    def compress(self):
+        templates = [] # Used to store current templates
         # For each amplicon,
+        for ampCompressedReads in self.compressedReadsByAmpID:
+            templates.clear()
         #   For each compressedRead
+            for compressedRead in ampCompressedReads:
+                for templateRead in templates:
+                    pass
         #       If it can merge with anything in template list
         #           Distrubute counts evenly
         #       else
         #           Add to template list
             
+# compareScore("ATCG", "AAAT")
