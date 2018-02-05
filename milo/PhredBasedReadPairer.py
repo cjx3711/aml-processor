@@ -20,11 +20,11 @@ class PhredBasedReadPairer:
         
 
     def pairRead(self, leftSeq, leftPhred, rightSeq, rightPhred):
-        '''
-        Takes two sequences of bases in the same direction with their respective Phred quality scores and merges them into a paired read
-        Returns a PairedRead named tuple
-        '''
-        # Get the smallest overlapping substring of bases which can fulfil the score threshold, and their respective qualities
+        """
+        Takes two sequences (bases and respective Phred scores) which have already been reverse complemented
+        and merges them into a paired read. Returns a PairedRead namedtuple.
+        """
+        # Get the smallest overlapping substring of bases which can fulfil the score threshold, and its Phred qualities
         leftSubstr = deque(leftSeq[-self.SCORE_THRESHOLD:])
         leftSubstrQual = deque(leftPhred[-self.SCORE_THRESHOLD:])
         rightSubstr = deque(rightSeq[:self.SCORE_THRESHOLD])
@@ -39,9 +39,7 @@ class PhredBasedReadPairer:
                 score += self.calcScore(leftSubstr[j], leftSubstrQual[j], rightSubstr[j], rightSubstrQual[j])
             # If score meets threshold, merge the overlapping region, then append the non-overlapping ends and return
             if score >= self.SCORE_THRESHOLD:
-                mergedRead = self.mergeOverlap(leftSubstr, leftSubstrQual, rightSubstr, rightSubstrQual) # Should use namedtuple here
-                # print(score)
-                # print(leftSeq[:self.SUPERPOSITION_INDEX - i], mergedRead[0], rightSeq[self.SCORE_THRESHOLD + i:])
+                mergedRead = self.mergeOverlap(leftSubstr, leftSubstrQual, rightSubstr, rightSubstrQual)
                 return PairedRead(leftSeq[:self.SUPERPOSITION_INDEX - i] + mergedRead[0] + rightSeq[self.SCORE_THRESHOLD + i:],
                         leftPhred[:self.SUPERPOSITION_INDEX - i] + mergedRead[1] + rightPhred[self.SCORE_THRESHOLD + i:],
                         True)
@@ -73,9 +71,9 @@ class PhredBasedReadPairer:
         return PairedRead(leftSeq + '|' + rightSeq, leftPhred + '|' + rightPhred, False)
 
     def calcScore(self, base1, phred1, base2, phred2):
-        '''
+        """
         Gives a penalty/reward based on mis/match of two bases, weighted by quality score
-        '''
+        """
         scoreWeight = min(phredToAccuDict[phred1], phredToAccuDict[phred2]) ** 2
         if base1 == base2:
             return self.MATCH_SCORE * scoreWeight
@@ -92,9 +90,9 @@ class PhredBasedReadPairer:
             if leftSubstr[i] == rightSubstr[i]:
                 mergedBases.append(leftSubstr[i])
                 mergedQual.append(getAvgPhredScore(leftSubstrPhred[i], rightSubstrQual[i]))
-            # If both bases are different, but the left base is more accurate, pick it as the base but dilute the quality score
+            # If bases are different, but left base is more accurate, pick it as the base but dilute the quality score
             elif phredToErrorDict[leftSubstrPhred[i]] < phredToErrorDict[rightSubstrQual[i]]:
-                # A rough approximation of the quality of the better base, ignoring the weight of the inferior base on distribution of error
+                # An approximation of the better base quality, ignoring inferior base's weight on error distribution
                 probBetterBaseIsCorrect = (phredToErrorDict[rightSubstrQual[i]] / 3 + phredToAccuDict[leftSubstrPhred[i]]) / 2
                 mergedQual.append(getNearestPhredFromAccu(probBetterBaseIsCorrect))
                 mergedBases.append(leftSubstr[i])
