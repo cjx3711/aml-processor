@@ -7,6 +7,8 @@ from AmpliconMatcherHashSweep import *
 import json
 
 """
+DEPRECATED: Changed to PhredBasedReadPairer
+
 Pairs two reads by sliding them across each other and scoring them.
 Once a threshold is hit, it will pair.
 There is also an option to do the pairing by global maxima.

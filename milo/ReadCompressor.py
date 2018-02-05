@@ -3,6 +3,10 @@ import json
 from tqdm import tqdm
 from j3xUtils import *
 
+"""
+DEPRECATED: Replaced with ProbReadCompressor
+"""
+
 class ReadCompressor:
     def __init__(self, referenceCount, configFile = 'config.json'):
         self.ampliconCountDict = {}

@@ -91,13 +91,7 @@ class MainAmpliconID:
                     # Align unpaired reads, merge them, and identify their amplicon
                     result = processManager.map(self.readPairer.alignAndMerge, fq1Iter, fq2Iter, chunksize = self.chunksize)
                     for i, pairedRead in tqdm(enumerate(result)):
-                        # failedToPair = pairedRead.failedToPair
-                        # matchType = pairedRead.matchType
                         totalReads += 1
-                        # failedToPairReads += failedToPair
-                        # failedToMatchReads += 1 if matchType == 'nah' else 0
-                        # if failedToPair == 1 and matchType == 'nah':
-                        #     failedToPairMatchReads += 1
                         
                         # Put all IDed and merged seqs into dictionary for later VAF calculation and compression decision
                         readCompressor.putPairedRead(pairedRead)
