@@ -4,6 +4,7 @@ TEST Scripts
 How to git.txt
 __pycache__
 *.pyc
+*.idea
 
 annovar
 
